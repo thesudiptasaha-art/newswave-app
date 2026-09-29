@@ -23,13 +23,14 @@ const DEFAULT_CHANNELS = [
   'The Wave Glam',
 ];
 
-const CONTENT_TYPES = ['EXPLAINER', 'LIVE', 'RECORDED LIVE', 'SOT', 'PACKAGE'];
+const CONTENT_TYPES = ['EXPLAINER', 'LIVE', 'RECORDED LIVE', 'SOT', 'PACKAGE', 'SHOW'];
 const CONTENT_TYPE_HINT = {
-  EXPLAINER: 'No shoot · script → edit',
-  LIVE: 'Shoot → publish',
-  'RECORDED LIVE': 'Shoot → edit → publish',
-  SOT: 'Shoot → publish',
-  PACKAGE: 'Full pipeline',
+  EXPLAINER: 'Full pipeline',
+  LIVE: 'Script approved → done (published)',
+  'RECORDED LIVE': 'Full pipeline',
+  SOT: 'Full pipeline',
+  PACKAGE: 'Script + raw footage → straight to the editor (no shoot)',
+  SHOW: 'Full pipeline',
 };
 
 const PLATFORMS = [
@@ -77,8 +78,8 @@ const can = (m, key) => !!m && m.active !== false && (isManager(m) || m[key] ===
 /* ------------------------------------------------------------------ */
 /* Workflow (state machine)                                            */
 /* ------------------------------------------------------------------ */
-const afterScript = (type) => (type === 'EXPLAINER' ? 'Assign Editor' : 'Ready for Shoot');
-const afterShoot = (type) => (type === 'LIVE' || type === 'SOT' ? 'Ready to Publish' : 'Assign Editor');
+const afterScript = (type) => (type === 'LIVE' ? 'Published' : type === 'PACKAGE' ? 'Assign Editor' : 'Ready for Shoot');
+const afterShoot = () => 'Assign Editor';
 
 function getActions(row, m) {
   const list = [];
@@ -107,7 +108,7 @@ function getActions(row, m) {
       add('start_edit', 'Send to Editing', 'Editing', 'primary', can(m, 'can_assign_editor'), 'Needs the “Assign editor” permission', row.video_editor ? '' : 'Pick a video editor first');
       break;
     case 'Editing':
-      add('submit_video', 'Submit Video', 'Video Review', 'primary', mgr || (!!row.video_editor && row.video_editor === m.full_name), 'Assigned editor or managers only', row.master_export_url ? '' : 'Add the master export link (Assets tab)');
+      add('submit_video', 'Submit Video', 'Video Review', 'primary', mgr || (!!row.video_editor && row.video_editor === m.full_name), 'Assigned editor or managers only', '');
       break;
     case 'Video Review':
       add('approve_video', 'Approve Video', 'Ready to Publish', 'primary', mgr, 'Managers only');
@@ -736,7 +737,7 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
     >
       <div className="space-y-5">
         <Field label="1 · Content / Pipeline type">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {CONTENT_TYPES.map((t) => (
               <button
                 key={t}
@@ -1326,7 +1327,12 @@ function ScriptTab({ row, actor, patch }) {
           No script yet.{canEdit ? ' Click Edit to write one.' : ''}
         </div>
       )}
-      {!canEdit && !editing ? (
+            {row.content_type === 'PACKAGE' ? (
+        <div className="mt-6">
+          <LinkRow label="Raw footage link (goes straight to the editor)" value={row.raw_footage_link} disabled={!actor || actor.active === false} onCommit={(v) => patch({ raw_footage_link: v })} />
+        </div>
+      ) : null}
+{!canEdit && !editing ? (
         <p className="mt-3 flex items-center gap-1.5 text-[12px] text-zinc-500">
           <LockIcon /> {locked && !mgr ? 'Read-only — this script is locked. Only Managers and the Owner can edit it.' : 'Read-only — you need the “Edit script” permission to make changes.'}
         </p>
@@ -1954,7 +1960,7 @@ export default function Page() {
       if (current.id === 'restore') patch.drop_reason = null;
       if (current.id === 'reshoot') patch.reshoot_reason = reason;
       if (current.id === 'revise') patch.revisions = [...fresh.revisions, { note: reason, actor: actor.full_name, role: actor.role, time: now }];
-      if (current.id === 'publish') {
+      if (current.to === 'Published') {
         patch.published_at = now;
         patch.publisher = actor.full_name;
       }
