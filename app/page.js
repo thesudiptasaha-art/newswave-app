@@ -1407,7 +1407,6 @@ function AssetsTab({ row, actor, patch }) {
         <LinkRow label="Master export" value={row.master_export_url} disabled={!active} onCommit={(v) => patch({ master_export_url: v })} />
         <LinkRow label="Live video URL" value={row.live_video_url} disabled={!active} onCommit={(v) => patch({ live_video_url: v })} />
       </section>
-
       <section>
         <div className="mb-3 flex items-center justify-between">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Shorts & reels ({row.shorts.length})</div>
@@ -2427,10 +2426,10 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
 
         <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
-          <table className="w-full min-w-[1360px] text-left text-[13px]">
+          <table className="w-full min-w-[1180px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
-                {['Time', 'Slug / Title', 'Type', 'Channel', 'Presenter', 'Writer', 'Editor', 'Status', 'Action'].map((h) => (
+                {['Time', 'Content Type', 'Slug Name', 'Writer', 'Presenter', 'Video Editor', 'Status', 'Action'].map((h) => (
                   <th key={h} className="px-4 py-3 font-medium">
                     {h}
                   </th>
@@ -2442,11 +2441,12 @@ function NewsroomApp({ authUser, onSignOut }) {
                 if (item.type === 'header') {
                   return (
                     <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
-                      <td colSpan={9} className="px-4 py-2.5">
-                        <div className="flex items-center gap-3">
-                          <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white">{item.name}</span>
-                          <span className="rounded-full bg-white/[0.07] px-2 py-0.5 text-[10px] font-medium tabular-nums text-zinc-400">{item.count}</span>
-                          <span className="h-px flex-1 bg-gradient-to-r from-white/[0.12] to-transparent" />
+                      <td colSpan={8} className="px-4 py-5">
+                        <div className="flex items-center gap-4">
+                          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.16]" />
+                          <span className="text-[18px] font-semibold tracking-tight text-white">{item.name}</span>
+                          <span className="rounded-full bg-white/[0.08] px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-zinc-400">{item.count}</span>
+                          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/[0.16]" />
                         </div>
                       </td>
                     </tr>
@@ -2464,22 +2464,20 @@ function NewsroomApp({ authUser, onSignOut }) {
                       <div className="font-medium text-white">{formatTime(r.scheduled_publish_time)}</div>
                       {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(r.scheduled_publish_time)}</div> : null}
                     </td>
-                    <td className="max-w-[300px] px-4 py-3.5">
+                    <td className="px-4 py-3.5">
+                      <TypeBadge type={r.content_type} />
+                    </td>
+                    <td className="max-w-[320px] px-4 py-3.5">
                       <div className="flex items-center gap-1.5">
                         <span className="truncate font-mono text-[12px] font-semibold tracking-wide text-white">{r.slug_name || '—'}</span>
                         {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
                       </div>
-                      <div className="truncate text-[12px] text-zinc-500">{r.title}</div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <TypeBadge type={r.content_type} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3.5 text-zinc-300">{r.channel || '—'}</td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <PersonName name={r.presenter_name} team={team} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5">
                       <PersonName name={r.writer} team={team} />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3.5">
+                      <PersonName name={r.presenter_name} team={team} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5">
                       <PersonName name={r.video_editor} team={team} />
