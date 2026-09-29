@@ -225,7 +225,15 @@ const asArray = (v) => {
   }
   return [];
 };
-
+/* Shorts whose upload time falls inside the rundown range. */
+const shortsInRange = (r, start, endEx) =>
+  (r.shorts || []).filter((s) => s.publish_at && new Date(s.publish_at) >= start && new Date(s.publish_at) < endEx);
+const rowTimeIn = (r, start, endEx) => {
+  const t = r.scheduled_publish_time ? new Date(r.scheduled_publish_time) : null;
+  if (t && t >= start && t < endEx) return r.scheduled_publish_time;
+  const ss = shortsInRange(r, start, endEx).map((s) => s.publish_at).sort();
+  return ss[0] || r.scheduled_publish_time;
+};
 function normalizeRow(r) {
   return {
     ...r,
@@ -1926,7 +1934,18 @@ function NewsroomApp({ authUser, onSignOut }) {
       notify(`Could not load rundown: ${errText(error)}`, 'error');
       return;
     }
-    setRows((data || []).map(normalizeRow));
+        /* Also load contents whose SHORTS are due in this range (needs the short_days column). */
+    const days = [];
+    for (let d = new Date(range.start); d < addDays(range.end, 1) && days.length < 62; d = addDays(d, 1)) days.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    const { data: extra } = await supabase
+      .from('contents')
+      .select('*')
+      .or(`organization_id.eq.${org.id},organization_id.is.null`)
+      .overlaps('short_days', days);
+    if (req !== reqRef.current) return;
+    const seen = new Set((data || []).map((r) => r.id));
+    const merged = [...(data || []), ...(extra || []).filter((r) => !seen.has(r.id))];
+    setRows(merged.map(normalizeRow));
   }, [org, range, notify]);
 
   const reloadTeam = useCallback(async () => {
@@ -2225,7 +2244,8 @@ function NewsroomApp({ authUser, onSignOut }) {
       .filter((r) => {
         if (!r.scheduled_publish_time) return true;
         const d = new Date(r.scheduled_publish_time);
-        return d >= range.start && d < endExclusive;
+        if (d >= range.start && d < endExclusive) return true;
+        return shortsInRange(r, range.start, endExclusive).length > 0;
       })
       .filter((r) => channelFilter === 'all' || r.channel === channelFilter)
       .filter((r) => statusFilter === 'all' || r.status === statusFilter)
@@ -2242,7 +2262,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           if (ga !== gb) return ga - gb;
           if (ga === channels.length && (a.channel || '') !== (b.channel || '')) return String(a.channel || '').localeCompare(String(b.channel || ''));
         }
-        return new Date(a.scheduled_publish_time || 0) - new Date(b.scheduled_publish_time || 0);
+      return new Date(rowTimeIn(a, range.start, endExclusive) || 0) - new Date(rowTimeIn(b, range.start, endExclusive) || 0);
       });
   }, [rows, range, channelFilter, statusFilter, search, channels]);
 
@@ -2507,7 +2527,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           <table className="w-full min-w-[1180px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
-                {['Time', 'Content Type', 'Slug Name', 'Writer', 'Presenter', 'Video Editor', 'Status', 'Action'].map((h) => (
+                  {['Time', 'Content Type', 'Slug Name', 'Writer', 'Presenter', 'Video Editor', 'Short', 'Status', 'Action'].map((h) => (
                   <th key={h} className="px-4 py-3 font-medium">
                     {h}
                   </th>
@@ -2519,7 +2539,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                 if (item.type === 'header') {
                   return (
                     <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
-                      <td colSpan={8} className="px-4 py-5">
+                      <td colSpan={9} className="px-4 py-5">
                         <div className="flex items-center gap-4">
                           <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.16]" />
                           <span className="text-[18px] font-semibold tracking-tight text-white">{item.name}</span>
@@ -2539,8 +2559,8 @@ function NewsroomApp({ authUser, onSignOut }) {
                     className="row-in cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]"
                   >
                     <td className="whitespace-nowrap px-4 py-3.5 tabular-nums text-zinc-300">
-                      <div className="font-medium text-white">{formatTime(r.scheduled_publish_time)}</div>
-                      {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(r.scheduled_publish_time)}</div> : null}
+                      <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
+                      {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div> : null}
                     </td>
                     <td className="px-4 py-3.5">
                       <TypeBadge type={r.content_type} />
@@ -2559,6 +2579,19 @@ function NewsroomApp({ authUser, onSignOut }) {
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5">
                       <PersonName name={r.video_editor} team={team} />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3.5">
+                      {shortsInRange(r, range.start, addDays(range.end, 1)).length ? (
+                        <div className="flex flex-col gap-1">
+                          {shortsInRange(r, range.start, addDays(range.end, 1)).map((s) => (
+                            <span key={s.id} className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${s.published ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25' : 'bg-amber-500/15 text-amber-300 ring-amber-400/25'}`}>
+                              Short · {formatTime(s.publish_at)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-zinc-700">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3.5">
                       <StatusBadge status={r.status} />
