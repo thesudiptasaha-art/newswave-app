@@ -1803,6 +1803,20 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [selectedId, setSelectedId] = useState(null);
   const [showNew, setShowNew] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
+    const [theme, setTheme] = useState('dark');
+  useEffect(() => {
+    try {
+      setTheme(window.localStorage.getItem('nw-theme') === 'light' ? 'light' : 'dark');
+    } catch (e) {}
+  }, []);
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    document.documentElement.classList.toggle('light', next === 'light');
+    try {
+      window.localStorage.setItem('nw-theme', next);
+    } catch (e) {}
+  };
   const [showKpi, setShowKpi] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
   const [reasonFor, setReasonFor] = useState(null);
@@ -2430,7 +2444,15 @@ function NewsroomApp({ authUser, onSignOut }) {
                 </span>
               ) : null}
             </div>
-            <button className={btnGhost} onClick={() => setShowTeam(true)}>
+                 <button className={btnGhost} onClick={toggleTheme} title="Switch light / dark theme" aria-label="Switch light / dark theme">
+              {theme === 'light' ? (
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+              )}
+              {theme === 'light' ? 'Dark' : 'Light'}
+            </button>
+                <button className={btnGhost} onClick={() => setShowTeam(true)}>
               <Icon name="users" /> Team
             </button>
             <button className={btnGhost} onClick={() => setShowKpi(true)}>
