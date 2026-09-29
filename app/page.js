@@ -48,6 +48,8 @@ const PERMISSIONS = [
   { key: 'can_reschedule', label: 'Reschedule', hint: 'Change scheduled date & publish time' },
   { key: 'can_change_presenter', label: 'Change presenter', hint: 'Update the presenter assignment' },
   { key: 'can_change_channel', label: 'Change channel', hint: 'Switch channel / platform' },
+  { key: 'can_approve_script', label: 'Approve script', hint: 'Approve or send back submitted scripts' },
+  { key: 'can_review_video', label: 'Review video', hint: 'Approve edited videos or request revisions' },
 ];
 
 const ROLE_LABEL = { owner: 'Owner', manager: 'Manager', general: 'General' };
@@ -95,8 +97,8 @@ function getActions(row, m) {
       add('submit', 'Submit Script', 'Script Submitted', 'primary', can(m, 'can_edit_script'), 'Needs the “Edit script” permission', row.script && row.script.trim() ? '' : 'Write a script first');
       break;
     case 'Script Submitted':
-      add('approve_script', 'Approve Script', afterScript(t), 'primary', mgr, 'Managers only');
-      add('return_script', 'Send Back', 'Draft', 'ghost', mgr, 'Managers only', '', true);
+      add('approve_script', 'Approve Script', afterScript(t), 'primary', can(m, 'can_approve_script'), 'Needs the “Approve script” permission');
+      add('return_script', 'Send Back', 'Draft', 'ghost', can(m, 'can_approve_script'), 'Needs the “Approve script” permission', '', true);
       break;
     case 'Ready for Shoot':
       add('start_shoot', 'Start Shoot', 'Shooting', 'primary', true);
@@ -111,8 +113,8 @@ function getActions(row, m) {
       add('submit_video', 'Submit Video', 'Video Review', 'primary', mgr || (!!row.video_editor && row.video_editor === m.full_name), 'Assigned editor or managers only', '');
       break;
     case 'Video Review':
-      add('approve_video', 'Approve Video', 'Ready to Publish', 'primary', mgr, 'Managers only');
-      add('revise', 'Request Revision', 'Editing', 'ghost', mgr, 'Managers only', '', true);
+      add('approve_video', 'Approve Video', 'Ready to Publish', 'primary', can(m, 'can_review_video'), 'Needs the “Review video” permission');
+      add('revise', 'Request Revision', 'Editing', 'ghost', can(m, 'can_review_video'), 'Needs the “Review video” permission', '', true);
       break;
     case 'Ready to Publish':
       add('publish', 'Publish', 'Published', 'primary', mgr, 'Managers only');
