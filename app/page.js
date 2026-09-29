@@ -265,7 +265,7 @@ function buildDemo() {
   const today = startOfDay(new Date());
   const at = (h, m) => new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m).toISOString();
     let demoSeq = 0;
-  const base = (o) => normalizeRow({ id: uid(), organization_id: orgId, content_uid: makeContentUid(undefined, ++demoSeq), target_platforms: ['youtube', 'facebook'], ...o }); target_platforms: ['youtube', 'facebook'], ...o });
+    const base = (o) => normalizeRow({ id: uid(), organization_id: orgId, content_uid: makeContentUid(undefined, ++demoSeq), target_platforms: ['youtube', 'facebook'], ...o });
   const rows = [
     base({ content_type: 'EXPLAINER', channel: 'The Wave Money', slug_name: 'BUDGET BREAKDOWN FISCAL YEAR', title: 'Budget Breakdown: What Changes This Fiscal Year', thumbnail_text: 'WHAT CHANGES?', writer: 'Tanvir Ahmed', presenter_name: 'Nusrat Jahan', scheduled_publish_time: at(10, 0), status: 'Script Submitted', script: 'Opening line.\n\nThis year’s budget reshapes how households plan spending.\n\nThree things matter: taxes, subsidies, and interest rates.' }),
     base({ content_type: 'PACKAGE', channel: 'The Wave 24', slug_name: 'CITY FLOOD RELIEF', title: 'City Flood Relief Operations', thumbnail_text: 'RELIEF ON THE GROUND', writer: 'Tanvir Ahmed', presenter_name: 'Rahim Uddin', camera_person: 'Karim', scheduled_publish_time: at(13, 30), status: 'Ready for Shoot', script: 'Relief teams are moving through the worst-hit districts.' }),
