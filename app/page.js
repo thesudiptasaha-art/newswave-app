@@ -1718,7 +1718,7 @@ const errText = (e) => (e && e.message ? e.message : 'Something went wrong');
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
-export default function Page() {
+function NewsroomApp({ authUser, onSignOut }) {
   const today = startOfDay(new Date());
   const [boot, setBoot] = useState({ phase: 'loading', message: '' });
   const [setupBusy, setSetupBusy] = useState(false);
@@ -1747,7 +1747,15 @@ export default function Page() {
   rowsRef.current = rows;
   teamRef.current = team;
 
-  const actor = useMemo(() => team.find((m) => m.id === actorId) || null, [team, actorId]);
+  const authId = authUser ? authUser.id : null;
+  const authRef = useRef({ id: null, email: '' });
+  authRef.current = { id: authId, email: authUser ? authUser.email || '' : '' };
+  const [showProfile, setShowProfile] = useState(false);
+
+  /* Signed-in person's own team record, and who the app treats as the actor. */
+  const me = useMemo(() => (authId ? team.find((m) => m.auth_user_id === authId) || null : null), [team, authId]);
+  const switcherOn = !authId || isOwner(me);
+  const actor = useMemo(() => (authId && !isOwner(me) ? me : team.find((m) => m.id === actorId) || null), [team, actorId, authId, me]);
 
   const notify = useCallback((msg, tone = 'info') => {
     setToast({ msg, tone });
@@ -1803,7 +1811,35 @@ export default function Page() {
     setOrg(o);
     setTeam(members);
     setChannels(mergeChannels(c.error ? [] : (c.data || []).map((x) => x.name)));
-    const owner = members.find((m) => m.role === 'owner') || members[0];
+        const owner = members.find((m) => m.role === 'owner') || members[0];
+    const auth = authRef.current;
+    if (auth.id) {
+      const mail = String(auth.email || '').toLowerCase();
+      let mine = members.find((m) => m.auth_user_id === auth.id) || null;
+      if (!mine) {
+        mine = members.find((m) => !m.auth_user_id && m.email && String(m.email).toLowerCase() === mail) || null;
+        if (mine) {
+          const link = await supabase.from('team_members').update({ auth_user_id: auth.id }).eq('id', mine.id);
+          if (link.error) {
+            setBoot({ phase: 'error', message: `${errText(link.error)} — did you run the login SQL in Supabase?` });
+            return;
+          }
+          mine = { ...mine, auth_user_id: auth.id };
+          setTeam(members.map((m) => (m.id === mine.id ? mine : m)));
+        }
+      }
+      if (!mine) {
+        setBoot({ phase: 'noaccess', message: `${auth.email} is not on the team yet. Ask your Owner or a Manager to add this email in Team, then sign in again.` });
+        return;
+      }
+      if (mine.active === false) {
+        setBoot({ phase: 'noaccess', message: 'Your access has been switched off. Please contact your Owner or a Manager.' });
+        return;
+      }
+      setActorId(mine.id);
+      setBoot({ phase: 'ready', message: '' });
+      return;
+    }
     setActorId((prev) => (prev && members.some((m) => m.id === prev) ? prev : owner ? owner.id : null));
     setBoot({ phase: 'ready', message: '' });
   }, []);
@@ -1870,7 +1906,7 @@ export default function Page() {
     PERMISSIONS.forEach((p) => {
       perms[p.key] = true;
     });
-    const m = await supabase.from('team_members').insert({ user_id: ownerUserId, organization_id: orgId, full_name: ownerName, email: ownerEmail || null, role: 'owner', active: true, ...perms });
+        const m = await supabase.from('team_members').insert({ user_id: ownerUserId, organization_id: orgId, full_name: ownerName, email: authRef.current.email || ownerEmail || null, auth_user_id: authRef.current.id, role: 'owner', active: true, ...perms });
     if (m.error) {
       await supabase.from('organizations').delete().eq('id', orgId);
       setSetupBusy(false);
@@ -2052,7 +2088,8 @@ export default function Page() {
       created = data;
     }
     setTeam((t) => [...t, normalizeMember(created)]);
-    notify(`${full_name} added as ${ROLE_LABEL[finalRole]}`, 'success');
+        const inviteNote = email ? ' — now create their login in Supabase' : ' (no email, so they cannot sign in yet)';
+    notify(`${full_name} added as ${ROLE_LABEL[finalRole]}${inviteNote}`, 'success');
     return true;
   };
 
@@ -2200,7 +2237,29 @@ export default function Page() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [reasonFor, showNew, showAddChannel, showTeam, showKpi, selectedId]);
-
+  /* ---------------- my profile ---------------- */
+  const saveProfile = async ({ full_name, designation, avatar_url }) => {
+    if (!me) return false;
+    const oldName = me.full_name;
+    const patch = { full_name, designation: designation || null, avatar_url: avatar_url || null };
+    if (supabase) {
+      const { error } = await supabase.from('team_members').update(patch).eq('id', me.id);
+      if (error) {
+        notify(`Could not save profile: ${errText(error)}`, 'error');
+        return false;
+      }
+      if (full_name !== oldName) {
+        /* Assignments are stored by name, so keep them pointing at this person. */
+        for (const col of ['writer', 'presenter_name', 'video_editor', 'camera_person']) {
+          await supabase.from('contents').update({ [col]: full_name }).eq(col, oldName);
+        }
+      }
+    }
+    setTeam((t) => t.map((m) => (m.id === me.id ? { ...m, ...patch } : m)));
+    if (full_name !== oldName) fetchRows();
+    notify('Profile updated', 'success');
+    return true;
+  };
   /* ---------------- boot screens ---------------- */
   if (boot.phase === 'loading') {
     return (
@@ -2217,6 +2276,16 @@ export default function Page() {
         </p>
         <button className={`${btnPrimary} w-full`} onClick={() => { setBoot({ phase: 'loading', message: '' }); loadWorkspace(); }}>
           Try again
+        </button>
+      </FullScreenCard>
+    );
+  }
+  if (boot.phase === 'noaccess') {
+    return (
+      <FullScreenCard title="No access yet">
+        <p className="mb-5 text-[14px] leading-relaxed text-zinc-400">{boot.message}</p>
+        <button className={`${btnPrimary} w-full`} onClick={onSignOut}>
+          Sign out
         </button>
       </FullScreenCard>
     );
@@ -2241,7 +2310,7 @@ export default function Page() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] py-1 pl-3 pr-1" title="Role simulation — switch who you are acting as to test permissions">
+            <div className={`items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] py-1 pl-3 pr-1 ${switcherOn ? 'flex' : 'hidden'}`} title="Role simulation — switch who you are acting as to test permissions">
               {actor ? <Avatar member={actor} size="h-6 w-6" /> : null}
               <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Acting as</span>
               <select
@@ -2276,6 +2345,22 @@ export default function Page() {
             <button className={btnPrimary} onClick={() => setShowNew(true)}>
               <Icon name="plus" /> New Content
             </button>
+                      {supabase && me ? (
+              <NotificationBell
+                memberId={me.id}
+                onOpenContent={(cid) => {
+                  const r = rowsRef.current.find((x) => String(x.id) === String(cid));
+                  if (r) setSelectedId(r.id);
+                  else notify('Change the date range to find this item', 'info');
+                }}
+              />
+            ) : null}
+            {authUser && me ? (
+              <button className={`${btnGhost} !py-1.5 !pl-2`} onClick={() => setShowProfile(true)} title="My profile">
+                <Avatar member={me} size="h-6 w-6" />
+                <span className="hidden max-w-[120px] truncate sm:inline">{me.full_name}</span>
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -2423,6 +2508,15 @@ export default function Page() {
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
+            {showProfile && me ? (
+        <ProfileModal
+          member={me}
+          authEmail={authUser ? authUser.email : ''}
+          onClose={() => setShowProfile(false)}
+          onSave={saveProfile}
+          onSignOut={onSignOut}
+        />
+      ) : null}
       {showKpi ? <KpiModal rows={visible} rangeLabel={formatRangeLabel(range)} onClose={() => setShowKpi(false)} /> : null}
       {reasonFor && reasonRow ? (
         <ReasonModal
@@ -2450,4 +2544,257 @@ export default function Page() {
       ) : null}
     </div>
   );
+}
+function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!email.trim() || !password) {
+      setError('Enter your email and password');
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (err) setError(err.message === 'Invalid login credentials' ? 'Wrong email or password. Ask your Owner or a Manager if you have not received your login yet.' : err.message);
+  };
+
+  return (
+    <FullScreenCard title="Sign in">
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Email">
+          <input type="email" autoComplete="email" autoFocus className={inputBase} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
+        </Field>
+        <Field label="Password">
+          <input type="password" autoComplete="current-password" className={inputBase} value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+        {error ? <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p> : null}
+        <button type="submit" disabled={busy} className={`${btnPrimary} w-full py-3`}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+      <p className="mt-5 text-[12px] leading-relaxed text-zinc-600">Your login is created by your Owner or a Manager. Forgot your password? Ask them to reset it.</p>
+    </FullScreenCard>
+  );
+}
+
+function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
+  const [name, setName] = useState(member.full_name || '');
+  const [designation, setDesignation] = useState(member.designation || '');
+  const [avatar, setAvatar] = useState(member.avatar_url || '');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const full = member.role !== 'general';
+
+  const save = async () => {
+    setError('');
+    if (!name.trim()) {
+      setError('Name is required');
+      return;
+    }
+    if (password && password.length < 6) {
+      setError('New password must be at least 6 characters');
+      return;
+    }
+    setBusy(true);
+    const ok = await onSave({ full_name: name.trim(), designation: designation.trim(), avatar_url: avatar.trim() });
+    if (ok && password && supabase) {
+      const { error: err } = await supabase.auth.updateUser({ password });
+      if (err) {
+        setBusy(false);
+        setError(`Profile saved, but the password was not changed: ${err.message}`);
+        return;
+      }
+    }
+    setBusy(false);
+    if (ok) onClose();
+  };
+
+  return (
+    <ModalShell
+      title="My profile"
+      subtitle={authEmail}
+      onClose={onClose}
+      footer={
+        <>
+          <button className={btnGhost} onClick={onSignOut}>
+            Sign out
+          </button>
+          <button className={btnGhost} onClick={onClose}>
+            Cancel
+          </button>
+          <button className={btnPrimary} disabled={busy} onClick={save}>
+            {busy ? 'Saving…' : 'Save profile'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <div className="flex items-center gap-4">
+          <Avatar member={{ full_name: name, avatar_url: avatar }} size="h-16 w-16" text="text-[22px]" />
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[15px] font-semibold text-white">{name || 'Your name'}</span>
+              <RoleBadge role={member.role} />
+              <DesignationPill designation={designation} />
+            </div>
+            <p className="mt-1 text-[12px] text-zinc-500">This is how your team sees you.</p>
+          </div>
+        </div>
+        <Field label="Full name">
+          <input className={inputBase} value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+        <Field label="Job designation" hint="optional">
+          <input className={inputBase} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Producer" />
+        </Field>
+        <Field label="Profile picture link" hint="optional">
+          <input className={inputBase} value={avatar} onChange={(e) => setAvatar(e.target.value)} placeholder="https://…/photo.jpg" />
+        </Field>
+        <Field label="New password" hint="leave empty to keep the current one">
+          <input type="password" autoComplete="new-password" className={inputBase} value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+        <div>
+          <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">Your access (set by your Manager)</div>
+          {full ? (
+            <p className="flex items-center gap-2 text-[13px] text-zinc-400">
+              <Icon name="shield" className="h-4 w-4 text-sky-400" /> {ROLE_LABEL[member.role]}s have full access.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {PERMISSIONS.map((p) => (
+                <div key={p.key} className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2 text-[13px]">
+                  {member[p.key] ? <Icon name="check" className="h-4 w-4 text-emerald-400" /> : <LockIcon message="Ask your Manager for this permission" className="h-4 w-4" />}
+                  <span className={member[p.key] ? 'text-zinc-200' : 'text-zinc-500'}>{p.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {error ? <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p> : null}
+      </div>
+    </ModalShell>
+  );
+}
+
+function NotificationBell({ memberId, onOpenContent }) {
+  const [items, setItems] = useState([]);
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  const load = useCallback(async () => {
+    if (!supabase || !memberId) return;
+    const { data, error } = await supabase.from('notifications').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(30);
+    if (!error && data) setItems(data);
+  }, [memberId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (!supabase || !memberId) return undefined;
+    const ch = supabase
+      .channel(`notifications-${memberId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `member_id=eq.${memberId}` }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [memberId, load]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const unread = items.filter((n) => !n.read).length;
+
+  const markRead = async (id) => {
+    setItems((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
+  };
+  const markAll = async () => {
+    setItems((list) => list.map((n) => ({ ...n, read: true })));
+    await supabase.from('notifications').update({ read: true }).eq('member_id', memberId).eq('read', false);
+  };
+
+  if (!memberId) return null;
+  return (
+    <div ref={wrapRef} className="relative">
+      <button onClick={() => setOpen((o) => !o)} className={`${btnGhost} relative !px-3`} aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+          <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7zM10 20a2 2 0 0 0 4 0" />
+        </svg>
+        {unread > 0 ? (
+          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{unread > 9 ? '9+' : unread}</span>
+        ) : null}
+      </button>
+      {open ? (
+        <div className="absolute right-0 top-full z-50 mt-2 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-white/[0.1] bg-[#121215]/95 shadow-2xl shadow-black/70 backdrop-blur-2xl">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+            <span className="text-[14px] font-semibold text-white">Notifications</span>
+            <button disabled={unread === 0} onClick={markAll} className="text-[12px] text-sky-400 hover:text-sky-300 disabled:text-zinc-600">
+              Mark all read
+            </button>
+          </div>
+          <div className="max-h-[420px] overflow-y-auto">
+            {items.length === 0 ? <p className="px-4 py-10 text-center text-[13px] text-zinc-600">You are all caught up.</p> : null}
+            {items.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => {
+                  markRead(n.id);
+                  setOpen(false);
+                  if (n.content_id) onOpenContent(n.content_id);
+                }}
+                className={`flex w-full items-start gap-3 border-b border-white/[0.04] px-4 py-3 text-left transition last:border-0 hover:bg-white/[0.05] ${n.read ? '' : 'bg-sky-500/[0.06]'}`}
+              >
+                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read ? 'bg-transparent' : 'bg-sky-400'}`} />
+                <span className="min-w-0">
+                  <span className={`block text-[13px] leading-snug ${n.read ? 'text-zinc-400' : 'text-zinc-100'}`}>{n.message}</span>
+                  <span className="mt-0.5 block text-[11px] text-zinc-600">{formatStamp(n.created_at)}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* Auth gate: shows the login screen until someone is signed in. */
+export default function Page() {
+  const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    if (!supabase) {
+      setSession(null);
+      return undefined;
+    }
+    supabase.auth.getSession().then(({ data }) => setSession(data.session || null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s || null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  if (!supabase) return <NewsroomApp authUser={null} onSignOut={() => {}} />;
+  if (session === undefined) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-[14px] text-zinc-500">
+        <span className="live-dot mr-2 h-2 w-2 rounded-full bg-sky-400" /> Loading…
+      </div>
+    );
+  }
+  if (!session) return <LoginScreen />;
+  return <NewsroomApp key={session.user.id} authUser={session.user} onSignOut={() => supabase.auth.signOut()} />;
 }
