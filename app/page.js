@@ -1403,6 +1403,9 @@ function AssetsTab({ row, actor, patch }) {
   const [url, setUrl] = useState('');
   const [thumbText, setThumbText] = useState('');
   const updateShort = (id, p) => patch({ shorts: row.shorts.map((s) => (s.id === id ? { ...s, ...p } : s)) });
+  const [shortWhen, setShortWhen] = useState('');
+  const nextShortN = row.shorts.reduce((m, s, i) => Math.max(m, s.n || i + 1), 0) + 1;
+  const shortUid = (s, i) => `${row.content_uid || 'CON'}-SHORT${pad(s.n || i + 1)}`;
   return (
     <div className="space-y-6">
       <section className="space-y-4">
@@ -1416,11 +1419,13 @@ function AssetsTab({ row, actor, patch }) {
           <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Shorts & reels ({row.shorts.length})</div>
         </div>
         <div className="space-y-2">
-          {row.shorts.map((s) => (
+          {row.shorts.map((s, i) => (
             <div key={s.id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
               <div className="min-w-0 flex-1">
+                <div className="truncate font-mono text-[11px] text-zinc-500">{shortUid(s, i)}</div>
                 <div className="truncate text-[13px] text-zinc-100">{s.title}</div>
                 {s.thumb_text ? <div className="truncate text-[12px] text-sky-300/80">Thumb: {s.thumb_text}</div> : null}
+                <div className="truncate text-[12px] text-amber-300/80">{s.publish_at ? `Upload: ${formatStamp(s.publish_at)}` : 'No upload time set'}</div>
                 <div className="truncate text-[11px] text-zinc-500">
                   {PLATFORMS.find((p) => p.id === s.platform)?.label || s.platform}
                   {s.url ? ` · ${s.url}` : ''}
@@ -1450,11 +1455,16 @@ function AssetsTab({ row, actor, patch }) {
           <SelectBox value={platform} onChange={setPlatform} options={PLATFORMS.map((p) => ({ value: p.id, label: p.label }))} disabled={!active} />
           <input className={inputBase} placeholder="Short thumb text (hook)" value={thumbText} disabled={!active} onChange={(e) => setThumbText(e.target.value)} />
           <input className={inputBase} placeholder="URL (optional)" value={url} disabled={!active} onChange={(e) => setUrl(e.target.value)} />
+            <div className="sm:col-span-2">
+            <div className="mb-1 text-[11px] text-zinc-500">Upload date & time (optional)</div>
+            <input type="datetime-local" className={`${inputBase} [color-scheme:dark]`} value={shortWhen} disabled={!active} onChange={(e) => setShortWhen(e.target.value)} />
+          </div>
           <button
             className={`${btnPrimary} sm:col-span-2`}
             disabled={!active || !title.trim()}
             onClick={() => {
-              patch({ shorts: [...row.shorts, { id: uid(), title: title.trim(), thumb_text: thumbText.trim(), platform, url: url.trim(), published: false }] });
+              patch({ shorts: [...row.shorts, { id: uid(), n: nextShortN, title: title.trim(), thumb_text: thumbText.trim(), platform, url: url.trim(), publish_at: fromLocalInput(shortWhen), published: false }] });
+              setShortWhen('');
               setTitle('');
               setThumbText('');
               setUrl('');
