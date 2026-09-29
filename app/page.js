@@ -1594,7 +1594,44 @@ function QcTab({ row, actor, patch }) {
   );
 }
 
-function Drawer({ row, actor, team, channels, onClose, onPatch, onRun }) {
+function DeleteModal({ row, onClose, onConfirm }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const key = (row.slug_name || row.title || row.content_uid || 'DELETE').trim();
+  const ok = text.trim().toLowerCase() === key.toLowerCase();
+  return (
+    <ModalShell
+      title="Delete permanently?"
+      subtitle="This cannot be undone."
+      onClose={onClose}
+      footer={
+        <>
+          <button className={btnGhost} onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className={btnDanger}
+            disabled={!ok || busy}
+            onClick={async () => {
+              setBusy(true);
+              const done = await onConfirm(row);
+              setBusy(false);
+              if (done) onClose();
+            }}
+          >
+            <Icon name="trash" /> {busy ? 'Deleting…' : 'Delete forever'}
+          </button>
+        </>
+      }
+    >
+      <p className="mb-4 text-[14px] leading-relaxed text-zinc-300">
+        The script, links, shorts, notes and history of this content will be removed for everyone. To confirm, type <span className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[13px] text-white">{key}</span> below.
+      </p>
+      <input autoFocus className={inputBase} value={text} onChange={(e) => setText(e.target.value)} placeholder={key} />
+    </ModalShell>
+  );
+}
+function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
   const [tab, setTab] = useState('overview');
   useEffect(() => {
     setTab('overview');
@@ -1651,6 +1688,16 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun }) {
         <footer className="border-t border-white/[0.08] bg-black/70 px-6 py-4 backdrop-blur-xl">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Next step</div>
           <ActionButtons actions={actions} onRun={(a) => onRun(row, a)} />
+          <div className="mt-3 border-t border-white/[0.06] pt-3">
+            <button
+              className={btnDanger}
+              disabled={!isManager(actor)}
+              title={isManager(actor) ? 'Delete this content forever' : 'Only Managers and the Owner can delete content'}
+              onClick={() => onDelete(row)}
+            >
+              <Icon name={isManager(actor) ? 'trash' : 'lock'} className="h-3.5 w-3.5" /> Delete permanently
+            </button>
+          </div>
           {actions.some((a) => a.allowed && a.blocked) ? (
             <p className="mt-2 text-[12px] text-amber-400/80">{actions.find((a) => a.allowed && a.blocked).blocked}</p>
           ) : null}
@@ -1737,6 +1784,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [showKpi, setShowKpi] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
   const [reasonFor, setReasonFor] = useState(null);
+  const [deleteFor, setDeleteFor] = useState(null);
   const [toast, setToast] = useState(null);
 
   const rowsRef = useRef([]);
@@ -2045,7 +2093,24 @@ function NewsroomApp({ authUser, onSignOut }) {
     notify('Content created', 'success');
     return true;
   };
-
+  const deleteContent = async (row) => {
+    if (!isManager(actor)) {
+      notify('Only Managers and the Owner can delete content', 'error');
+      return false;
+    }
+    if (supabase) {
+      const { error } = await supabase.from('contents').delete().eq('id', row.id);
+      if (error) {
+        notify(`Could not delete: ${errText(error)}`, 'error');
+        return false;
+      }
+      await supabase.from('notifications').delete().eq('content_id', String(row.id));
+    }
+    setRows((rs) => rs.filter((r) => r.id !== row.id));
+    setSelectedId(null);
+    notify(`${row.slug_name || row.title || 'Content'} deleted`, 'success');
+    return true;
+  };
   const addChannel = async (name) => {
     if (!isManager(actor)) {
       notify('Only the Owner and Managers can add channels', 'error');
@@ -2502,7 +2567,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
       </main>
 
-      {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} /> : null}
+      {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
@@ -2516,7 +2581,10 @@ function NewsroomApp({ authUser, onSignOut }) {
         />
       ) : null}
       {showKpi ? <KpiModal rows={visible} rangeLabel={formatRangeLabel(range)} onClose={() => setShowKpi(false)} /> : null}
-      {reasonFor && reasonRow ? (
+            {deleteFor && rows.find((r) => r.id === deleteFor) ? (
+        <DeleteModal row={rows.find((r) => r.id === deleteFor)} onClose={() => setDeleteFor(null)} onConfirm={deleteContent} />
+      ) : null}
+        {reasonFor && reasonRow ? (
         <ReasonModal
           title={reasonFor.action.label}
           label="Reason / note"
