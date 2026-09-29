@@ -207,9 +207,10 @@ const uid = () =>
         return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
       });
 
-const makeContentUid = () => {
-  const d = new Date();
-  return `NC-${String(d.getFullYear()).slice(2)}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${Math.floor(1000 + Math.random() * 9000)}`;
+/* Demo mode only. With Supabase, the database assigns CON-YYYYMMDD_001 itself. */
+const makeContentUid = (iso, n) => {
+  const d = iso ? new Date(iso) : new Date();
+  return `CON-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${String(n || 1).padStart(3, '0')}`;
 };
 
 const asArray = (v) => {
@@ -263,7 +264,8 @@ function buildDemo() {
   ];
   const today = startOfDay(new Date());
   const at = (h, m) => new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m).toISOString();
-  const base = (o) => normalizeRow({ id: uid(), organization_id: orgId, content_uid: makeContentUid(), target_platforms: ['youtube', 'facebook'], ...o });
+    let demoSeq = 0;
+  const base = (o) => normalizeRow({ id: uid(), organization_id: orgId, content_uid: makeContentUid(undefined, ++demoSeq), target_platforms: ['youtube', 'facebook'], ...o }); target_platforms: ['youtube', 'facebook'], ...o });
   const rows = [
     base({ content_type: 'EXPLAINER', channel: 'The Wave Money', slug_name: 'BUDGET BREAKDOWN FISCAL YEAR', title: 'Budget Breakdown: What Changes This Fiscal Year', thumbnail_text: 'WHAT CHANGES?', writer: 'Tanvir Ahmed', presenter_name: 'Nusrat Jahan', scheduled_publish_time: at(10, 0), status: 'Script Submitted', script: 'Opening line.\n\nThis year’s budget reshapes how households plan spending.\n\nThree things matter: taxes, subsidies, and interest rates.' }),
     base({ content_type: 'PACKAGE', channel: 'The Wave 24', slug_name: 'CITY FLOOD RELIEF', title: 'City Flood Relief Operations', thumbnail_text: 'RELIEF ON THE GROUND', writer: 'Tanvir Ahmed', presenter_name: 'Rahim Uddin', camera_person: 'Karim', scheduled_publish_time: at(13, 30), status: 'Ready for Shoot', script: 'Relief teams are moving through the worst-hit districts.' }),
@@ -2068,7 +2070,6 @@ function NewsroomApp({ authUser, onSignOut }) {
     const now = new Date().toISOString();
     const payload = {
       organization_id: org ? org.id : null,
-      content_uid: makeContentUid(),
       status: 'Draft',
       target_platforms: ['youtube', 'facebook'],
       shorts: [],
@@ -2086,7 +2087,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       }
       saved = normalizeRow(inserted);
     } else {
-      saved = normalizeRow({ id: uid(), ...payload });
+    saved = normalizeRow({ id: uid(), content_uid: makeContentUid(payload.scheduled_publish_time, rowsRef.current.length + 1), ...payload });
     }
     const when = new Date(saved.scheduled_publish_time);
     const inRange = when >= range.start && when < addDays(range.end, 1);
