@@ -234,6 +234,8 @@ const rowTimeIn = (r, start, endEx) => {
   const ss = shortsInRange(r, start, endEx).map((s) => s.publish_at).sort();
   return ss[0] || r.scheduled_publish_time;
 };
+/* "Parked" content is kept off the rundown: On Hold, or no publish date/time yet. */
+const isParked = (r) => r.status === 'On Hold' || !r.scheduled_publish_time;
 function normalizeRow(r) {
   return {
     ...r,
@@ -705,7 +707,7 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
   const errors = {
     content_type: f.content_type ? '' : 'Choose a content type',
     channel: f.channel ? '' : 'Choose a channel',
-    when: f.when ? '' : 'Pick a date & time',
+    when: '',
     slug_name: f.slug_name.trim() ? '' : 'Slug name is required',
     title: f.title.trim() ? '' : 'Title is required',
   };
@@ -772,7 +774,7 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
           {showErr('channel')}
         </Field>
 
-        <Field label="3 · Scheduled date & publish time">
+          <Field label="3 · Scheduled date & publish time" hint="optional — leave empty to keep it in the On hold & unscheduled list">
           <input type="datetime-local" value={f.when} onChange={(e) => set('when', e.target.value)} className={`${inputBase} [color-scheme:dark]`} />
           {showErr('when')}
         </Field>
@@ -1786,6 +1788,36 @@ const errText = (e) => (e && e.message ? e.message : 'Something went wrong');
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
+/* Date picker + button in the parked table: puts a content back on the rundown. */
+function ScheduleCell({ row, actor, onSchedule }) {
+  const [when, setWhen] = useState('');
+  const [busy, setBusy] = useState(false);
+  const held = row.status === 'On Hold';
+  const allowed = held ? isManager(actor) : can(actor, 'can_reschedule');
+  return (
+    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <input
+        type="datetime-local"
+        value={when}
+        disabled={!allowed || busy}
+        onChange={(e) => setWhen(e.target.value)}
+        title={allowed ? 'Pick a new publish date & time' : held ? 'Only Managers and the Owner can resume held content' : 'You need the “Reschedule” permission'}
+        className={`${inputBase} !w-[205px] !py-1.5 !text-[12px] [color-scheme:dark]`}
+      />
+      <button
+        className={`${btnPrimary} !px-3 !py-1.5 !text-[12px]`}
+        disabled={!allowed || !when || busy}
+        onClick={async () => {
+          setBusy(true);
+          await onSchedule(row, fromLocalInput(when));
+          setBusy(false);
+        }}
+      >
+        {held ? 'Resume' : 'Schedule'}
+      </button>
+    </div>
+  );
+}
 function NewsroomApp({ authUser, onSignOut }) {
   const today = startOfDay(new Date());
   const [boot, setBoot] = useState({ phase: 'loading', message: '' });
@@ -1961,8 +1993,22 @@ function NewsroomApp({ authUser, onSignOut }) {
       .or(`organization_id.eq.${org.id},organization_id.is.null`)
       .overlaps('short_days', days);
     if (req !== reqRef.current) return;
-    const seen = new Set((data || []).map((r) => r.id));
-    const merged = [...(data || []), ...(extra || []).filter((r) => !seen.has(r.id))];
+        /* Parked content (On Hold, or no date yet) is not tied to the date range, so load it separately. */
+    const [heldRes, nodateRes] = await Promise.all([
+      supabase.from('contents').select('*').eq('organization_id', org.id).eq('status', 'On Hold'),
+      supabase.from('contents').select('*').eq('organization_id', org.id).is('scheduled_publish_time', null),
+    ]);
+    if (req !== reqRef.current) return;
+    const seen = new Set();
+    const merged = [];
+    [data || [], extra || [], heldRes.data || [], nodateRes.data || []].forEach((list) =>
+      list.forEach((r) => {
+        if (!seen.has(r.id)) {
+          seen.add(r.id);
+          merged.push(r);
+        }
+      })
+    );
     setRows(merged.map(normalizeRow));
   }, [org, range, notify]);
 
@@ -2108,7 +2154,72 @@ function NewsroomApp({ authUser, onSignOut }) {
     if (action.needsReason) setReasonFor({ rowId: row.id, action });
     else transition(row, action);
   };
-
+  /* Put a parked content (On Hold / no date) onto the rundown with a new publish time. */
+  const scheduleParked = async (row, iso) => {
+    if (!iso) return;
+    let ok = false;
+    if (row.status === 'On Hold') {
+      if (!isManager(actor)) {
+        notify('Only Managers and the Owner can resume held content', 'error');
+        return;
+      }
+      const now = new Date().toISOString();
+      const to = row.previous_status || 'Draft';
+      ok = await patchRow(
+        row.id,
+        {
+          status: to,
+          hold_reason: null,
+          scheduled_publish_time: iso,
+          audit_log: [
+            ...row.audit_log,
+            { kind: 'status', actor: actor.full_name, role: actor.role, from: 'On Hold', to, time: now, note: 'Resumed with a new publish time' },
+            { kind: 'change', field: 'Scheduled time', from: describeValue('scheduled_publish_time', row.scheduled_publish_time), to: describeValue('scheduled_publish_time', iso), actor: actor.full_name, role: actor.role, time: now, note: '' },
+          ],
+        },
+        true
+      );
+    } else {
+      ok = await patchRow(row.id, { scheduled_publish_time: iso });
+    }
+    if (!ok) return;
+    const when = new Date(iso);
+    if (!(when >= range.start && when < addDays(range.end, 1))) setRange({ start: startOfDay(when), end: startOfDay(when) });
+    notify(`${row.slug_name || row.title || 'Content'} is on the rundown for ${formatStamp(iso)}`, 'success');
+  };
+    /* Put a parked content (On Hold / no date) onto the rundown with a new publish time. */
+  const scheduleParked = async (row, iso) => {
+    if (!iso) return;
+    let ok = false;
+    if (row.status === 'On Hold') {
+      if (!isManager(actor)) {
+        notify('Only Managers and the Owner can resume held content', 'error');
+        return;
+      }
+      const now = new Date().toISOString();
+      const to = row.previous_status || 'Draft';
+      ok = await patchRow(
+        row.id,
+        {
+          status: to,
+          hold_reason: null,
+          scheduled_publish_time: iso,
+          audit_log: [
+            ...row.audit_log,
+            { kind: 'status', actor: actor.full_name, role: actor.role, from: 'On Hold', to, time: now, note: 'Resumed with a new publish time' },
+            { kind: 'change', field: 'Scheduled time', from: describeValue('scheduled_publish_time', row.scheduled_publish_time), to: describeValue('scheduled_publish_time', iso), actor: actor.full_name, role: actor.role, time: now, note: '' },
+          ],
+        },
+        true
+      );
+    } else {
+      ok = await patchRow(row.id, { scheduled_publish_time: iso });
+    }
+    if (!ok) return;
+    const when = new Date(iso);
+    if (!(when >= range.start && when < addDays(range.end, 1))) setRange({ start: startOfDay(when), end: startOfDay(when) });
+    notify(`${row.slug_name || row.title || 'Content'} is on the rundown for ${formatStamp(iso)}`, 'success');
+  };
   const createContent = async (data) => {
     if (!actor || actor.active === false) {
       notify('Inactive members cannot create content', 'error');
@@ -2136,8 +2247,8 @@ function NewsroomApp({ authUser, onSignOut }) {
     } else {
     saved = normalizeRow({ id: uid(), content_uid: makeContentUid(payload.scheduled_publish_time, rowsRef.current.length + 1), ...payload });
     }
-    const when = new Date(saved.scheduled_publish_time);
-    const inRange = when >= range.start && when < addDays(range.end, 1);
+    const when = saved.scheduled_publish_time ? new Date(saved.scheduled_publish_time) : null;
+    const inRange = !when || (when >= range.start && when < addDays(range.end, 1));
     if (!inRange) setRange({ start: startOfDay(when), end: startOfDay(when) });
     setRows((rs) => [...rs.filter((r) => r.id !== saved.id), saved]);
     notify('Content created', 'success');
@@ -2260,7 +2371,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     const endExclusive = addDays(range.end, 1);
     return rows
       .filter((r) => {
-        if (!r.scheduled_publish_time) return true;
+        if (isParked(r)) return false;
         const d = new Date(r.scheduled_publish_time);
         if (d >= range.start && d < endExclusive) return true;
         return shortsInRange(r, range.start, endExclusive).length > 0;
@@ -2283,7 +2394,16 @@ function NewsroomApp({ authUser, onSignOut }) {
       return new Date(rowTimeIn(a, range.start, endExclusive) || 0) - new Date(rowTimeIn(b, range.start, endExclusive) || 0);
       });
   }, [rows, range, channelFilter, statusFilter, search, channels]);
-
+  /* On Hold + no-date content: shown in the table under the rundown. */
+  const parked = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return rows
+      .filter(isParked)
+      .filter((r) => channelFilter === 'all' || r.channel === channelFilter)
+      .filter((r) => statusFilter === 'all' || r.status === statusFilter)
+      .filter((r) => !q || [r.slug_name, r.title, r.presenter_name, r.writer, r.video_editor, r.content_uid, r.channel, r.thumbnail_text].some((v) => String(v || '').toLowerCase().includes(q)))
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  }, [rows, channelFilter, statusFilter, search]);
   /* Rundown rows, with a channel header inserted before each channel group in "All Channels" view. */
   const tableItems = useMemo(() => {
     const items = [];
@@ -2621,6 +2741,66 @@ function NewsroomApp({ authUser, onSignOut }) {
             </div>
           ) : null}
         </div>
+          
+        <section className="mt-10">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-[18px] font-semibold tracking-tight text-white">On hold &amp; unscheduled</h2>
+            <span className="text-[13px] text-zinc-500">
+              {parked.length} item{parked.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
+            <table className="w-full min-w-[1080px] text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
+                  {['Why', 'Content Type', 'Slug Name', 'Channel', 'Writer', 'Presenter', 'Status', 'New publish time'].map((h) => (
+                    <th key={h} className="px-4 py-3 font-medium">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {parked.map((r) => (
+                  <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]">
+                    <td className="max-w-[220px] px-4 py-3.5">
+                      {r.status === 'On Hold' ? (
+                        <>
+                          <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 ring-1 ring-inset ring-yellow-400/25">On hold</span>
+                          {r.hold_reason ? <div className="mt-1 truncate text-[12px] text-zinc-500">{r.hold_reason}</div> : null}
+                        </>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25">No date &amp; time</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <TypeBadge type={r.content_type} />
+                    </td>
+                    <td className="max-w-[300px] px-4 py-3.5">
+                      <span className="block truncate font-mono text-[12px] font-semibold tracking-wide text-white">{r.slug_name || '—'}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3.5 text-zinc-300">{r.channel || '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-3.5">
+                      <PersonName name={r.writer} team={team} />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3.5">
+                      <PersonName name={r.presenter_name} team={team} />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge status={r.status} />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <ScheduleCell row={r} actor={actor} onSchedule={scheduleParked} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {parked.length === 0 ? (
+              <div className="px-6 py-10 text-center text-[13px] text-zinc-600">Nothing on hold, and nothing waiting for a date.</div>
+            ) : null}
+          </div>
+        </section>
       </main>
 
       <footer className="mx-auto max-w-[1500px] px-5 pb-10 pt-2">
