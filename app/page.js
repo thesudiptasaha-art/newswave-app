@@ -2187,39 +2187,6 @@ function NewsroomApp({ authUser, onSignOut }) {
     if (!(when >= range.start && when < addDays(range.end, 1))) setRange({ start: startOfDay(when), end: startOfDay(when) });
     notify(`${row.slug_name || row.title || 'Content'} is on the rundown for ${formatStamp(iso)}`, 'success');
   };
-    /* Put a parked content (On Hold / no date) onto the rundown with a new publish time. */
-  const scheduleParked = async (row, iso) => {
-    if (!iso) return;
-    let ok = false;
-    if (row.status === 'On Hold') {
-      if (!isManager(actor)) {
-        notify('Only Managers and the Owner can resume held content', 'error');
-        return;
-      }
-      const now = new Date().toISOString();
-      const to = row.previous_status || 'Draft';
-      ok = await patchRow(
-        row.id,
-        {
-          status: to,
-          hold_reason: null,
-          scheduled_publish_time: iso,
-          audit_log: [
-            ...row.audit_log,
-            { kind: 'status', actor: actor.full_name, role: actor.role, from: 'On Hold', to, time: now, note: 'Resumed with a new publish time' },
-            { kind: 'change', field: 'Scheduled time', from: describeValue('scheduled_publish_time', row.scheduled_publish_time), to: describeValue('scheduled_publish_time', iso), actor: actor.full_name, role: actor.role, time: now, note: '' },
-          ],
-        },
-        true
-      );
-    } else {
-      ok = await patchRow(row.id, { scheduled_publish_time: iso });
-    }
-    if (!ok) return;
-    const when = new Date(iso);
-    if (!(when >= range.start && when < addDays(range.end, 1))) setRange({ start: startOfDay(when), end: startOfDay(when) });
-    notify(`${row.slug_name || row.title || 'Content'} is on the rundown for ${formatStamp(iso)}`, 'success');
-  };
   const createContent = async (data) => {
     if (!actor || actor.active === false) {
       notify('Inactive members cannot create content', 'error');
