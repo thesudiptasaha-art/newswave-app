@@ -1299,7 +1299,7 @@ function ScriptTab({ row, actor, patch }) {
             onChange={(e) => setDraft(e.target.value)}
             rows={18}
             className={`${inputBase} resize-y text-[16px] leading-8`}
-            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
             placeholder="Write the script…"
           />
           <div className="mt-3 flex justify-end gap-2">
@@ -1326,7 +1326,7 @@ function ScriptTab({ row, actor, patch }) {
       ) : text ? (
         <article
           className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-6 text-[17px] leading-[1.9] text-zinc-200"
-          style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+          style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
         >
           {text.split(/\n{2,}/).map((para, i) => (
             <p key={i} className="mb-5 whitespace-pre-wrap last:mb-0">
