@@ -2721,6 +2721,26 @@ function LoginScreen() {
   );
 }
 
+/* Shrinks a photo to a 384px square JPEG (small and fast to load). */
+const resizeToJpeg = (file, size = 384) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const src = URL.createObjectURL(file);
+    img.onload = () => {
+      const side = Math.min(img.width, img.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      canvas.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+      URL.revokeObjectURL(src);
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not read this image'))), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(src);
+      reject(new Error('Could not read this image'));
+    };
+    img.src = src;
+  });
 function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
   const [name, setName] = useState(member.full_name || '');
   const [designation, setDesignation] = useState(member.designation || '');
@@ -2729,6 +2749,40 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const full = member.role !== 'general';
+    const [uploading, setUploading] = useState(false);
+  const pickPhoto = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    setError('');
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file');
+      return;
+    }
+    setUploading(true);
+    try {
+      const blob = await resizeToJpeg(file);
+      if (supabase && member.organization_id && member.id) {
+        const path = `${member.organization_id}/${member.id}.jpg`;
+        const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+        setAvatar(`${data.publicUrl}?v=${Date.now()}`);
+      } else {
+        await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            setAvatar(String(reader.result));
+            resolve();
+          };
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch (err) {
+      setError(`Could not upload the photo: ${err && err.message ? err.message : 'unknown error'}`);
+    }
+    setUploading(false);
+  };
 
   const save = async () => {
     setError('');
@@ -2783,6 +2837,10 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
               <DesignationPill designation={designation} />
             </div>
             <p className="mt-1 text-[12px] text-zinc-500">This is how your team sees you.</p>
+                  <label className={`${btnGhost} mt-2 cursor-pointer !py-1.5 !text-[12px] ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+              {uploading ? 'Uploading…' : 'Upload photo'}
+              <input type="file" accept="image/*" className="hidden" onChange={pickPhoto} />
+            </label>
           </div>
         </div>
         <Field label="Full name">
