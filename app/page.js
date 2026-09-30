@@ -1878,6 +1878,10 @@ function NewsroomApp({ authUser, onSignOut }) {
       return;
     }
     if (!orgs || orgs.length === 0) {
+    if (authRef.current && authRef.current.id) {
+        setBoot({ phase: 'noaccess', message: `${authRef.current.email} is not on any team yet. Ask your Owner or a Manager to add this email in Team, then sign in again.` });
+        return;
+      }
       setBoot({ phase: 'setup', message: '' });
       return;
     }
