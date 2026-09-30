@@ -14,7 +14,7 @@ const tailwindConfig = `
     theme: {
       extend: {
         fontFamily: {
-          sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Arial', 'sans-serif'],
+          sans: ['Inter', 'Noto Serif Bengali', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Arial', 'sans-serif'],
           mono: ['SF Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
         },
       },
@@ -25,7 +25,7 @@ const tailwindConfig = `
 const globalCss = `
   html, body { background: #000000; color: #f4f4f5; }
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -142,6 +142,11 @@ const lightCss = `
   html.light .text-pink-300 { color: #be185d; }
   html.light .text-orange-300 { color: #c2410c; }
   html.light .text-indigo-300 { color: #4338ca; }
+  
+  /* modal / form panels and the side drawer */
+  html.light [class~="bg-[#121215]/90"] { background-color: rgba(255,255,255,0.96) !important; }
+  html.light aside[class~="bg-black/60"] { background-color: rgba(255,255,255,0.94) !important; }
+  html.light input, html.light textarea, html.light select { color: #1d1d1f; }
 `;
 export default function RootLayout({ children }) {
   return (
@@ -154,7 +159,7 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <script src="https://cdn.tailwindcss.com"></script>
