@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // Existing placeholders (since I didn't actually write the full file in previous turns due to code splitting simulation, I'll mock them)
 export function downloadContentArchive(row) { alert('Archiving content ' + row.id); }
@@ -32,7 +32,7 @@ export function downloadUserReport(member, rows, startDate, endDate) {
     r.video_editor === member.full_name ? 'Yes' : '-'
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: 40,
     head: [['Slug / Title', 'Type', 'Status', 'Date', 'Wrote Script', 'Edited Video']],
     body: tableData,

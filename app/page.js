@@ -1942,6 +1942,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [showNew, setShowNew] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
     const [theme, setTheme] = useState('dark');
   useEffect(() => {
@@ -2649,6 +2650,12 @@ function NewsroomApp({ authUser, onSignOut }) {
             <button className={btnPrimary} onClick={() => setShowNew(true)}>
               <Icon name="plus" /> New Content
             </button>
+            {isManager(actor) && (
+              <button className={btnGhost} onClick={() => setBulkOpen(true)}>
+                <Icon name="calendar" className="h-4 w-4" />
+                <span className="hidden md:inline">Bulk Schedule</span>
+              </button>
+            )}
                       {supabase && me ? (
               <NotificationBell
                 memberId={me.id}
@@ -2918,6 +2925,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
       </footer>
       {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
+      {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createRow} /> : null}
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
