@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, LockIcon } from '../components/ui/Icons';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
 import { createClient } from '@supabase/supabase-js';
-import { downloadContentArchive, downloadKPIReport, downloadFullSystemBackup } from '../services/exportService';
+import { downloadContentArchive, downloadKPIReport, downloadFullSystemBackup, downloadUserReport } from '../services/exportService';
 import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
 
@@ -889,7 +889,7 @@ function Toggle({ on, disabled, onChange }) {
   );
 }
 
-function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove }) {
+function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, rows, range }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [designation, setDesignation] = useState('');
@@ -1006,6 +1006,9 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove })
                       </button>
                       <button className={btnDanger} onClick={() => onRemove(t)}>
                         <Icon name="trash" /> Remove
+                      </button>
+                      <button className={btnGhost} onClick={() => downloadUserReport(t, rows || [], range?.start, range?.end)}>
+                        <Icon name="chart" className="h-4 w-4" /> Download Report
                       </button>
                     </div>
                   ) : null}
@@ -2958,6 +2961,57 @@ function NewsroomApp({ authUser, onSignOut }) {
     </div>
   );
 }
+
+function BulkScheduleModal({ onClose, team, channels, onAdd }) {
+  const [contentType, setContentType] = useState('PACKAGE');
+  const [channel, setChannel] = useState(channels[0]?.name || 'TV');
+  const [writer, setWriter] = useState('');
+  const [time, setTime] = useState('14:00');
+  const [days, setDays] = useState(7); // How many days to generate
+
+  return (
+    <ModalShell title="Bulk Schedule Slots" subtitle="Pre-assign daily content" onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="Content Type">
+          <SelectBox value={contentType} onChange={setContentType} options={['PACKAGE', 'SOT', 'LIVE', 'EXPLAINER'].map(c => ({value: c, label: c}))} />
+        </Field>
+        <Field label="Channel">
+          <SelectBox value={channel} onChange={setChannel} options={channels.map(c => ({value: c.name, label: c.name}))} />
+        </Field>
+        <Field label="Writer / Assignee">
+          <SelectBox value={writer} onChange={setWriter} options={[{value: '', label: 'Unassigned'}, ...team.filter(t => t.can_write || t.role === 'owner').map(t => ({value: t.full_name, label: t.full_name}))]} />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Time of Day">
+            <input type="time" className={inputBase} value={time} onChange={e => setTime(e.target.value)} />
+          </Field>
+          <Field label="Days to schedule">
+            <input type="number" min="1" max="30" className={inputBase} value={days} onChange={e => setDays(e.target.value)} />
+          </Field>
+        </div>
+        <button className={`${btnPrimary} w-full mt-4`} onClick={async () => {
+          for (let i = 0; i < days; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() + i);
+            const [hh, mm] = time.split(':');
+            d.setHours(parseInt(hh), parseInt(mm), 0, 0);
+            
+            await onAdd({
+              slug_name: `TBD ${contentType}`,
+              content_type: contentType,
+              target_platform: channel,
+              writer: writer,
+              scheduled_publish_time: d.toISOString(),
+              status: 'Draft'
+            });
+          }
+          onClose();
+        }}>Generate {days} Slots</button>
+      </div>
+    </ModalShell>
+  );
+}
+
 function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
