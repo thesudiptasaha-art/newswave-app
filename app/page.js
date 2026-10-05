@@ -2925,7 +2925,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
       </footer>
       {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
-      {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createRow} /> : null}
+      {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
