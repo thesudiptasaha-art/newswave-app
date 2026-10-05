@@ -1,0 +1,7 @@
+node_modules/
+.next/
+*.py
+*.backup.js
+dev.log
+.env
+.env.local

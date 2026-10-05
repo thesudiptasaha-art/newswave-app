@@ -1,7 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Icon, LockIcon } from '../components/ui/Icons';
+import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
 import { createClient } from '@supabase/supabase-js';
+import { downloadContentArchive, downloadKPIReport, downloadFullSystemBackup } from '../services/exportService';
+import { uploadFile, generateFileName } from '../services/storageService';
+import { uploadReferenceFile } from '../services/fileUploadProvider';
+
+
+
 
 /* ------------------------------------------------------------------ */
 /* Supabase client (falls back to demo mode when env vars are absent)  */
@@ -136,6 +144,10 @@ function getActions(row, m) {
     add('hold', 'Hold', 'On Hold', 'ghost', mgr, 'Managers only', '', true);
     add('drop', 'Drop', 'Dropped', 'danger', mgr, 'Managers only', '', true);
   }
+  add('download_script', 'Download ZIP', '', 'ghost', true);
+  if (s === 'Ready for Shoot') {
+    add('copy_script', 'Copy Script', '', 'ghost', true);
+  }
   return list;
 }
 
@@ -207,6 +219,21 @@ const uid = () =>
         return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
       });
 
+export function generateUserUID(dateIso) {
+  const date = dateIso ? new Date(dateIso) : new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const mins = pad(date.getMinutes());
+  
+  // 6-character random alphanumeric
+  const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  return `${yyyy}${mm}${dd}-${hh}${mins}BST-${randomStr}`;
+}
+
 /* Demo mode only. With Supabase, the database assigns CON-YYYYMMDD_001 itself. */
 const makeContentUid = (iso, n) => {
   const d = iso ? new Date(iso) : new Date();
@@ -235,7 +262,13 @@ const rowTimeIn = (r, start, endEx) => {
   return ss[0] || r.scheduled_publish_time;
 };
 /* "Parked" content is kept off the rundown: On Hold, or no publish date/time yet. */
-const isParked = (r) => r.status === 'On Hold' || !r.scheduled_publish_time;
+const isParked = (r) => {
+  if (r.status === 'On Hold' || r.status === 'Dropped' || r.status === 'Draft') return true;
+  if (!r.scheduled_publish_time) return true;
+  if (!r.title && !r.script) return true; // Metadata less
+  if (new Date(r.scheduled_publish_time) < new Date() && !['Published', 'Ready to Publish'].includes(r.status)) return true;
+  return false;
+};
 function normalizeRow(r) {
   return {
     ...r,
@@ -263,13 +296,15 @@ function normalizeMember(m) {
 /* ------------------------------------------------------------------ */
 function buildDemo() {
   const orgId = 'demo-org';
-  const mk = (full_name, email, role, perms) =>
-    normalizeMember({ id: uid(), user_id: uid(), organization_id: orgId, full_name, email, role, active: true, ...perms });
+  const mk = (full_name, email, role, perms, gender = 'male') => {
+    const nick = full_name.split(' ')[0];
+    return normalizeMember({ id: uid(), user_id: uid(), custom_uid: generateUserUID(), organization_id: orgId, full_name, nickname: nick, gender, email, role, active: true, ...perms });
+  };
   const team = [
     mk('Rahim Uddin', 'owner@demo.com', 'owner', { designation: 'Editor-in-Chief' }),
-    mk('Nusrat Jahan', 'nusrat@demo.com', 'manager', { designation: 'Head of Production' }),
+    mk('Nusrat Jahan', 'nusrat@demo.com', 'manager', { designation: 'Head of Production' }, 'female'),
     mk('Tanvir Ahmed', 'tanvir@demo.com', 'general', { can_edit_script: true, can_edit_metadata: true, designation: 'Senior Writer' }),
-    mk('Sadia Islam', 'sadia@demo.com', 'general', { designation: 'Presenter' }),
+    mk('Sadia Islam', 'sadia@demo.com', 'general', { designation: 'Presenter' }, 'female'),
     mk('Imran Hossain', 'imran@demo.com', 'general', { can_assign_editor: true, can_reschedule: true, can_change_presenter: true, can_change_channel: true, designation: 'Video Editor' }),
   ];
   const today = startOfDay(new Date());
@@ -303,74 +338,13 @@ const btnDanger =
 /* ------------------------------------------------------------------ */
 /* Icons                                                               */
 /* ------------------------------------------------------------------ */
-const ICON_PATHS = {
-  lock: 'M7 11V8a5 5 0 0 1 10 0v3M6 11h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z',
-  plus: 'M12 5v14M5 12h14',
-  x: 'M6 6l12 12M18 6L6 18',
-  check: 'M5 12.5l4.5 4.5L19 7.5',
-  copy: 'M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1zM5 15V5a1 1 0 0 1 1-1h10',
-  chevronDown: 'M6 9l6 6 6-6',
-  chevronLeft: 'M15 6l-6 6 6 6',
-  chevronRight: 'M9 6l6 6-6 6',
-  calendar: 'M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4',
-  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
-  users: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14a6 6 0 0 1 3.5 6',
-  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
-  download: 'M12 4v11M7 11l5 5 5-5M5 20h14',
-  edit: 'M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3zM14 7l3 3',
-  trash: 'M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13',
-  link: 'M10 14a4 4 0 0 0 5.6 0l3-3a4 4 0 0 0-5.6-5.6l-1 1M14 10a4 4 0 0 0-5.6 0l-3 3a4 4 0 0 0 5.6 5.6l1-1',
-  shield: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z',
-  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
-  alert: 'M12 4l9 16H3L12 4zM12 10v4M12 17.5v.01',
-  unlock: 'M7 11V8a5 5 0 0 1 9.6-2M6 11h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z',
-};
-function Icon({ name, className = 'h-4 w-4', strokeWidth = 1.8 }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d={ICON_PATHS[name] || ''} />
-    </svg>
-  );
-}
 
-function LockIcon({ message = 'You do not have permission to change this', className = 'h-3.5 w-3.5' }) {
-  return (
-    <span title={message} className="inline-flex items-center text-zinc-500">
-      <Icon name="lock" className={className} />
-    </span>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Small components                                                    */
 /* ------------------------------------------------------------------ */
-function StatusBadge({ status }) {
-  const meta = STATUS_META[status] || STATUS_META.Draft;
-  return (
-    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset backdrop-blur-md ${meta.tone}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${meta.dot} ${meta.live ? 'live-dot' : ''}`} />
-      {status}
-    </span>
-  );
-}
 
-function TypeBadge({ type }) {
-  return (
-    <span className="inline-flex whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-zinc-300">
-      {type}
-    </span>
-  );
-}
 
-function RoleBadge({ role }) {
-  const tone =
-    role === 'owner'
-      ? 'text-amber-300 bg-amber-500/15 ring-amber-400/25'
-      : role === 'manager'
-      ? 'text-sky-300 bg-sky-500/15 ring-sky-400/25'
-      : 'text-zinc-300 bg-zinc-500/15 ring-zinc-400/25';
-  return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-inset ${tone}`}>{ROLE_LABEL[role] || role}</span>;
-}
 
 function Avatar({ member, name, size = 'h-6 w-6', text = 'text-[10px]' }) {
   const [failed, setFailed] = useState(false);
@@ -385,25 +359,33 @@ function Avatar({ member, name, size = 'h-6 w-6', text = 'text-[10px]' }) {
   return <span className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full bg-white/[0.1] font-semibold text-zinc-200 ring-1 ring-white/10`}>{label}</span>;
 }
 
-function DesignationPill({ designation }) {
-  if (!designation) return null;
-  return (
-    <span className="inline-flex max-w-[160px] items-center truncate whitespace-nowrap rounded-full border border-white/[0.08] bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium text-zinc-400 backdrop-blur-md">
-      {designation}
-    </span>
-  );
-}
 
 /* Avatar + name + designation pill, looked up from the team by full name. */
-function PersonName({ name, team }) {
+function PersonName({ name, team, hideDesignation }) {
   if (!name) return <span className="text-zinc-600">—</span>;
   const m = (team || []).find((x) => x.full_name === name);
+  
+  if (hideDesignation) {
+    const nick = m?.nickname || name.split(' ')[0];
+    const prefix = m?.gender === 'female' ? 'Ms.' : 'Mr.';
+    const suffix = m?.gender === 'female' ? 'মহোদয়া' : 'মহোদয়';
+    return (
+      <div className="flex flex-col items-center justify-center gap-1 text-center">
+        <Avatar member={m} name={name} size="h-7 w-7" />
+        <div className="flex flex-col leading-none">
+          <span className="text-[11px] font-medium text-zinc-200">{prefix} {nick}</span>
+          <span className="text-[9px] text-zinc-500 font-serif mt-0.5">{suffix}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <span className="flex items-center gap-2">
       <Avatar member={m} name={name} />
       <span className="flex min-w-0 flex-col items-start gap-0.5">
         <span className="truncate text-zinc-200">{name}</span>
-        {m && m.designation ? <DesignationPill designation={m.designation} /> : null}
+        {m && m.designation && !hideDesignation ? <DesignationPill designation={m.designation} /> : null}
       </span>
     </span>
   );
@@ -1103,6 +1085,7 @@ async function copyText(text) {
 /* Workflow buttons                                                    */
 /* ------------------------------------------------------------------ */
 function ActionButtons({ actions, onRun, compact = false }) {
+  if (compact) actions = actions.filter(a => a.id !== 'hold' && a.id !== 'drop');
   if (!actions.length) return <p className={compact ? 'text-[12px] text-zinc-600' : 'text-[13px] text-zinc-600'}>{compact ? '—' : 'No actions available for you at this stage.'}</p>;
   const size = compact ? ' !px-2.5 !py-1 !text-[11px]' : '';
   return (
@@ -1424,6 +1407,52 @@ function AssetsTab({ row, actor, patch }) {
         <LinkRow label="Master export" value={row.master_export_url} disabled={!active} onCommit={(v) => patch({ master_export_url: v })} />
         <LinkRow label="Live video URL" value={row.live_video_url} disabled={!active} onCommit={(v) => patch({ live_video_url: v })} />
       </section>
+      <section className="border-t border-white/[0.08] pt-4 mt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">References & Attachments</div>
+        </div>
+        <div className="space-y-3">
+          {/* List of uploaded references (saved in a new array column 'reference_files', assuming it might be initialized) */}
+          {(row.reference_files || []).map((ref, idx) => (
+             <div key={idx} className="flex items-center justify-between rounded-xl bg-white/[0.02] border border-white/[0.05] p-2.5">
+               <a href={ref.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-sky-400 hover:underline">{ref.name}</a>
+               <button onClick={() => {
+                 const newRefs = row.reference_files.filter((_, i) => i !== idx);
+                 patch({ reference_files: newRefs });
+               }} className="text-zinc-500 hover:text-red-400"><Icon name="trash" className="h-4 w-4" /></button>
+             </div>
+          ))}
+
+          {/* Upload Button */}
+          {active && (
+            <div className="relative">
+              <input 
+                type="file" 
+                id={`upload-ref-${row.id}`}
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  try {
+                    const url = await uploadReferenceFile(file);
+                    const newRef = { name: file.name, url };
+                    patch({ reference_files: [...(row.reference_files || []), newRef] });
+                    alert('File uploaded successfully!');
+                  } catch(err) {
+                    alert('Upload failed. ' + err.message);
+                  }
+                }}
+              />
+              <label 
+                htmlFor={`upload-ref-${row.id}`} 
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/[0.05] px-4 py-2 text-[13px] font-medium text-zinc-300 transition hover:bg-white/[0.1] w-full border border-dashed border-white/[0.2]"
+              >
+                <Icon name="plus" className="h-4 w-4" /> Upload Document/Reference
+              </label>
+            </div>
+          )}
+        </div>
+      </section>
       <section>
         <div className="mb-3 flex items-center justify-between">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Shorts & reels ({row.shorts.length})</div>
@@ -1712,6 +1741,16 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
         <footer className="border-t border-white/[0.08] bg-black/70 px-6 py-4 backdrop-blur-xl">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Next step</div>
           <ActionButtons actions={actions} onRun={(a) => onRun(row, a)} />
+          <div className="mt-3 border-t border-white/[0.06] pt-3 flex items-center gap-3">
+            <button
+              onClick={() => downloadContentArchive(row)}
+              title="Download Full Archive (PDF + Script + Logs)"
+              className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[12px] font-medium text-indigo-300 transition hover:bg-indigo-500/20"
+            >
+              <Icon name="download" className="h-3.5 w-3.5" />
+              Archive ZIP
+            </button>
+          </div>
           <div className="mt-3 border-t border-white/[0.06] pt-3">
             <button
               className={btnDanger}
@@ -2151,6 +2190,8 @@ function NewsroomApp({ authUser, onSignOut }) {
   );
 
   const runAction = (row, action) => {
+    if (action.id === 'download_script') { downloadContentArchive(row); return; }
+    if (action.id === 'copy_script') { navigator.clipboard.writeText(row.script || 'No script'); alert('Script copied!'); return; }
     if (action.needsReason) setReasonFor({ rowId: row.id, action });
     else transition(row, action);
   };
@@ -2608,6 +2649,20 @@ function NewsroomApp({ authUser, onSignOut }) {
                 className="w-44 rounded-full border border-white/[0.08] bg-white/[0.04] py-2 pl-8 pr-3 text-[12px] text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-sky-400/50"
               />
             </div>
+            <button
+              onClick={() => downloadKPIReport(visible)}
+              title="Download KPI Excel for filtered data"
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-2 text-[12px] font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+            >
+              <Icon name="chart" className="h-3.5 w-3.5" /> KPI Report
+            </button>
+            <button
+              onClick={() => downloadFullSystemBackup(rows)}
+              title="Backup Entire System (JSON + CSV)"
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-2 text-[12px] font-medium text-red-300 transition hover:bg-red-500/20"
+            >
+              <Icon name="shield" className="h-3.5 w-3.5" /> Backup All
+            </button>
           </div>
         </div>
       </header>
@@ -2655,29 +2710,30 @@ function NewsroomApp({ authUser, onSignOut }) {
                     style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
                     className="row-in cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]"
                   >
-                    <td className="whitespace-nowrap px-4 py-3.5 tabular-nums text-zinc-300">
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5 tabular-nums text-zinc-300">
                       <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
                       {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div> : null}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3 border-r border-white/5 relative">
+                      <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                       <TypeBadge type={r.content_type} />
                     </td>
-                    <td className="max-w-[320px] px-4 py-3.5">
+                    <td className="max-w-[280px] px-3 py-3 border-r border-white/5">
                       <div className="flex items-center gap-1.5">
                         <span className="truncate font-mono text-[12px] font-semibold tracking-wide text-white">{r.slug_name || '—'}</span>
                         {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <PersonName name={r.writer} team={team} />
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
+                      <PersonName name={r.writer} team={team} hideDesignation />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <PersonName name={r.presenter_name} team={team} />
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
+                      <PersonName name={r.presenter_name} team={team} hideDesignation />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <PersonName name={r.video_editor} team={team} />
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
+                      <PersonName name={r.video_editor} team={team} hideDesignation />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
                       {shortsInRange(r, range.start, addDays(range.end, 1)).length ? (
                         <div className="flex flex-col gap-1">
                           {shortsInRange(r, range.start, addDays(range.end, 1)).map((s) => (
@@ -2693,7 +2749,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                     <td className="px-4 py-3.5">
                       <StatusBadge status={r.status} />
                     </td>
-                    <td className="min-w-[260px] px-4 py-3.5">
+                    <td className="min-w-[260px] px-3 py-3">
                       <ActionButtons compact actions={getActions(r, actor)} onRun={(a) => runAction(r, a)} />
                     </td>
                   </tr>
@@ -2740,18 +2796,19 @@ function NewsroomApp({ authUser, onSignOut }) {
                         <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25">No date &amp; time</span>
                       )}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3 border-r border-white/5 relative">
+                      <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                       <TypeBadge type={r.content_type} />
                     </td>
                     <td className="max-w-[300px] px-4 py-3.5">
                       <span className="block truncate font-mono text-[12px] font-semibold tracking-wide text-white">{r.slug_name || '—'}</span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5 text-zinc-300">{r.channel || '—'}</td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <PersonName name={r.writer} team={team} />
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
+                      <PersonName name={r.writer} team={team} hideDesignation />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5">
-                      <PersonName name={r.presenter_name} team={team} />
+                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
+                      <PersonName name={r.presenter_name} team={team} hideDesignation />
                     </td>
                     <td className="px-4 py-3.5">
                       <StatusBadge status={r.status} />
@@ -3001,8 +3058,28 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
         <Field label="Job designation" hint="optional">
           <input className={inputBase} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Producer" />
         </Field>
-        <Field label="Profile picture link" hint="optional">
-          <input className={inputBase} value={avatar} onChange={(e) => setAvatar(e.target.value)} placeholder="https://…/photo.jpg" />
+        <Field label="Profile Picture (Upload)" hint="optional">
+          <div className="flex items-center gap-3">
+            <input 
+              type="file" 
+              accept="image/*"
+              className="text-[12px] text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-[12px] file:text-white hover:file:bg-white/20"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                  const fileName = generateFileName(file.name);
+                  // Make sure you have created an 'avatars' bucket in Supabase!
+                  const url = await uploadFile('avatars', fileName, file);
+                  setAvatar(url);
+                  alert('Avatar uploaded successfully!');
+                } catch (err) {
+                  alert('Upload failed: ' + err.message);
+                }
+              }}
+            />
+            {avatar && <img src={avatar} alt="Avatar Preview" className="h-8 w-8 rounded-full object-cover border border-white/20" />}
+          </div>
         </Field>
         <Field label="New password" hint="leave empty to keep the current one">
           <input type="password" autoComplete="new-password" className={inputBase} value={password} onChange={(e) => setPassword(e.target.value)} />
