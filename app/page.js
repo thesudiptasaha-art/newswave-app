@@ -51,13 +51,25 @@ const PLATFORMS = [
 
 const PERMISSIONS = [
   { key: 'can_edit_script', label: 'Edit script', hint: 'Write, edit and save scripts' },
-  { key: 'can_edit_metadata', label: 'Edit metadata', hint: 'Title, thumbnail text, writer, camera, platforms' },
+  { key: 'can_edit_metadata', label: 'Edit metadata', hint: 'Title, thumbnail text, platforms' },
   { key: 'can_assign_editor', label: 'Assign editor', hint: 'Change or assign the video editor' },
   { key: 'can_reschedule', label: 'Reschedule', hint: 'Change scheduled date & publish time' },
-  { key: 'can_change_presenter', label: 'Change presenter', hint: 'Update the presenter assignment' },
-  { key: 'can_change_channel', label: 'Change channel', hint: 'Switch channel / platform' },
   { key: 'can_approve_script', label: 'Approve script', hint: 'Approve or send back submitted scripts' },
   { key: 'can_review_video', label: 'Review video', hint: 'Approve edited videos or request revisions' },
+  
+  // New Roles / Skills
+  { key: 'can_write', label: 'Can Write & Submit', hint: 'Available in Writer dropdown' },
+  { key: 'can_edit_video', label: 'Can Edit Video', hint: 'Available in Video Editor dropdown' },
+  { key: 'can_produce', label: 'Can Produce', hint: 'Available in Producer dropdown' },
+  { key: 'can_camera', label: 'Can Operate Camera', hint: 'Available in Camera Operator dropdown' },
+  { key: 'can_present', label: 'Can Present', hint: 'Available in Presenter dropdown' },
+  { key: 'can_light', label: 'Light Design', hint: 'Available in Light Designer dropdown' },
+  { key: 'can_vfx', label: 'Visual Effects', hint: 'Available in VFX dropdown' },
+  { key: 'can_color', label: 'Colorist', hint: 'Available in Color dropdown' },
+  { key: 'can_sound_record', label: 'Sound Record', hint: 'Available in Sound Record dropdown' },
+  { key: 'can_audio_mix', label: 'Audio Mixing', hint: 'Available in Audio Mixing dropdown' },
+  { key: 'can_video_switch', label: 'Video Switch', hint: 'Available in Video Switch dropdown' },
+  { key: 'can_live_audio', label: 'Live Audio Mix', hint: 'Available in Live Audio Mixing dropdown' }
 ];
 
 const ROLE_LABEL = { owner: 'Owner', manager: 'Manager', general: 'General' };
@@ -109,7 +121,7 @@ function getActions(row, m) {
       add('return_script', 'Send Back', 'Draft', 'ghost', can(m, 'can_approve_script'), 'Needs the “Approve script” permission', '', true);
       break;
     case 'Ready for Shoot':
-      add('start_shoot', 'Start Shoot', 'Shooting', 'primary', true);
+      add('start_shoot', 'Start Shoot', 'Shooting', 'primary', true, '', row.camera_operator ? '' : 'Camera Operator must be assigned first');
       break;
     case 'Shooting':
       add('finish_shoot', 'Finish Shoot', afterShoot(t), 'primary', true);
@@ -125,7 +137,7 @@ function getActions(row, m) {
       add('revise', 'Request Revision', 'Editing', 'ghost', can(m, 'can_review_video'), 'Needs the “Review video” permission', '', true);
       break;
     case 'Ready to Publish':
-      add('publish', 'Publish', 'Published', 'primary', mgr, 'Managers only');
+      add('publish', 'Publish', 'Published', 'primary', mgr, 'Managers only', row.uploader ? '' : 'Uploader must be assigned first');
       break;
     case 'On Hold':
       add('resume', 'Resume', row.previous_status || 'Draft', 'primary', mgr, 'Managers only');
@@ -298,7 +310,7 @@ function buildDemo() {
   const orgId = 'demo-org';
   const mk = (full_name, email, role, perms, gender = 'male') => {
     const nick = full_name.split(' ')[0];
-    return normalizeMember({ id: uid(), user_id: uid(), custom_uid: generateUserUID(), organization_id: orgId, full_name, nickname: nick, gender, email, role, active: true, ...perms });
+    return normalizeMember({ id: uid(), user_id: uid(), custom_uid: generateUserUID(), organization_id: orgId, full_name, nickname: nick, gender, email, role, active: true, can_write: true, can_edit_video: true, can_produce: true, can_camera: true, can_present: true, ...perms });
   };
   const team = [
     mk('Rahim Uddin', 'owner@demo.com', 'owner', { designation: 'Editor-in-Chief' }),
@@ -1684,7 +1696,59 @@ function DeleteModal({ row, onClose, onConfirm }) {
     </ModalShell>
   );
 }
+
+function CreditTab({ row, actor, patch, team }) {
+  const active = !!actor && actor.active !== false;
+  
+  const CreditSelect = ({ label, field, skillKey }) => (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</label>
+      <select
+        value={row[field] || ''}
+        disabled={!active}
+        onChange={(e) => patch({ [field]: e.target.value })}
+        className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[13px] text-white transition focus:border-white/[0.15] focus:bg-white/[0.04] focus:outline-none focus:ring-4 focus:ring-white/[0.04]"
+      >
+        <option value="">— Unassigned —</option>
+        {team.filter(t => !skillKey || t[skillKey] || t.role === 'owner' || t.role === 'manager').map(m => (
+          <option key={m.id} value={m.full_name}>{m.full_name}</option>
+        ))}
+      </select>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5">
+        <h3 className="mb-4 text-[13px] font-semibold text-white">Main Credits</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <CreditSelect label="Idea" field="idea_by" skillKey="can_write" />
+          <CreditSelect label="Research & Script" field="writer" skillKey="can_write" />
+          <CreditSelect label="Producer" field="producer" skillKey="can_produce" />
+          <CreditSelect label="Camera Operator" field="camera_person" skillKey="can_camera" />
+          <CreditSelect label="Video Editor" field="video_editor" skillKey="can_edit_video" />
+          <CreditSelect label="Uploader" field="uploader" />
+        </div>
+      </div>
+      
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5">
+        <h3 className="mb-4 text-[13px] font-semibold text-white">Extended Credits</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <CreditSelect label="Visual Effects" field="vfx" skillKey="can_vfx" />
+          <CreditSelect label="Colorist" field="colorist" skillKey="can_color" />
+          <CreditSelect label="Light Design" field="light_designer" skillKey="can_light" />
+          <CreditSelect label="Sound Record" field="sound_recordist" skillKey="can_sound_record" />
+          <CreditSelect label="Audio Mixing" field="audio_mixer" skillKey="can_audio_mix" />
+          <CreditSelect label="Video Switch" field="video_switcher" skillKey="can_video_switch" />
+          <CreditSelect label="Live Audio Mixing" field="live_audio" skillKey="can_live_audio" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
+
   const [tab, setTab] = useState('overview');
   useEffect(() => {
     setTab('overview');
@@ -1697,6 +1761,7 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
     ['assets', 'Assets & Shorts'],
     ['qc', 'QC & Audit'],
     ['metadata', 'Metadata'],
+    ['credit', 'Credit Card'],
   ];
   return (
     <div className="fixed inset-0 z-50">
@@ -1737,6 +1802,7 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
           {tab === 'assets' ? <AssetsTab row={row} actor={actor} patch={patch} /> : null}
           {tab === 'qc' ? <QcTab row={row} actor={actor} patch={patch} /> : null}
           {tab === 'metadata' ? <MetadataTab row={row} actor={actor} patch={patch} /> : null}
+          {tab === 'credit' ? <CreditTab row={row} actor={actor} patch={patch} team={team} /> : null}
         </div>
         <footer className="border-t border-white/[0.08] bg-black/70 px-6 py-4 backdrop-blur-xl">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Next step</div>
