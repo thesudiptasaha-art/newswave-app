@@ -2752,7 +2752,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           </span>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
           <table className="w-full min-w-[1180px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
@@ -2839,9 +2839,73 @@ function NewsroomApp({ authUser, onSignOut }) {
               <div className="text-[15px] font-medium text-zinc-300">Nothing scheduled</div>
               <p className="mt-1 text-[13px] text-zinc-600">Pick another date or add new content.</p>
             </div>
-          ) : null}
+) : null}
         </div>
-          
+
+        {/* Mobile View for Rundown */}
+        <div className="md:hidden flex flex-col space-y-4 mb-8">
+          {tableItems.map((item, i) => {
+            if (item.type === 'header') {
+              return (
+                <div key={item.key} className="flex items-center gap-4 py-2 mt-4">
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.16]" />
+                  <span className="text-[16px] font-semibold tracking-tight text-white">{item.name}</span>
+                  <span className="rounded-full bg-white/[0.08] px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-zinc-400">{item.count}</span>
+                  <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/[0.16]" />
+                </div>
+              );
+            }
+            const r = item.row;
+            return (
+              <div key={item.key} onClick={() => setSelectedId(r.id)} className="cursor-pointer rounded-2xl border border-white/[0.08] bg-[#121215] p-4 flex flex-col gap-3 relative overflow-hidden shadow-lg shadow-black/20">
+                <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
+                <div className="flex justify-between items-start pl-1">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sky-400 font-mono text-[13px] font-medium tracking-wide">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</span>
+                    {!sameDay(range.start, range.end) ? <span className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</span> : null}
+                  </div>
+                  <TypeBadge type={r.content_type} />
+                </div>
+                
+                <div className="pl-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[16px] font-semibold text-white tracking-tight">{r.slug_name || '—'}</h3>
+                    {r.is_script_locked ? <Icon name="lock" className="h-3.5 w-3.5 text-zinc-500" /> : null}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-3 gap-x-2 pl-1 mt-1 border-t border-white/[0.04] pt-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Writer</span>
+                    <PersonName name={r.writer} team={team} hideDesignation />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Presenter</span>
+                    <PersonName name={r.presenter_name} team={team} hideDesignation />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Editor</span>
+                    <PersonName name={r.video_editor} team={team} hideDesignation />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Status</span>
+                    <span className="text-[12px] text-zinc-300 flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />{r.status}</span>
+                  </div>
+                </div>
+
+                <div className="pl-1 mt-1 pt-3 border-t border-white/[0.04] flex items-center justify-between">
+                   <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+                     <Icon name="play" className="h-3 w-3" />
+                     {shortsInRange(r, range.start, addDays(range.end, 1)).length ? <span className="text-pink-400 font-medium">Shorts</span> : 'No short'}
+                   </div>
+                   <div onClick={(e) => e.stopPropagation()}>
+                     <ActionButtons actions={getActions(r, actor)} onRun={(a) => runAction(r, a)} compact />
+                   </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
         <section className="mt-10">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[18px] font-semibold tracking-tight text-white">On hold &amp; unscheduled</h2>
@@ -2849,7 +2913,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               {parked.length} item{parked.length === 1 ? '' : 's'}
             </span>
           </div>
-          <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
+          <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
             <table className="w-full min-w-[1080px] text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
@@ -2901,6 +2965,54 @@ function NewsroomApp({ authUser, onSignOut }) {
               <div className="px-6 py-10 text-center text-[13px] text-zinc-600">Nothing on hold, and nothing waiting for a date.</div>
             ) : null}
           </div>
+        
+          {/* Mobile View for Parked */}
+          <div className="md:hidden flex flex-col space-y-4 mt-4">
+            {parked.map((r) => (
+              <div key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer rounded-2xl border border-white/[0.08] bg-[#121215] p-4 flex flex-col gap-3 relative overflow-hidden shadow-lg shadow-black/20">
+                <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
+                <div className="flex justify-between items-start pl-1">
+                  <div className="flex flex-col gap-1">
+                      {r.status === 'On Hold' ? (
+                        <>
+                          <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 w-fit">On hold</span>
+                          {r.hold_reason ? <div className="truncate text-[11px] text-zinc-500 max-w-[150px]">{r.hold_reason}</div> : null}
+                        </>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 w-fit">No date</span>
+                      )}
+                  </div>
+                  <TypeBadge type={r.content_type} />
+                </div>
+                
+                <div className="pl-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[16px] font-semibold text-white tracking-tight">{r.slug_name || '—'}</h3>
+                  </div>
+                  <div className="text-[12px] text-zinc-400 mt-0.5">{r.channel || 'No channel'}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-3 gap-x-2 pl-1 mt-1 border-t border-white/[0.04] pt-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Writer</span>
+                    <PersonName name={r.writer} team={team} hideDesignation />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Presenter</span>
+                    <PersonName name={r.presenter_name} team={team} hideDesignation />
+                  </div>
+                </div>
+
+                <div className="pl-1 mt-1 pt-3 border-t border-white/[0.04] flex flex-col gap-2">
+                   <div className="flex flex-col">
+                     <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 mb-1">Schedule</span>
+                     <ScheduleCell row={r} actor={actor} onSchedule={(patch) => patchRow(r.id, patch)} />
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </section>
       </main>
 
