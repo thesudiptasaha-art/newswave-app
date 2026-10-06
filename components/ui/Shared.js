@@ -89,7 +89,7 @@ export function SelectBox({ value, onChange, options, disabled = false, placehol
   );
 }
 
-export function BlurInput({ value, onCommit, disabled = false, placeholder, type = 'text', multiline = false, rows = 3 }) {
+export function BlurInput({ value, onCommit, disabled = false, placeholder, type = 'text', multiline = false, rows = 3, className }) {
   const [draft, setDraft] = useState(value || '');
   useEffect(() => {
     setDraft(value || '');
@@ -103,7 +103,7 @@ export function BlurInput({ value, onCommit, disabled = false, placeholder, type
     placeholder,
     onChange: (e) => setDraft(e.target.value),
     onBlur: commit,
-    className: disabled ? inputLocked : inputBase,
+    className: className || (disabled ? inputLocked : inputBase),
   };
   if (multiline) return <textarea rows={rows} {...common} />;
   return (
