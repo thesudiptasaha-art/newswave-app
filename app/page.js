@@ -1349,20 +1349,6 @@ function NewsroomApp({ authUser, onSignOut }) {
                 className="w-44 rounded-full border border-white/[0.08] bg-white/[0.04] py-2 pl-8 pr-3 text-[12px] text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-sky-400/50"
               />
             </div>
-            <button
-              onClick={() => downloadKPIReport(visible)}
-              title="Download KPI Excel for filtered data"
-              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-2 text-[12px] font-medium text-emerald-300 transition hover:bg-emerald-500/20"
-            >
-              <Icon name="chart" className="h-3.5 w-3.5" /> KPI Report
-            </button>
-            <button
-              onClick={() => downloadFullSystemBackup(rows)}
-              title="Backup Entire System (JSON + CSV)"
-              className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-2 text-[12px] font-medium text-red-300 transition hover:bg-red-500/20"
-            >
-              <Icon name="shield" className="h-3.5 w-3.5" /> Backup All
-            </button>
           </div>
         </div>
       </header>
@@ -1649,6 +1635,12 @@ function NewsroomApp({ authUser, onSignOut }) {
           </button>
           <button className={btnGhost} onClick={exportXlsx}>
             <Icon name="download" /> Excel
+          </button>
+          <button className={`${btnGhost} text-emerald-400 hover:text-emerald-300`} onClick={() => downloadKPIReport(visible)} title="Download KPI Excel for filtered data">
+            <Icon name="chart" /> KPI Report
+          </button>
+          <button className={`${btnGhost} text-red-400 hover:text-red-300`} onClick={() => downloadFullSystemBackup(rows)} title="Backup Entire System (JSON + CSV)">
+            <Icon name="shield" /> Backup All
           </button>
         </div>
       </footer>
