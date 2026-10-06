@@ -1366,7 +1366,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
                   {['Time', 'Content Type', 'Slug Name', 'Staff Assignment', 'Short', 'Status', 'Action'].map((h) => (
-                  <th key={h} className="px-4 py-3 font-medium">
+                  <th key={h} className="px-4 py-2 font-medium">
                     {h}
                   </th>
                 ))}
@@ -1396,15 +1396,15 @@ function NewsroomApp({ authUser, onSignOut }) {
                     style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
                     className="row-in cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]"
                   >
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5 tabular-nums text-zinc-300">
+                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5 tabular-nums text-zinc-300">
                       <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
                       {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div> : null}
                     </td>
-                    <td className="px-3 py-3 border-r border-white/5 relative">
+                    <td className="px-3 py-2 border-r border-white/5 relative">
                       <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                       <TypeBadge type={r.content_type} />
                     </td>
-                    <td className="max-w-[280px] px-3 py-3 border-r border-white/5">
+                    <td className="max-w-[280px] px-3 py-2 border-r border-white/5">
                       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <BlurInput 
                           value={r.slug_name} 
@@ -1415,15 +1415,15 @@ function NewsroomApp({ authUser, onSignOut }) {
                         {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
-                      <div className="flex flex-col gap-1.5 text-[11px]">
-                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-12 shrink-0">Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
-                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-12 shrink-0">Present:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
-                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-12 shrink-0">Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
+                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
+                      <div className="flex flex-col gap-1 text-[11px]">
+                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
+                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
+                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
                         {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
+                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
                       {shortsInRange(r, range.start, addDays(range.end, 1)).length ? (
                         <div className="flex flex-col gap-1">
                           {shortsInRange(r, range.start, addDays(range.end, 1)).map((s) => (
@@ -1436,7 +1436,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                         <span className="text-zinc-700">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-2">
                       <StatusBadge status={r.status} />
                     </td>
                     <td className="min-w-[260px] px-3 py-3">
@@ -1460,8 +1460,8 @@ function NewsroomApp({ authUser, onSignOut }) {
           <table className="w-full text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-white/[0.02]">
-                <th className="px-3 py-3 font-medium w-[40%]">Time / Type / Status</th>
-                <th className="px-3 py-3 font-medium w-[60%] text-right">Slug / Action</th>
+                <th className="px-3 py-2 font-medium w-[40%]">Time / Type / Status</th>
+                <th className="px-3 py-2 font-medium w-[60%] text-right">Slug / Action</th>
               </tr>
             </thead>
             <tbody>
@@ -1511,7 +1511,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
         <section className="mt-10">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-[18px] font-semibold tracking-tight text-white">On hold &amp; unscheduled</h2>
+            <h2 className="text-[18px] font-semibold tracking-tight text-white">Parking Zone</h2>
             <span className="text-[13px] text-zinc-500">
               {parked.length} item{parked.length === 1 ? '' : 's'}
             </span>
@@ -1521,7 +1521,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               <thead>
                 <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
                   {['Why', 'Content Type', 'Slug Name', 'Channel', 'Staff Assignment', 'Status', 'New publish time'].map((h) => (
-                    <th key={h} className="px-4 py-3 font-medium">
+                    <th key={h} className="px-4 py-2 font-medium">
                       {h}
                     </th>
                   ))}
@@ -1530,7 +1530,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               <tbody>
                 {parked.map((r) => (
                   <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]">
-                    <td className="max-w-[220px] px-4 py-3.5">
+                    <td className="max-w-[220px] px-4 py-2">
                       {r.status === 'On Hold' ? (
                         <>
                           <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 ring-1 ring-inset ring-yellow-400/25">On hold</span>
@@ -1540,24 +1540,26 @@ function NewsroomApp({ authUser, onSignOut }) {
                         <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25">No date &amp; time</span>
                       )}
                     </td>
-                    <td className="px-3 py-3 border-r border-white/5 relative">
+                    <td className="px-3 py-2 border-r border-white/5 relative">
                       <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                       <TypeBadge type={r.content_type} />
                     </td>
-                    <td className="max-w-[300px] px-4 py-3.5">
+                    <td className="max-w-[300px] px-4 py-2">
                       <span className="block truncate font-mono text-[12px] font-semibold tracking-wide text-white">{r.slug_name || '—'}</span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3.5 text-zinc-300">{r.channel || '—'}</td>
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
-                      <PersonName name={r.writer} team={team} hideDesignation />
+                    <td className="whitespace-nowrap px-4 py-2 text-zinc-300">{r.channel || '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-2">
+                      <div className="flex flex-col gap-1 text-[11px]">
+                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
+                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
+                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
+                        {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
+                      </div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
-                      <PersonName name={r.presenter_name} team={team} hideDesignation />
-                    </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-2">
                       <StatusBadge status={r.status} />
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-2">
                       <ScheduleCell row={r} actor={actor} onSchedule={scheduleParked} />
                     </td>
                   </tr>
@@ -1574,8 +1576,8 @@ function NewsroomApp({ authUser, onSignOut }) {
             <table className="w-full text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-white/[0.02]">
-                  <th className="px-3 py-3 font-medium w-[40%]">Type &amp; Status</th>
-                  <th className="px-3 py-3 font-medium w-[60%] text-right">Slug &amp; Schedule</th>
+                  <th className="px-3 py-2 font-medium w-[40%]">Type &amp; Status</th>
+                  <th className="px-3 py-2 font-medium w-[60%] text-right">Slug &amp; Schedule</th>
                 </tr>
               </thead>
               <tbody>
@@ -1810,7 +1812,7 @@ function NotificationBell({ memberId, onOpenContent }) {
       </button>
       {open ? (
         <div className="absolute right-0 top-full z-50 mt-2 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-white/[0.1] bg-[#121215]/95 shadow-2xl shadow-black/70 backdrop-blur-2xl">
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2">
             <span className="text-[14px] font-semibold text-white">Notifications</span>
             <button disabled={unread === 0} onClick={markAll} className="text-[12px] text-sky-400 hover:text-sky-300 disabled:text-zinc-600">
               Mark all read
@@ -1826,7 +1828,7 @@ function NotificationBell({ memberId, onOpenContent }) {
                   setOpen(false);
                   if (n.content_id) onOpenContent(n.content_id);
                 }}
-                className={`flex w-full items-start gap-3 border-b border-white/[0.04] px-4 py-3 text-left transition last:border-0 hover:bg-white/[0.05] ${n.read ? '' : 'bg-sky-500/[0.06]'}`}
+                className={`flex w-full items-start gap-3 border-b border-white/[0.04] px-4 py-2 text-left transition last:border-0 hover:bg-white/[0.05] ${n.read ? '' : 'bg-sky-500/[0.06]'}`}
               >
                 <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read ? 'bg-transparent' : 'bg-sky-400'}`} />
                 <span className="min-w-0">

@@ -28,8 +28,8 @@ export function PersonName({ name, team, hideDesignation }) {
   if (hideDesignation) {
     const nick = m?.nickname || name.split(' ')[0];
     return (
-      <div className="flex flex-col items-center justify-center gap-1 text-center">
-        <Avatar member={m} name={name} size="h-7 w-7" />
+      <div className="flex items-center gap-1.5">
+        <Avatar member={m} name={name} size="h-5 w-5" />
         <span className="text-[11px] font-medium text-zinc-200">{nick}</span>
       </div>
     );
