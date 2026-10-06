@@ -27,15 +27,10 @@ export function PersonName({ name, team, hideDesignation }) {
   
   if (hideDesignation) {
     const nick = m?.nickname || name.split(' ')[0];
-    const prefix = m?.gender === 'female' ? 'Ms.' : 'Mr.';
-    const suffix = m?.gender === 'female' ? 'মহোদয়া' : 'মহোদয়';
     return (
       <div className="flex flex-col items-center justify-center gap-1 text-center">
         <Avatar member={m} name={name} size="h-7 w-7" />
-        <div className="flex flex-col leading-none">
-          <span className="text-[11px] font-medium text-zinc-200">{prefix} {nick}</span>
-          <span className="text-[9px] text-zinc-500 font-serif mt-0.5">{suffix}</span>
-        </div>
+        <span className="text-[11px] font-medium text-zinc-200">{nick}</span>
       </div>
     );
   }

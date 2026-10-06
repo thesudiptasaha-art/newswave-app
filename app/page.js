@@ -2796,8 +2796,13 @@ function NewsroomApp({ authUser, onSignOut }) {
                       <TypeBadge type={r.content_type} />
                     </td>
                     <td className="max-w-[280px] px-3 py-3 border-r border-white/5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate font-mono text-[12px] font-semibold tracking-wide text-white">{r.slug_name || '—'}</span>
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <BlurInput 
+                          value={r.slug_name} 
+                          onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
+                          className="bg-transparent border border-transparent text-[12px] font-mono font-semibold tracking-wide text-white hover:bg-white/[0.04] px-1 -ml-1 rounded focus:bg-black focus:border-white/10 min-w-[150px] w-full max-w-full"
+                          placeholder="No slug..."
+                        />
                         {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
                       </div>
                     </td>
@@ -2842,14 +2847,13 @@ function NewsroomApp({ authUser, onSignOut }) {
 ) : null}
         </div>
 
-        {/* Mobile View for Rundown (Condensed Table) */}
+        {/* Mobile View for Rundown (2-Column) */}
         <div className="md:hidden overflow-hidden rounded-2xl border border-white/[0.08] bg-[#121215] mb-8">
           <table className="w-full text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-white/[0.02]">
-                <th className="px-3 py-3 font-medium w-1/4">Time/Status</th>
-                <th className="px-3 py-3 font-medium w-1/2">Details</th>
-                <th className="px-3 py-3 font-medium w-1/4 text-right">Action</th>
+                <th className="px-3 py-3 font-medium w-[40%]">Time / Type / Status</th>
+                <th className="px-3 py-3 font-medium w-[60%] text-right">Slug / Action</th>
               </tr>
             </thead>
             <tbody>
@@ -2857,7 +2861,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                   if (item.type === 'header') {
                      return (
                         <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
-                           <td colSpan={3} className="px-3 py-3 text-center">
+                           <td colSpan={2} className="px-3 py-3 text-center">
                               <span className="text-[14px] font-semibold text-white">{item.name}</span>
                               <span className="ml-2 rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-medium text-zinc-400">{item.count}</span>
                            </td>
@@ -2867,7 +2871,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                   const r = item.row;
                   return (
                      <tr key={item.key} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] hover:bg-white/[0.04]">
-                        <td className="px-3 py-3 align-top border-r border-white/5 relative">
+                        <td className="px-3 py-3 align-top border-r border-white/5 relative w-[40%]">
                            <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                            <div className="flex flex-col gap-2 pl-1">
                               <span className="text-sky-400 font-mono text-[11px] font-medium tracking-tighter">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</span>
@@ -2875,26 +2879,21 @@ function NewsroomApp({ authUser, onSignOut }) {
                               <div className="scale-90 origin-left"><StatusBadge status={r.status} /></div>
                            </div>
                         </td>
-                        <td className="px-3 py-3 align-top border-r border-white/5">
-                           <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-1.5">
-                                 <span className="text-[14px] font-bold text-white leading-tight break-all">{r.slug_name || '—'}</span>
-                                 {r.is_script_locked && <Icon name="lock" className="h-3 w-3 text-zinc-500 shrink-0" />}
+                        <td className="px-3 py-3 align-top w-[60%] relative">
+                           <div className="flex flex-col justify-between h-full min-h-[90px]">
+                              <div className="flex items-start justify-end gap-1.5 text-right w-full" onClick={(e) => e.stopPropagation()}>
+                                 {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
+                                 <BlurInput 
+                                   value={r.slug_name} 
+                                   onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
+                                   className="bg-transparent border border-transparent text-right text-[14px] font-bold text-white hover:bg-white/[0.04] p-1 -mr-1 rounded focus:bg-black focus:border-white/10 w-full leading-tight"
+                                   placeholder="Enter slug..."
+                                 />
                               </div>
-                              <div className="text-[11px] text-zinc-400 mt-1 flex flex-col gap-1">
-                                 {r.writer && <div className="flex items-start gap-1"><span className="text-[9px] uppercase text-zinc-600 mt-0.5">W:</span> <PersonName name={r.writer} team={team} hideDesignation /></div>}
-                                 {r.video_editor && <div className="flex items-start gap-1"><span className="text-[9px] uppercase text-zinc-600 mt-0.5">E:</span> <PersonName name={r.video_editor} team={team} hideDesignation /></div>}
-                                 {r.presenter_name && <div className="flex items-start gap-1"><span className="text-[9px] uppercase text-zinc-600 mt-0.5">P:</span> <PersonName name={r.presenter_name} team={team} hideDesignation /></div>}
+                              <div className="flex flex-col items-end gap-2 mt-auto pt-2" onClick={(e) => e.stopPropagation()}>
+                                 <ActionButtons actions={getActions(r, actor).slice(0, 2)} onRun={(a) => runAction(r, a)} compact />
                               </div>
                            </div>
-                        </td>
-                        <td className="px-3 py-3 align-top text-right">
-                           <div onClick={(e) => e.stopPropagation()} className="flex justify-end scale-90 origin-top-right">
-                              <ActionButtons actions={getActions(r, actor).slice(0, 2)} onRun={(a) => runAction(r, a)} compact />
-                           </div>
-                           {shortsInRange(r, range.start, addDays(range.end, 1)).length > 0 && (
-                              <div className="mt-2 text-[10px] text-pink-400 font-medium">Has Shorts</div>
-                           )}
                         </td>
                      </tr>
                   )
@@ -2962,43 +2961,43 @@ function NewsroomApp({ authUser, onSignOut }) {
             ) : null}
           </div>
         
-          {/* Mobile View for Parked (Condensed Table) */}
+          {/* Mobile View for Parked (2-Column) */}
           <div className="md:hidden overflow-hidden rounded-2xl border border-white/[0.08] bg-[#121215] mt-4">
             <table className="w-full text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-white/[0.02]">
-                  <th className="px-3 py-3 font-medium w-1/4">Status</th>
-                  <th className="px-3 py-3 font-medium w-1/2">Details</th>
-                  <th className="px-3 py-3 font-medium w-1/4 text-right">Schedule</th>
+                  <th className="px-3 py-3 font-medium w-[40%]">Type &amp; Status</th>
+                  <th className="px-3 py-3 font-medium w-[60%] text-right">Slug &amp; Schedule</th>
                 </tr>
               </thead>
               <tbody>
                  {parked.map((r) => (
                        <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] hover:bg-white/[0.04]">
-                          <td className="px-3 py-3 align-top border-r border-white/5 relative">
+                          <td className="px-3 py-3 align-top border-r border-white/5 relative w-[40%]">
                              <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                              <div className="flex flex-col gap-2 pl-1">
                                 {r.status === 'On Hold' ? (
-                                  <span className="inline-flex items-center rounded-sm bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300">On hold</span>
+                                  <span className="inline-flex items-center rounded-sm bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300 w-fit">On hold</span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-sm bg-zinc-500/15 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300">No date</span>
+                                  <span className="inline-flex items-center rounded-sm bg-zinc-500/15 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 w-fit">No date</span>
                                 )}
                                 <div className="scale-90 origin-left"><TypeBadge type={r.content_type} /></div>
                              </div>
                           </td>
-                          <td className="px-3 py-3 align-top border-r border-white/5">
-                             <div className="flex flex-col gap-1">
-                                <div className="text-[14px] font-bold text-white leading-tight break-all">{r.slug_name || '—'}</div>
-                                <div className="text-[10px] text-zinc-500">{r.channel || 'No channel'}</div>
-                                <div className="text-[11px] text-zinc-400 mt-1 flex flex-col gap-1">
-                                   {r.writer && <div className="flex items-start gap-1"><span className="text-[9px] uppercase text-zinc-600 mt-0.5">W:</span> <PersonName name={r.writer} team={team} hideDesignation /></div>}
-                                   {r.presenter_name && <div className="flex items-start gap-1"><span className="text-[9px] uppercase text-zinc-600 mt-0.5">P:</span> <PersonName name={r.presenter_name} team={team} hideDesignation /></div>}
+                          <td className="px-3 py-3 align-top w-[60%] relative">
+                             <div className="flex flex-col justify-between h-full min-h-[90px]">
+                                <div className="flex items-start justify-end gap-1.5 text-right w-full" onClick={(e) => e.stopPropagation()}>
+                                   {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
+                                   <BlurInput 
+                                     value={r.slug_name} 
+                                     onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
+                                     className="bg-transparent border border-transparent text-right text-[14px] font-bold text-white hover:bg-white/[0.04] p-1 -mr-1 rounded focus:bg-black focus:border-white/10 w-full leading-tight"
+                                     placeholder="Enter slug..."
+                                   />
                                 </div>
-                             </div>
-                          </td>
-                          <td className="px-3 py-3 align-top text-right">
-                             <div className="scale-90 origin-top-right">
-                               <ScheduleCell row={r} actor={actor} onSchedule={(patch) => patchRow(r.id, patch)} />
+                                <div className="flex flex-col items-end gap-2 mt-auto pt-2 scale-90 origin-bottom-right" onClick={(e) => e.stopPropagation()}>
+                                   <ScheduleCell row={r} actor={actor} onSchedule={(patch) => patchRow(r.id, patch)} />
+                                </div>
                              </div>
                           </td>
                        </tr>
