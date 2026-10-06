@@ -8,11 +8,11 @@ import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Person
 import { downloadContentArchive, downloadKPIReport, downloadFullSystemBackup, downloadUserReport } from '../services/exportService';
 import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
-import { Drawer } from '../components/ui/Drawer';
-import { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal } from '../components/ui/Modals';
+import { Drawer, DeleteModal } from '../components/ui/Drawer';
+import { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal } from '../components/ui/Modals';
 
 import {
-  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LABEL,
+  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, CONTENT_TYPE_COLORS, PLATFORMS, PERMISSIONS, ROLE_LABEL,
   STATUS_META, ALL_STATUSES, isManager, isOwner, can, afterScript, afterShoot, getActions,
   startOfDay, addDays, sameDay, MONTHS, pad, formatRangeLabel, toLocalInput, fromLocalInput,
   formatTime, formatDay, formatStamp, SLUG_MAX, normalizeSlugInput, uid, generateUserUID,
@@ -441,29 +441,7 @@ function SetupScreen({ onCreate, busy, error }) {
 
 
 
-/* ------------------------------------------------------------------ */
-/* Clipboard                                                           */
-/* ------------------------------------------------------------------ */
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (e) {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand('copy');
-      document.body.removeChild(ta);
-      return ok;
-    } catch (err) {
-      return false;
-    }
-  }
-}
+
 
 /* ------------------------------------------------------------------ */
 /* Workflow buttons                                                    */
@@ -567,6 +545,8 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [selectedId, setSelectedId] = useState(null);
   const [showNew, setShowNew] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
+    const [showEmpReport, setShowEmpReport] = useState(false);
+    const [showBackup, setShowBackup] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
     const [theme, setTheme] = useState('dark');
   useEffect(() => {
@@ -584,6 +564,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   };
   const [showKpi, setShowKpi] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
+    const [showAuthority, setShowAuthority] = useState(false);
   const [reasonFor, setReasonFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
   const [toast, setToast] = useState(null);
@@ -599,6 +580,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const authRef = useRef({ id: null, email: '' });
   authRef.current = { id: authId, email: authUser ? authUser.email || '' : '' };
   const [showProfile, setShowProfile] = useState(false);
+    const [showMyWork, setShowMyWork] = useState(false);
 
   /* Signed-in person's own team record, and who the app treats as the actor. */
   const me = useMemo(() => (authId ? team.find((m) => m.auth_user_id === authId) || null : null), [team, authId]);
@@ -1274,12 +1256,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             <button className={btnPrimary} onClick={() => setShowNew(true)}>
               <Icon name="plus" /> New Content
             </button>
-            {isManager(actor) && (
-              <button className={btnGhost} onClick={() => setBulkOpen(true)}>
-                <Icon name="calendar" className="h-4 w-4" />
-                <span className="hidden md:inline">Bulk Schedule</span>
-              </button>
-            )}
+            
                       {supabase && me ? (
               <NotificationBell
                 memberId={me.id}
@@ -1354,18 +1331,20 @@ function NewsroomApp({ authUser, onSignOut }) {
       </header>
 
       <main className="mx-auto max-w-[1500px] px-5 py-6">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h1 className="text-[22px] font-semibold tracking-tight text-white">Daily Rundown</h1>
+        <div className="mb-4 relative flex flex-col items-center">
+          <h1 className="text-[22px] font-semibold tracking-tight text-white text-center">RUNDOWN</h1>
+          <div className="w-full flex justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2">
           <span className="text-[13px] text-zinc-500">
             {visible.length} item{visible.length === 1 ? '' : 's'} · {formatRangeLabel(range)}
           </span>
+        </div>
         </div>
 
         <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
           <table className="w-full min-w-[1180px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
-                  {['Time', 'Content Type', 'Slug Name', 'Staff Assignment', 'Short', 'Status', 'Action'].map((h) => (
+                  {['Time', 'Slug Name', 'Staff Assignment', 'Action'].map((h) => (
                   <th key={h} className="px-4 py-2 font-medium">
                     {h}
                   </th>
@@ -1377,7 +1356,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                 if (item.type === 'header') {
                   return (
                     <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
-                      <td colSpan={9} className="px-4 py-5">
+                      <td colSpan={4} className="px-4 py-5">
                         <div className="flex items-center gap-4">
                           <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.16]" />
                           <span className="text-[18px] font-semibold tracking-tight text-white">{item.name}</span>
@@ -1396,24 +1375,60 @@ function NewsroomApp({ authUser, onSignOut }) {
                     style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
                     className="row-in cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]"
                   >
-                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5 tabular-nums text-zinc-300">
+                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5 tabular-nums text-zinc-300 align-top">
                       <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
                       {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div> : null}
+                      <div className="mt-1.5"><StatusBadge status={r.status} /></div>
                     </td>
-                    <td className="px-3 py-2 border-r border-white/5 relative">
+                    <td className="max-w-[280px] px-3 py-2 border-r border-white/5 relative align-top">
                       <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
-                      <TypeBadge type={r.content_type} />
-                    </td>
-                    <td className="max-w-[280px] px-3 py-2 border-r border-white/5">
-                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <BlurInput 
-                          value={r.slug_name} 
-                          onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                          disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-[15px] font-mono font-black tracking-wide text-white px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
-                          placeholder="No slug..."
-                        />
-                        {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
-                      </div>
+                      {(() => {
+                        const tc = CONTENT_TYPE_COLORS[r.content_type?.toUpperCase()] || { bg: 'bg-zinc-500', text: 'text-zinc-500', tagText: 'text-white' };
+                        return (
+                          <div className="pl-3 flex flex-col gap-0.5">
+                            <div>
+                              <span className={`inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded ${tc.bg} ${tc.tagText}`}>
+                                {r.content_type || 'UNKNOWN'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <BlurInput 
+                                value={r.slug_name} 
+                                onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
+                                disabled={!can(actor, 'can_edit_metadata')} 
+                                className={`uppercase bg-transparent border border-transparent text-[18px] font-bold tracking-wide ${tc.text} px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
+                                placeholder="No slug..."
+                              />
+                              {r.is_script_locked ? <LockIcon message="Script locked" className="h-4 w-4 shrink-0 text-white" /> : null}
+                            </div>
+                            {(() => {
+                              const d = r.scheduled_publish_time ? new Date(r.scheduled_publish_time) : null;
+                              const isMainInRange = d && d >= range.start && d < addDays(range.end, 1);
+                              const totalShorts = (r.shorts || []).length;
+                              const dueShorts = shortsInRange(r, range.start, addDays(range.end, 1));
+                              if (!isMainInRange && dueShorts.length === 0) return null;
+                              
+                              const getOrdinal = (num) => {
+                                const sfx = ["th", "st", "nd", "rd"];
+                                const v = num % 100;
+                                return num + (sfx[(v - 20) % 10] || sfx[v] || sfx[0]);
+                              };
+                              return (
+                                <div className="flex flex-col mt-1 text-[11px] text-zinc-500">
+                                  {isMainInRange && totalShorts >= 1 && (
+                                    <div>Total {totalShorts} Short Content</div>
+                                  )}
+                                  {dueShorts.map(s => {
+                                    const n = (r.shorts || []).findIndex(x => x.id === s.id) + 1;
+                                    return <div key={s.id}>{getOrdinal(n)} out of {totalShorts}</div>;
+                                  })}
+                                </div>
+                              );
+                            })()}
+
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
                       <div className="flex flex-col gap-1 text-[11px]">
@@ -1423,22 +1438,8 @@ function NewsroomApp({ authUser, onSignOut }) {
                         {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
-                      {shortsInRange(r, range.start, addDays(range.end, 1)).length ? (
-                        <div className="flex flex-col gap-1">
-                          {shortsInRange(r, range.start, addDays(range.end, 1)).map((s) => (
-                            <span key={s.id} className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${s.published ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25' : 'bg-amber-500/15 text-amber-300 ring-amber-400/25'}`}>
-                              Short · {formatTime(s.publish_at)}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-zinc-700">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2">
-                      <StatusBadge status={r.status} />
-                    </td>
+                    
+                    
                     <td className="min-w-[260px] px-3 py-3">
                       <ActionButtons compact actions={getActions(r, actor)} onRun={(a) => runAction(r, a)} />
                     </td>
@@ -1510,11 +1511,13 @@ function NewsroomApp({ authUser, onSignOut }) {
           </table>
         </div>
         <section className="mt-10">
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-[18px] font-semibold tracking-tight text-white">Parking Zone</h2>
+          <div className="mb-4 relative flex flex-col items-center">
+            <h2 className="text-[22px] font-semibold tracking-tight text-white text-center">PARKING ZONE</h2>
+            <div className="w-full flex justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2">
             <span className="text-[13px] text-zinc-500">
               {parked.length} item{parked.length === 1 ? '' : 's'}
             </span>
+          </div>
           </div>
           <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
             <table className="w-full min-w-[1080px] text-left text-[13px]">
@@ -1606,7 +1609,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                                    />
                                 </div>
                                 <div className="flex flex-col items-end gap-2 mt-auto pt-2 scale-90 origin-bottom-right" onClick={(e) => e.stopPropagation()}>
-                                   <ScheduleCell row={r} actor={actor} onSchedule={(patch) => patchRow(r.id, patch)} />
+                                   <ScheduleCell row={r} actor={actor} onSchedule={scheduleParked} />
                                 </div>
                              </div>
                           </td>
@@ -1628,15 +1631,29 @@ function NewsroomApp({ authUser, onSignOut }) {
             )}
             {theme === 'light' ? 'Dark' : 'Light'}
           </button>
-          <button className={btnGhost} onClick={() => setShowTeam(true)}>
-            <Icon name="users" /> Team
-          </button>
-          <button className={btnGhost} onClick={() => setShowKpi(true)}>
-            <Icon name="chart" /> KPI
-          </button>
-          <button className={btnGhost} onClick={exportXlsx}>
-            <Icon name="download" /> Excel
-          </button>
+          
+          {(isManager(actor) || isOwner(actor)) ? (
+            <button className={btnGhost} onClick={() => setShowAuthority(true)}>
+              কর্তৃপক্ষ
+            </button>
+          ) : null}
+          {isManager(actor) ? (
+            <>
+              <button className={btnGhost} onClick={() => setShowTeam(true)}>
+                <Icon name="users" /> Team
+              </button>
+              <button className={btnGhost} onClick={() => setShowKpi(true)}>
+                <Icon name="chart" /> KPI
+              </button>
+              <button className={btnGhost} onClick={exportXlsx}>
+                <Icon name="download" /> Excel
+              </button>
+            </>
+          ) : (
+            <button className={btnGhost} onClick={() => setShowMyWork(true)}>
+              <Icon name="user" /> My Work
+            </button>
+          )}
           <button className={`${btnGhost} text-emerald-400 hover:text-emerald-300`} onClick={() => downloadKPIReport(visible)} title="Download KPI Excel for filtered data">
             <Icon name="chart" /> KPI Report
           </button>
@@ -1646,11 +1663,63 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
       </footer>
       {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
-      {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
+      
+        {showEmpReport ? (
+          <EmployeeReportModal 
+            rows={rows} 
+            range={range} 
+            team={team} 
+            onClose={() => setShowEmpReport(false)} 
+            onOpenContent={(r) => { setShowEmpReport(false); setSelectedId(r.id); }}
+          />
+        ) : null}
+
+        
+        {showBackup ? <BackupModal onClose={() => setShowBackup(false)} /> : null}
+
+        {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
+            {showAuthority ? (
+        <ModalShell onClose={() => setShowAuthority(false)} title="কর্তৃপক্ষ">
+          <div className="flex flex-col gap-3 p-4">
+            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setBulkOpen(true); }}>
+                <Icon name="calendar" /> Bulk Schedule Entry
+              </button>
+              <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowEmpReport(true); }}>
+                <Icon name="chart" /> Report
+              </button>
+              <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowBackup(true); }}>
+                <Icon name="download" /> Backup
+              </button>
+              <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowTeam(true); }}>
+              <Icon name="users" /> Team & permissions
+            </button>
+            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowAddChannel(true); }}>
+              <Icon name="plus" /> Add channel
+            </button>
+            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); downloadKPIReport(visible); }}>
+              <Icon name="chart" /> KPI report
+            </button>
+            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); exportXlsx(); }}>
+              <Icon name="download" /> Excel export
+            </button>
+          </div>
+        </ModalShell>
+      ) : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
-            {showProfile && me ? (
+            
+        {showMyWork && actor ? (
+          <MyWorkModal 
+            rows={rows} 
+            range={range} 
+            rangeLabel={formatRangeLabel(range)} 
+            actor={actor} 
+            onClose={() => setShowMyWork(false)} 
+          />
+        ) : null}
+
+        {showProfile && me ? (
         <ProfileModal
           member={me}
           authEmail={authUser ? authUser.email : ''}
@@ -1730,28 +1799,6 @@ function LoginScreen() {
     </FullScreenCard>
   );
 }
-
-/* Shrinks a photo to a 384px square JPEG (small and fast to load). */
-const resizeToJpeg = (file, size = 384) =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    const src = URL.createObjectURL(file);
-    img.onload = () => {
-      const side = Math.min(img.width, img.height);
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      canvas.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
-      URL.revokeObjectURL(src);
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not read this image'))), 'image/jpeg', 0.85);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(src);
-      reject(new Error('Could not read this image'));
-    };
-    img.src = src;
-  });
-
 
 function NotificationBell({ memberId, onOpenContent }) {
   const [items, setItems] = useState([]);

@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
-import { Icon } from './Icons';
-import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Field, SelectBox, ModalShell, Toggle, FullScreenCard } from './Shared';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Icon, LockIcon } from './Icons';
+import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Field, SelectBox, ModalShell, Toggle, FullScreenCard, BlurInput } from './Shared';
 import { RoleBadge, DesignationPill } from './Badges';
 import {
-  DEFAULT_CHANNELS, CONTENT_TYPES, PLATFORMS, PERMISSIONS, ROLE_LABEL,
+  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LABEL,
   isManager, isOwner, can, toLocalInput, fromLocalInput, formatDay, formatTime, 
-  SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays
+  SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays, sameDay, shortsInRange
 } from '../../lib/core';
 
-import { downloadUserReport } from '../../services/exportService';
+import { downloadUserReport, downloadContentArchive } from '../../services/exportService';
+import { generateFileName, uploadFile } from '../../services/storageService';
 import { createClient } from '@supabase/supabase-js';
+import { resizeToJpeg } from '../../utils/helpers';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -391,52 +393,185 @@ function KpiModal({ rows, rangeLabel, onClose }) {
 }
 
 function BulkScheduleModal({ onClose, team, channels, onAdd }) {
-  const [contentType, setContentType] = useState('PACKAGE');
-  const [channel, setChannel] = useState(channels[0]?.name || 'TV');
-  const [writer, setWriter] = useState('');
-  const [time, setTime] = useState('14:00');
-  const [days, setDays] = useState(7); // How many days to generate
+  const [items, setItems] = useState([createEmptyRow()]);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+
+  function createEmptyRow() {
+    return {
+      _id: Math.random().toString(36).substring(2),
+      scheduled_publish_time: '',
+      channel: channels[0]?.name || 'TV',
+      content_type: 'PACKAGE',
+      slug_name: '',
+      writer: '',
+      presenter_name: '',
+      video_editor: '',
+      error: null
+    };
+  }
+
+  const addRow = () => setItems(prev => [...prev, createEmptyRow()]);
+  const addTenRows = () => {
+    const newRows = Array.from({ length: 10 }, createEmptyRow);
+    setItems(prev => [...prev, ...newRows]);
+  };
+  const duplicateRow = (row) => setItems(prev => {
+    const idx = prev.findIndex(r => r._id === row._id);
+    const newRow = { ...row, _id: Math.random().toString(36).substring(2), error: null };
+    const copy = [...prev];
+    copy.splice(idx + 1, 0, newRow);
+    return copy;
+  });
+  const removeRow = (id) => setItems(prev => prev.filter(r => r._id !== id));
+
+  const updateItem = (id, field, value) => {
+    setItems(prev => prev.map(r => r._id === id ? { ...r, [field]: value, error: null } : r));
+  };
+
+  const handleSaveAll = async () => {
+    // Validate
+    let hasError = false;
+    const validated = items.map(r => {
+      if (!r.scheduled_publish_time || !r.channel || !r.content_type || !r.slug_name.trim()) {
+        hasError = true;
+        return { ...r, error: 'Missing required fields (Date, Channel, Type, Slug)' };
+      }
+      return r;
+    });
+
+    if (hasError) {
+      setItems(validated);
+      return;
+    }
+
+    setSaving(true);
+    let successCount = 0;
+    const newIds = [];
+    const failedRows = [];
+
+    for (const r of validated) {
+      const data = {
+        scheduled_publish_time: new Date(r.scheduled_publish_time).toISOString(),
+        channel: r.channel,
+        content_type: r.content_type,
+        slug_name: r.slug_name.trim(),
+        title: r.slug_name.trim(),
+        writer: r.writer || '',
+        presenter_name: r.presenter_name || '',
+        video_editor: r.video_editor || '',
+      };
+      const saved = await onAdd(data);
+      if (saved && saved.content_uid) {
+        successCount++;
+        newIds.push(saved.content_uid);
+      } else {
+        failedRows.push({ ...r, error: 'Failed to create' });
+      }
+    }
+
+    setSaving(false);
+    if (failedRows.length > 0) {
+      setItems(failedRows);
+      setResult({ msg: `Created ${successCount} contents. Some rows failed.`, ids: newIds });
+    } else {
+      setItems([createEmptyRow()]);
+      setResult({ msg: `Successfully created ${successCount} contents!`, ids: newIds });
+    }
+  };
+
+  const activeWriters = team.filter(t => t.active !== false && (t.can_write || t.role === 'owner')).map(t => t.full_name);
+  const activePresenters = team.filter(t => t.active !== false && (t.can_present || t.role === 'owner' || t.can_camera)).map(t => t.full_name); // App uses activeNames typically
+  const activeEditors = team.filter(t => t.active !== false && (t.can_edit_video || t.role === 'owner')).map(t => t.full_name);
+  
+  // Actually, standard activeNames for everyone
+  const activeNames = team.filter(t => t.active !== false).map(t => t.full_name);
 
   return (
-    <ModalShell title="Bulk Schedule Slots" subtitle="Pre-assign daily content" onClose={onClose}>
-      <div className="space-y-4">
-        <Field label="Content Type">
-          <SelectBox value={contentType} onChange={setContentType} options={['PACKAGE', 'SOT', 'LIVE', 'EXPLAINER'].map(c => ({value: c, label: c}))} />
-        </Field>
-        <Field label="Channel">
-          <SelectBox value={channel} onChange={setChannel} options={channels.map(c => ({value: c.name, label: c.name}))} />
-        </Field>
-        <Field label="Writer / Assignee">
-          <SelectBox value={writer} onChange={setWriter} options={[{value: '', label: 'Unassigned'}, ...team.filter(t => t.can_write || t.role === 'owner').map(t => ({value: t.full_name, label: t.full_name}))]} />
-        </Field>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Time of Day">
-            <input type="time" className={inputBase} value={time} onChange={e => setTime(e.target.value)} />
-          </Field>
-          <Field label="Days to schedule">
-            <input type="number" min="1" max="30" className={inputBase} value={days} onChange={e => setDays(e.target.value)} />
-          </Field>
+    <FullScreenCard onClose={onClose} title="Bulk Schedule Entry">
+      <div className="flex h-full flex-col p-6">
+        {result && (
+          <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-300">
+            <strong>{result.msg}</strong>
+            {result.ids.length > 0 && <div className="mt-1 text-sm">IDs: {result.ids.join(', ')}</div>}
+          </div>
+        )}
+        <div className="flex gap-2 mb-4">
+          <button className={btnGhost} onClick={addRow}><Icon name="plus" /> Add row</button>
+          <button className={btnGhost} onClick={addTenRows}><Icon name="plus" /> Add 10 rows</button>
+          <div className="flex-1" />
+          <button className={btnPrimary} onClick={handleSaveAll} disabled={saving || items.length === 0}>
+            {saving ? 'Saving...' : 'Save All'}
+          </button>
         </div>
-        <button className={`${btnPrimary} w-full mt-4`} onClick={async () => {
-          for (let i = 0; i < days; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() + i);
-            const [hh, mm] = time.split(':');
-            d.setHours(parseInt(hh), parseInt(mm), 0, 0);
-            
-            await onAdd({
-              slug_name: `TBD ${contentType}`,
-              content_type: contentType,
-              target_platform: channel,
-              writer: writer,
-              scheduled_publish_time: d.toISOString(),
-              status: 'Draft'
-            });
-          }
-          onClose();
-        }}>Generate {days} Slots</button>
+        
+        <div className="flex-1 overflow-auto rounded-xl border border-white/[0.08] bg-[#1a1a1f]">
+          <table className="w-full min-w-[1200px] text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-[#121215]">
+                <th className="px-3 py-2 w-[180px]">Date & Time *</th>
+                <th className="px-3 py-2 w-[120px]">Channel *</th>
+                <th className="px-3 py-2 w-[130px]">Type *</th>
+                <th className="px-3 py-2">Slug Name *</th>
+                <th className="px-3 py-2 w-[140px]">Writer</th>
+                <th className="px-3 py-2 w-[140px]">Presenter</th>
+                <th className="px-3 py-2 w-[140px]">Video Editor</th>
+                <th className="px-3 py-2 w-[80px]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((r, i) => (
+                <tr key={r._id} className={`border-b border-white/[0.03] hover:bg-white/[0.02] ${r.error ? 'bg-red-500/5' : ''}`}>
+                  <td className="px-3 py-2">
+                    <input type="datetime-local" className={inputBase + " [color-scheme:dark]"} value={r.scheduled_publish_time} onChange={e => updateItem(r._id, 'scheduled_publish_time', e.target.value)} />
+                    {r.error && !r.scheduled_publish_time && <div className="text-[10px] text-red-400 mt-1">Required</div>}
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className={inputBase} value={r.channel} onChange={e => updateItem(r._id, 'channel', e.target.value)}>
+                      {channels.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className={inputBase} value={r.content_type} onChange={e => updateItem(r._id, 'content_type', e.target.value)}>
+                      {['PACKAGE', 'SOT', 'LIVE', 'EXPLAINER', 'SHOW', 'STORY'].map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <input type="text" className={inputBase} value={r.slug_name} onChange={e => updateItem(r._id, 'slug_name', e.target.value)} placeholder="Slug..." />
+                    {r.error && !r.slug_name.trim() && <div className="text-[10px] text-red-400 mt-1">Required</div>}
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className={inputBase} value={r.writer} onChange={e => updateItem(r._id, 'writer', e.target.value)}>
+                      <option value="">- Unassigned -</option>
+                      {activeNames.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className={inputBase} value={r.presenter_name} onChange={e => updateItem(r._id, 'presenter_name', e.target.value)}>
+                      <option value="">- Unassigned -</option>
+                      {activeNames.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select className={inputBase} value={r.video_editor} onChange={e => updateItem(r._id, 'video_editor', e.target.value)}>
+                      <option value="">- Unassigned -</option>
+                      {activeNames.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex gap-2">
+                      <button className="text-sky-400 hover:text-sky-300" title="Duplicate row" onClick={() => duplicateRow(r)}><Icon name="copy" /></button>
+                      <button className="text-red-400 hover:text-red-300" title="Delete row" onClick={() => removeRow(r._id)}><Icon name="trash" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-zinc-500">No rows. Click "Add row" to start.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </ModalShell>
+    </FullScreenCard>
   );
 }
 
@@ -597,4 +732,461 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
   );
 }
 
-export { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal };
+
+function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
+  const endExclusive = addDays(range.end, 1);
+  const myItems = rows.filter(r => {
+    let inRange = false;
+    if (r.scheduled_publish_time) {
+      const d = new Date(r.scheduled_publish_time);
+      if (d >= range.start && d < endExclusive) inRange = true;
+    }
+    if (!inRange && typeof shortsInRange === 'function' && shortsInRange(r, range.start, endExclusive).length > 0) {
+      inRange = true;
+    }
+    if (!inRange) return false;
+
+    if (!actor) return false;
+    const name = actor.full_name;
+    return r.writer === name || 
+           r.presenter_name === name || 
+           r.video_editor === name || 
+           r.camera_person === name || 
+           r.uploader === name;
+  });
+
+  const roleTotals = { Writer: 0, Presenter: 0, 'Video Editor': 0, 'Camera Person': 0, Publisher: 0 };
+  const statusTotals = {};
+  
+  const getMyRoles = (r) => {
+    const roles = [];
+    if (!actor) return roles;
+    const name = actor.full_name;
+    if (r.writer === name) roles.push('Writer');
+    if (r.presenter_name === name) roles.push('Presenter');
+    if (r.video_editor === name) roles.push('Video Editor');
+    if (r.camera_person === name) roles.push('Camera Person');
+    if (r.uploader === name) roles.push('Publisher');
+    return roles;
+  };
+
+  myItems.forEach(r => {
+    const roles = getMyRoles(r);
+    roles.forEach(role => {
+      roleTotals[role] = (roleTotals[role] || 0) + 1;
+    });
+    statusTotals[r.status] = (statusTotals[r.status] || 0) + 1;
+  });
+
+  return (
+    <FullScreenCard onClose={onClose}>
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#121215] px-6 py-4">
+          <div>
+            <h2 className="text-[18px] font-semibold text-white">My Work: {actor?.full_name}</h2>
+            <div className="text-[13px] text-zinc-400">{rangeLabel}</div>
+          </div>
+          <button className={btnGhost} onClick={() => myItems.forEach(r => downloadContentArchive(r))}>
+            <Icon name="download" /> Download Zip
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto p-6 bg-black/90">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="rounded-xl border border-white/[0.08] bg-[#1a1a1f] p-4">
+              <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-zinc-500">Totals by Role</h3>
+              <div className="grid grid-cols-2 gap-2 text-[13px]">
+                {Object.entries(roleTotals).map(([r, c]) => (
+                  <div key={r} className="flex justify-between border-b border-white/[0.04] py-1">
+                    <span className="text-zinc-400">{r}</span>
+                    <span className="text-white font-medium">{c}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-[#1a1a1f] p-4">
+              <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-zinc-500">Totals by Status</h3>
+              <div className="grid grid-cols-2 gap-2 text-[13px]">
+                {Object.entries(statusTotals).map(([s, c]) => (
+                  <div key={s} className="flex justify-between border-b border-white/[0.04] py-1">
+                    <span className="text-zinc-400">{s}</span>
+                    <span className="text-white font-medium">{c}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#1a1a1f]">
+            <table className="w-full min-w-[900px] text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-[#121215]">
+                  <th className="px-4 py-3">Content ID</th>
+                  <th className="px-4 py-3">Slug Name</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Channel</th>
+                  <th className="px-4 py-3">My role(s)</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Publish time</th>
+                  <th className="px-4 py-3">Short count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myItems.map(r => (
+                  <tr key={r.id} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                    <td className="px-4 py-3 font-mono text-[11px] text-zinc-500">{r.content_uid}</td>
+                    <td className="px-4 py-3 text-white font-medium">{r.slug_name}</td>
+                    <td className="px-4 py-3 text-zinc-300">{r.content_type}</td>
+                    <td className="px-4 py-3 text-zinc-300">{r.channel}</td>
+                    <td className="px-4 py-3 text-sky-300">{getMyRoles(r).join(', ')}</td>
+                    <td className="px-4 py-3">{r.status}</td>
+                    <td className="px-4 py-3 text-zinc-400">{r.scheduled_publish_time ? formatStamp(r.scheduled_publish_time) : '-'}</td>
+                    <td className="px-4 py-3 text-zinc-400">{(r.shorts || []).length}</td>
+                  </tr>
+                ))}
+                {myItems.length === 0 && (
+                  <tr>
+                    <td colSpan="8" className="px-4 py-8 text-center text-zinc-500">No content found for your roles in this date range.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </FullScreenCard>
+  );
+}
+
+
+function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
+  const [localRange, setLocalRange] = useState({ start: range.start, end: range.end });
+  const [data, setData] = useState([]);
+  const [activeRoles, setActiveRoles] = useState([]);
+
+  useEffect(() => {
+    const endExclusive = addDays(localRange.end, 1);
+    
+    const validRows = rows.filter(r => {
+      let inRange = false;
+      if (r.scheduled_publish_time) {
+         const d = new Date(r.scheduled_publish_time);
+         if (d >= localRange.start && d < endExclusive) inRange = true;
+      }
+      if (!inRange && typeof shortsInRange === 'function' && shortsInRange(r, localRange.start, endExclusive).length > 0) {
+         inRange = true;
+      }
+      return inRange;
+    });
+
+    const stats = {};
+    team.forEach(m => {
+      stats[m.full_name] = { 
+        name: m.full_name, 
+        total: 0, 
+        published: 0, 
+        roles: {}, 
+        contents: new Map(),
+        details: [] 
+      };
+    });
+
+    const ALL_ROLES = [
+      { key: 'writer', label: 'Writer' },
+      { key: 'presenter_name', label: 'Presenter' },
+      { key: 'video_editor', label: 'Video Editor' },
+      { key: 'camera_person', label: 'Camera Person' },
+      { key: 'uploader', label: 'Publisher' },
+      { key: 'idea_by', label: 'Idea' },
+      { key: 'producer', label: 'Producer' },
+      { key: 'vfx', label: 'Visual Effects' },
+      { key: 'colorist', label: 'Colorist' },
+      { key: 'light_designer', label: 'Light Design' },
+      { key: 'sound_recordist', label: 'Sound Record' },
+      { key: 'audio_mixer', label: 'Audio Mixing' },
+      { key: 'video_switcher', label: 'Video Switch' },
+      { key: 'live_audio', label: 'Live Audio' }
+    ];
+
+    validRows.forEach(r => {
+      ALL_ROLES.forEach(roleDef => {
+        const personName = r[roleDef.key];
+        if (personName && stats[personName]) {
+          const s = stats[personName];
+          s.roles[roleDef.label] = (s.roles[roleDef.label] || 0) + 1;
+          s.contents.set(r.id, r);
+          s.details.push({
+            name: personName,
+            role: roleDef.label,
+            contentId: r.content_uid || r.id,
+            slug: r.slug_name,
+            type: r.content_type,
+            channel: r.channel,
+            status: r.status,
+            publishTime: r.scheduled_publish_time,
+            row: r
+          });
+        }
+      });
+    });
+
+    const finalData = [];
+    const roleSet = new Set();
+    Object.values(stats).forEach(s => {
+      if (s.contents.size > 0) {
+        s.total = s.contents.size;
+        s.published = Array.from(s.contents.values()).filter(c => c.status === 'Published').length;
+        Object.keys(s.roles).forEach(k => roleSet.add(k));
+        finalData.push(s);
+      }
+    });
+
+    const sortedRoles = ALL_ROLES.filter(r => roleSet.has(r.label)).map(r => r.label);
+    finalData.sort((a, b) => b.total - a.total);
+    setActiveRoles(sortedRoles);
+    setData(finalData);
+  }, [rows, localRange, team]);
+
+  const handleExport = () => {
+    import('xlsx').then(XLSX => {
+      const summarySheet = data.map(d => {
+        const row = { Name: d.name, 'Total contents': d.total, 'Published': d.published };
+        activeRoles.forEach(r => row[r] = d.roles[r] || 0);
+        return row;
+      });
+
+      const detailsSheet = [];
+      data.forEach(d => {
+        d.details.forEach(det => {
+          detailsSheet.push({
+            Name: det.name,
+            Role: det.role,
+            'Content ID': det.contentId,
+            'Slug Name': det.slug,
+            Type: det.type,
+            Channel: det.channel,
+            Status: det.status,
+            'Publish time': det.publishTime ? new Date(det.publishTime).toLocaleString() : ''
+          });
+        });
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summarySheet), 'Summary');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailsSheet), 'Details');
+      XLSX.writeFile(wb, `Employee_Report_${Date.now()}.xlsx`);
+    });
+  };
+
+  const toDateInput = (d) => {
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  };
+
+  const handleDateChange = (field, val) => {
+    if (!val) return;
+    const d = new Date(val);
+    d.setHours(0,0,0,0);
+    if (!isNaN(d.getTime())) {
+      setLocalRange(prev => ({ ...prev, [field]: d }));
+    }
+  };
+
+  return (
+    <FullScreenCard onClose={onClose} title="Employee Report">
+      <div className="flex flex-col h-full bg-[#121215]">
+        <div className="flex flex-wrap items-center justify-between border-b border-white/[0.06] px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-[12px] text-zinc-500">From</label>
+              <input type="date" className={inputBase + " [color-scheme:dark] w-36 !py-1"} value={toDateInput(localRange.start)} onChange={e => handleDateChange('start', e.target.value)} />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-[12px] text-zinc-500">To</label>
+              <input type="date" className={inputBase + " [color-scheme:dark] w-36 !py-1"} value={toDateInput(localRange.end)} onChange={e => handleDateChange('end', e.target.value)} />
+            </div>
+          </div>
+          <button className={btnGhost} onClick={handleExport}>
+            <Icon name="download" /> Download Excel
+          </button>
+        </div>
+        <div className="flex-1 p-6 overflow-auto bg-[#1a1a1f]">
+          <table className="w-full text-left text-[13px] border border-white/[0.08] rounded-xl overflow-hidden">
+            <thead className="bg-[#121215]">
+              <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Total contents</th>
+                <th className="px-4 py-3">Published</th>
+                {activeRoles.map(r => <th key={r} className="px-4 py-3">{r}</th>)}
+                <th className="px-4 py-3">Content IDs</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map(d => (
+                <tr key={d.name} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                  <td className="px-4 py-3 font-medium text-white">{d.name}</td>
+                  <td className="px-4 py-3 text-emerald-400 font-bold">{d.total}</td>
+                  <td className="px-4 py-3 text-sky-400">{d.published}</td>
+                  {activeRoles.map(r => (
+                    <td key={r} className="px-4 py-3 text-zinc-300">{d.roles[r] || 0}</td>
+                  ))}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from(d.contents.values()).map(c => (
+                        <button key={c.id} className="text-[11px] font-mono text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.1] px-1.5 py-0.5 rounded transition" onClick={() => onOpenContent(c)}>
+                          {c.content_uid || c.id}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {data.length === 0 && (
+                <tr>
+                  <td colSpan={activeRoles.length + 4} className="px-4 py-8 text-center text-zinc-500">No data found for this date range.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </FullScreenCard>
+  );
+}
+
+export { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal };
+
+
+export function BackupModal({ onClose }) {
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState('');
+  const [error, setError] = useState('');
+
+  const performBackup = async (format) => {
+    setLoading(true);
+    setError('');
+    setProgress('Starting backup...');
+    try {
+      const tables = ['contents', 'team_members', 'channels', 'notifications', 'organizations'];
+      const dbData = {};
+      const readmeNotes = [];
+
+      for (const table of tables) {
+        setProgress(`Fetching ${table}...`);
+        let allRows = [];
+        let page = 0;
+        const pageSize = 1000;
+        while (true) {
+          const { data, error: err } = await supabase
+            .from(table)
+            .select('*')
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+          if (err) throw new Error(`Table ${table} failed: ${err.message}`);
+          if (!data || data.length === 0) break;
+          allRows = allRows.concat(data);
+          setProgress(`Fetching ${table}... ${allRows.length} rows`);
+          if (data.length < pageSize) break;
+          page++;
+        }
+        dbData[table] = allRows;
+      }
+
+      const d = new Date();
+      const stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
+
+      if (format === 'json') {
+        setProgress('Generating JSON file...');
+        const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `newsroom-backup-${stamp}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (format === 'excel') {
+        setProgress('Generating Excel file...');
+        const XLSX = await import('xlsx');
+        const wb = XLSX.utils.book_new();
+
+        for (const table of tables) {
+          const rows = dbData[table];
+          const sheetData = rows.map((row, rowIndex) => {
+            const outRow = {};
+            for (const [key, val] of Object.entries(row)) {
+              if (val === null || val === undefined) {
+                outRow[key] = '';
+              } else if (typeof val === 'object') {
+                const str = JSON.stringify(val);
+                if (str.length > 32767) {
+                  outRow[key] = str.substring(0, 32764) + '...';
+                  readmeNotes.push(`Table: ${table}, Row: ${row.id || rowIndex}, Field: ${key} was truncated (>32767 chars).`);
+                } else {
+                  outRow[key] = str;
+                }
+              } else {
+                const str = String(val);
+                if (str.length > 32767) {
+                  outRow[key] = str.substring(0, 32764) + '...';
+                  readmeNotes.push(`Table: ${table}, Row: ${row.id || rowIndex}, Field: ${key} was truncated (>32767 chars).`);
+                } else {
+                   outRow[key] = val;
+                }
+              }
+            }
+            return outRow;
+          });
+          if (sheetData.length === 0) {
+             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ _empty: true }]), table.substring(0, 31));
+          } else {
+             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), table.substring(0, 31));
+          }
+        }
+
+        if (readmeNotes.length > 0) {
+          const readmeData = readmeNotes.map(note => ({ Note: note }));
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(readmeData), 'README');
+        } else {
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Note: 'No data was truncated.' }]), 'README');
+        }
+
+        XLSX.writeFile(wb, `newsroom-backup-${stamp}.xlsx`);
+      }
+      
+      setProgress('Backup complete!');
+      setTimeout(() => setProgress(''), 3000);
+    } catch (e) {
+      console.error(e);
+      setError(e.message || 'Backup failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ModalShell title="Data Backup" subtitle="Export your workspace data" onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <div className="text-zinc-400 text-sm">
+          <Icon name="info" className="inline-block mr-1.5 h-4 w-4 text-sky-400" />
+          This is a data export, not a full database backup.
+        </div>
+        {error && (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+        {progress && (
+          <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-sm animate-pulse">
+            {progress}
+          </div>
+        )}
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <button className={btnPrimary + " flex-1"} onClick={() => performBackup('json')} disabled={loading}>
+            <Icon name="download" /> Download Backup (JSON)
+          </button>
+          <button className={btnPrimary + " flex-1"} onClick={() => performBackup('excel')} disabled={loading}>
+            <Icon name="download" /> Download Backup (Excel)
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}

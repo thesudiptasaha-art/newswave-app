@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Icon, LockIcon } from './Icons';
+import { copyText } from '../../utils/helpers';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
@@ -333,6 +334,7 @@ function AssetsTab({ row, actor, patch }) {
   const active = !!actor && actor.active !== false;
   const [title, setTitle] = useState('');
   const [platform, setPlatform] = useState('youtube');
+  const [format, setFormat] = useState('Short Video');
   const [url, setUrl] = useState('');
   const [thumbText, setThumbText] = useState('');
   const updateShort = (id, p) => patch({ shorts: row.shorts.map((s) => (s.id === id ? { ...s, ...p } : s)) });
@@ -401,7 +403,17 @@ function AssetsTab({ row, actor, patch }) {
           {row.shorts.map((s, i) => (
             <div key={s.id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
               <div className="min-w-0 flex-1">
-                <div className="truncate font-mono text-[11px] text-zinc-500">{shortUid(s, i)}</div>
+                <div className="flex items-center gap-2">
+                  <div className="truncate font-mono text-[11px] text-zinc-500">{shortUid(s, i)}</div>
+                  <select
+                    value={s.format || 'Short Video'}
+                    onChange={(e) => updateShort(s.id, { format: e.target.value })}
+                    disabled={!active}
+                    className="appearance-none bg-zinc-800 text-[9px] font-bold text-zinc-300 uppercase tracking-wider px-1.5 py-0.5 rounded cursor-pointer border border-transparent hover:border-zinc-600 focus:outline-none disabled:opacity-50"
+                  >
+                    {SHORT_FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
                 <div className="truncate text-[13px] text-zinc-100">{s.title}</div>
                 {s.thumb_text ? <div className="truncate text-[12px] text-sky-300/80">Thumb: {s.thumb_text}</div> : null}
                 <div className="truncate text-[12px] text-amber-300/80">{s.publish_at ? `Upload: ${formatStamp(s.publish_at)}` : 'No upload time set'}</div>
@@ -432,6 +444,7 @@ function AssetsTab({ row, actor, patch }) {
         <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 sm:grid-cols-2">
           <input className={inputBase} placeholder="Short title" value={title} disabled={!active} onChange={(e) => setTitle(e.target.value)} />
           <SelectBox value={platform} onChange={setPlatform} options={PLATFORMS.map((p) => ({ value: p.id, label: p.label }))} disabled={!active} />
+          <SelectBox value={format} onChange={setFormat} options={SHORT_FORMATS.map((f) => ({ value: f, label: f }))} disabled={!active} />
           <input className={inputBase} placeholder="Short thumb text (hook)" value={thumbText} disabled={!active} onChange={(e) => setThumbText(e.target.value)} />
           <input className={inputBase} placeholder="URL (optional)" value={url} disabled={!active} onChange={(e) => setUrl(e.target.value)} />
             <div className="sm:col-span-2">
@@ -442,7 +455,7 @@ function AssetsTab({ row, actor, patch }) {
             className={`${btnPrimary} sm:col-span-2`}
             disabled={!active || !title.trim()}
             onClick={() => {
-              patch({ shorts: [...row.shorts, { id: uid(), n: nextShortN, title: title.trim(), thumb_text: thumbText.trim(), platform, url: url.trim(), publish_at: fromLocalInput(shortWhen), published: false }] });
+              patch({ shorts: [...row.shorts, { id: uid(), n: nextShortN, title: title.trim(), thumb_text: thumbText.trim(), platform, format, url: url.trim(), publish_at: fromLocalInput(shortWhen), published: false }] });
               setShortWhen('');
               setTitle('');
               setThumbText('');
@@ -587,7 +600,7 @@ function QcTab({ row, actor, patch }) {
   );
 }
 
-function DeleteModal({ row, onClose, onConfirm }) {
+export function DeleteModal({ row, onClose, onConfirm }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const key = (row.slug_name || row.title || row.content_uid || 'DELETE').trim();
@@ -625,6 +638,8 @@ function DeleteModal({ row, onClose, onConfirm }) {
   );
 }
 
+
+const SHORT_FORMATS = ["Short Video", "Reel", "Photo Card", "Photo Story", "Post"];
 function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
 
   const [tab, setTab] = useState('overview');
