@@ -2801,7 +2801,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                         <BlurInput 
                           value={r.slug_name} 
                           onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                          disabled={!can(actor, \'can_edit_metadata\')} className={`bg-transparent border border-transparent text-[12px] font-mono font-semibold tracking-wide text-white px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, \'can_edit_metadata\') ? \'hover:bg-white/[0.04] focus:bg-black focus:border-white/10\' : \'opacity-50 cursor-not-allowed\'}`}
+                          disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-[12px] font-mono font-semibold tracking-wide text-white px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
                           placeholder="No slug..."
                         />
                         {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
@@ -2887,7 +2887,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                                  <BlurInput 
                                    value={r.slug_name} 
                                    onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                   disabled={!can(actor, \'can_edit_metadata\')} className={`bg-transparent border border-transparent text-right text-[14px] font-bold text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, \'can_edit_metadata\') ? \'hover:bg-white/[0.04] focus:bg-black focus:border-white/10\' : \'opacity-50 cursor-not-allowed\'}`}
+                                   disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[14px] font-bold text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
                                    placeholder="Enter slug..."
                                  />
                               </div>
@@ -2992,7 +2992,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                                    <BlurInput 
                                      value={r.slug_name} 
                                      onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                     disabled={!can(actor, \'can_edit_metadata\')} className={`bg-transparent border border-transparent text-right text-[14px] font-bold text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, \'can_edit_metadata\') ? \'hover:bg-white/[0.04] focus:bg-black focus:border-white/10\' : \'opacity-50 cursor-not-allowed\'}`}
+                                     disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[14px] font-bold text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
                                      placeholder="Enter slug..."
                                    />
                                 </div>
