@@ -1365,7 +1365,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           <table className="w-full min-w-[1180px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
-                  {['Time', 'Content Type', 'Slug Name', 'Writer', 'Presenter', 'Video Editor', 'Short', 'Status', 'Action'].map((h) => (
+                  {['Time', 'Content Type', 'Slug Name', 'Staff Assignment', 'Short', 'Status', 'Action'].map((h) => (
                   <th key={h} className="px-4 py-3 font-medium">
                     {h}
                   </th>
@@ -1409,20 +1409,19 @@ function NewsroomApp({ authUser, onSignOut }) {
                         <BlurInput 
                           value={r.slug_name} 
                           onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                          disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-[12px] font-mono font-semibold tracking-wide text-white px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
+                          disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-[15px] font-mono font-black tracking-wide text-white px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
                           placeholder="No slug..."
                         />
                         {r.is_script_locked ? <LockIcon message="Script locked" className="h-3 w-3 shrink-0" /> : null}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
-                      <PersonName name={r.writer} team={team} hideDesignation />
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
-                      <PersonName name={r.presenter_name} team={team} hideDesignation />
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
-                      <PersonName name={r.video_editor} team={team} hideDesignation />
+                      <div className="flex flex-col gap-1.5 text-[11px]">
+                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-12 shrink-0">Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
+                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-12 shrink-0">Present:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
+                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-12 shrink-0">Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
+                        {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 border-r border-white/5">
                       {shortsInRange(r, range.start, addDays(range.end, 1)).length ? (
@@ -1495,7 +1494,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                                  <BlurInput 
                                    value={r.slug_name} 
                                    onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                   disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[14px] font-bold text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
+                                   disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[16px] font-black text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
                                    placeholder="Enter slug..."
                                  />
                               </div>
@@ -1521,7 +1520,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             <table className="w-full min-w-[1080px] text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
-                  {['Why', 'Content Type', 'Slug Name', 'Channel', 'Writer', 'Presenter', 'Status', 'New publish time'].map((h) => (
+                  {['Why', 'Content Type', 'Slug Name', 'Channel', 'Staff Assignment', 'Status', 'New publish time'].map((h) => (
                     <th key={h} className="px-4 py-3 font-medium">
                       {h}
                     </th>
@@ -1600,7 +1599,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                                    <BlurInput 
                                      value={r.slug_name} 
                                      onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                     disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[14px] font-bold text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
+                                     disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[16px] font-black text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
                                      placeholder="Enter slug..."
                                    />
                                 </div>

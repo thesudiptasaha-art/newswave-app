@@ -16,6 +16,26 @@ import {
   FIELD_PERM, TRACKED_FIELDS
 } from '../../lib/core';
 
+
+function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</label>
+      <select
+        value={row[field] || ''}
+        disabled={disabled}
+        onChange={(e) => patch({ [field]: e.target.value })}
+        className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[13px] text-white transition focus:border-white/[0.15] focus:bg-white/[0.04] focus:outline-none focus:ring-4 focus:ring-white/[0.04] disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <option value="">— Unassigned —</option>
+        {team.filter(t => !skillKey || t[skillKey] || t.role === 'owner' || t.role === 'manager').map(m => (
+          <option key={m.id} value={m.full_name}>{m.full_name}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
   const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);
   const lockMsg = (label) => `You need the “${label}” permission`;
@@ -24,16 +44,12 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
   const okPres = can(actor, 'can_change_presenter');
   const okChan = can(actor, 'can_change_channel');
   const okEditor = can(actor, 'can_assign_editor');
+  const [showExtended, setShowExtended] = useState(false);
+  const active = !!actor && actor.active !== false;
 
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-1 gap-4">
-        <Field label="Title" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
-          <BlurInput value={row.title} disabled={!okMeta} onCommit={(v) => patch({ title: v })} placeholder="Title" />
-        </Field>
-        <Field label="Thumbnail text" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
-          <BlurInput value={row.thumbnail_text} disabled={!okMeta} onCommit={(v) => patch({ thumbnail_text: v })} placeholder="Hook on the thumbnail" />
-        </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Channel" locked={!okChan} lockMessage={lockMsg('Change channel')}>
             <SelectBox value={row.channel} disabled={!okChan} options={channels} onChange={(v) => patch({ channel: v })} />
@@ -53,18 +69,36 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
       <section>
         <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Staff assignment</div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Writer" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
-            <SelectBox value={row.writer} disabled={!okMeta} options={activeNames} onChange={(v) => patch({ writer: v })} placeholder="Unassigned" />
-          </Field>
+          <CreditSelect label="Idea" field="idea_by" skillKey="can_write" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Research & Script" field="writer" skillKey="can_write" row={row} patch={patch} team={team} disabled={!active} />
           <Field label="Presenter" locked={!okPres} lockMessage={lockMsg('Change presenter')}>
             <SelectBox value={row.presenter_name} disabled={!okPres} options={activeNames} onChange={(v) => patch({ presenter_name: v })} placeholder="Unassigned" />
           </Field>
-          <Field label="Video editor" locked={!okEditor} lockMessage={lockMsg('Assign editor')}>
-            <SelectBox value={row.video_editor} disabled={!okEditor} options={activeNames} onChange={(v) => patch({ video_editor: v })} placeholder="Unassigned" />
-          </Field>
-          <Field label="Camera person" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
-            <SelectBox value={row.camera_person} disabled={!okMeta} options={activeNames} onChange={(v) => patch({ camera_person: v })} placeholder="Unassigned" />
-          </Field>
+          <CreditSelect label="Producer" field="producer" skillKey="can_produce" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Cameraman" field="camera_person" skillKey="can_camera" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Video Editor" field="video_editor" skillKey="can_edit_video" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Uploader" field="uploader" skillKey="" row={row} patch={patch} team={team} disabled={!active} />
+        </div>
+        
+        <div className="mt-4">
+          <button 
+            onClick={() => setShowExtended(!showExtended)}
+            className="text-[12px] font-medium text-sky-400 hover:text-sky-300 transition"
+          >
+            {showExtended ? 'Hide Credits' : 'See More Credits'}
+          </button>
+          
+          {showExtended ? (
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-white/[0.06] pt-4">
+              <CreditSelect label="Visual Effects" field="vfx" skillKey="can_vfx" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Colorist" field="colorist" skillKey="can_color" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Light Design" field="light_designer" skillKey="can_light" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Sound Record" field="sound_recordist" skillKey="can_sound_record" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Audio Mixing" field="audio_mixer" skillKey="can_audio_mix" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Video Switch" field="video_switcher" skillKey="can_video_switch" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Live Audio Mixing" field="live_audio" skillKey="can_live_audio" row={row} patch={patch} team={team} disabled={!active} />
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -247,7 +281,7 @@ function normalizeHashtags(v) {
     .join(' ');
 }
 
-function MetadataTab({ row, actor, patch }) {
+function PublisherTab({ row, actor, patch }) {
   const ok = can(actor, 'can_edit_metadata');
   const msg = 'You need the “Edit metadata” permission';
   return (
@@ -259,6 +293,12 @@ function MetadataTab({ row, actor, patch }) {
       ) : (
         <p className="text-[12px] text-zinc-500">Changes save automatically when you click away from a field.</p>
       )}
+      <Field label="Title" locked={!ok} lockMessage={msg}>
+        <BlurInput value={row.title} disabled={!ok} onCommit={(v) => patch({ title: v })} placeholder="Title" />
+      </Field>
+      <Field label="Thumbnail text" locked={!ok} lockMessage={msg}>
+        <BlurInput value={row.thumbnail_text} disabled={!ok} onCommit={(v) => patch({ thumbnail_text: v })} placeholder="Hook on the thumbnail" />
+      </Field>
       <Field label="Post caption / social copy" locked={!ok} lockMessage={msg}>
         <BlurInput multiline rows={6} value={row.post_caption} disabled={!ok} onCommit={(v) => patch({ post_caption: v })} placeholder="Caption that goes out with the post…" />
       </Field>
@@ -585,56 +625,6 @@ function DeleteModal({ row, onClose, onConfirm }) {
   );
 }
 
-function CreditTab({ row, actor, patch, team }) {
-  const active = !!actor && actor.active !== false;
-  
-  const CreditSelect = ({ label, field, skillKey }) => (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</label>
-      <select
-        value={row[field] || ''}
-        disabled={!active}
-        onChange={(e) => patch({ [field]: e.target.value })}
-        className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[13px] text-white transition focus:border-white/[0.15] focus:bg-white/[0.04] focus:outline-none focus:ring-4 focus:ring-white/[0.04]"
-      >
-        <option value="">— Unassigned —</option>
-        {team.filter(t => !skillKey || t[skillKey] || t.role === 'owner' || t.role === 'manager').map(m => (
-          <option key={m.id} value={m.full_name}>{m.full_name}</option>
-        ))}
-      </select>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5">
-        <h3 className="mb-4 text-[13px] font-semibold text-white">Main Credits</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <CreditSelect label="Idea" field="idea_by" skillKey="can_write" />
-          <CreditSelect label="Research & Script" field="writer" skillKey="can_write" />
-          <CreditSelect label="Producer" field="producer" skillKey="can_produce" />
-          <CreditSelect label="Camera Operator" field="camera_person" skillKey="can_camera" />
-          <CreditSelect label="Video Editor" field="video_editor" skillKey="can_edit_video" />
-          <CreditSelect label="Uploader" field="uploader" />
-        </div>
-      </div>
-      
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-5">
-        <h3 className="mb-4 text-[13px] font-semibold text-white">Extended Credits</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <CreditSelect label="Visual Effects" field="vfx" skillKey="can_vfx" />
-          <CreditSelect label="Colorist" field="colorist" skillKey="can_color" />
-          <CreditSelect label="Light Design" field="light_designer" skillKey="can_light" />
-          <CreditSelect label="Sound Record" field="sound_recordist" skillKey="can_sound_record" />
-          <CreditSelect label="Audio Mixing" field="audio_mixer" skillKey="can_audio_mix" />
-          <CreditSelect label="Video Switch" field="video_switcher" skillKey="can_video_switch" />
-          <CreditSelect label="Live Audio Mixing" field="live_audio" skillKey="can_live_audio" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
 
   const [tab, setTab] = useState('overview');
@@ -648,8 +638,8 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
     ['script', 'Script Desk'],
     ['assets', 'Assets & Shorts'],
     ['qc', 'QC & Audit'],
-    ['metadata', 'Metadata'],
-    ['credit', 'Credit Card'],
+    ['metadata', 'Publisher'],
+    
   ];
   return (
     <div className="fixed inset-0 z-50">
@@ -663,7 +653,7 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
                 <StatusBadge status={row.status} />
                 <span className="font-mono text-[11px] text-zinc-600">{row.content_uid}</span>
               </div>
-              <h2 className="truncate text-[20px] font-semibold tracking-tight text-white">{row.slug_name || row.title || 'Untitled'}</h2>
+              <h2 className="truncate text-[24px] font-black tracking-tight text-white">{row.slug_name || row.title || 'Untitled'}</h2>
               <p className="mt-0.5 text-[13px] text-zinc-500">
                 {row.channel || 'No channel'} · {formatDay(row.scheduled_publish_time)} {formatTime(row.scheduled_publish_time)}
               </p>
@@ -689,21 +679,41 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
           {tab === 'script' ? <ScriptTab row={row} actor={actor} patch={patch} /> : null}
           {tab === 'assets' ? <AssetsTab row={row} actor={actor} patch={patch} /> : null}
           {tab === 'qc' ? <QcTab row={row} actor={actor} patch={patch} /> : null}
-          {tab === 'metadata' ? <MetadataTab row={row} actor={actor} patch={patch} /> : null}
-          {tab === 'credit' ? <CreditTab row={row} actor={actor} patch={patch} team={team} /> : null}
+          {tab === 'metadata' ? <PublisherTab row={row} actor={actor} patch={patch} /> : null}
+          
         </div>
         <footer className="border-t border-white/[0.08] bg-black/70 px-6 py-4 backdrop-blur-xl">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Next step</div>
           <ActionButtons actions={actions} onRun={(a) => onRun(row, a)} />
           <div className="mt-3 border-t border-white/[0.06] pt-3 flex items-center gap-3">
-            <button
-              onClick={() => downloadContentArchive(row)}
-              title="Download Full Archive (PDF + Script + Logs)"
-              className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[12px] font-medium text-indigo-300 transition hover:bg-indigo-500/20"
-            >
-              <Icon name="download" className="h-3.5 w-3.5" />
-              Archive ZIP
-            </button>
+            
+            {(() => {
+              const isManagerOrOwner = isManager(actor);
+              const isInvolved = actor && [
+                row.idea_by, row.writer, row.producer, row.camera_person, row.video_editor, row.uploader,
+                row.presenter_name, row.vfx, row.colorist, row.light_designer, row.sound_recordist, row.audio_mixer,
+                row.video_switcher, row.live_audio
+              ].includes(actor.full_name);
+              const canDownload = isManagerOrOwner || isInvolved;
+              return canDownload ? (
+                <button
+                  onClick={() => downloadContentArchive(row)}
+                  title="Download Full Archive (PDF + Script + Logs)"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[12px] font-medium text-indigo-300 transition hover:bg-indigo-500/20"
+                >
+                  <Icon name="download" className="h-3.5 w-3.5" /> Archive ZIP
+                </button>
+              ) : (
+                <button
+                  disabled
+                  title="You must be assigned to this content to download its archive."
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-zinc-500 cursor-not-allowed"
+                >
+                  <Icon name="download" className="h-3.5 w-3.5" /> Archive ZIP
+                </button>
+              );
+            })()}
+
           </div>
           <div className="mt-3 border-t border-white/[0.06] pt-3">
             <button
