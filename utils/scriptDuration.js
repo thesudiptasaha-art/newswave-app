@@ -1,3 +1,4 @@
+import { scriptToPlainText } from './scriptRich';
 ﻿import { SCRIPT_WORDS_PER_MINUTE } from './constants';
 
 /*
@@ -8,6 +9,7 @@
   300 words -> "2:18"
 */
 export function scriptStats(text) {
+  text = scriptToPlainText(text);
   const str = text || '';
   const trimmed = str.trim();
   const words = trimmed ? trimmed.split(/\s+/).length : 0;

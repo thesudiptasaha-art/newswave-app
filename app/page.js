@@ -1,5 +1,6 @@
 'use client';
 import { purgeOldDrafts } from '../utils/scriptDraft';
+import { scriptToPlainText } from '../utils/scriptRich';
 import { isFeatureEnabled } from '../utils/features';
 import { APP_NAME, APP_CREDIT } from '../utils/constants';
 
@@ -492,7 +493,7 @@ function describeValue(field, v) {
   if (field === 'scheduled_publish_time') return v ? formatStamp(v) : '';
   if (field === 'is_script_locked') return v ? 'Locked' : 'Unlocked';
   if (field === 'target_platforms') return asArray(v).join(', ');
-  if (field === 'script') return v ? `${String(v).trim().split(/\s+/).filter(Boolean).length} words` : 'empty';
+  if (field === 'script') return v ? `${scriptToPlainText(v).split(/\s+/).filter(Boolean).length} words` : 'empty';
   return clip(v);
 }
 
@@ -873,7 +874,7 @@ function NewsroomApp({ authUser, onSignOut }) {
 
   const runAction = (row, action) => {
     if (action.id === 'download_script') { downloadContentArchive(row); return; }
-    if (action.id === 'copy_script') { navigator.clipboard.writeText(row.script || 'No script'); alert('Script copied!'); return; }
+    if (action.id === 'copy_script') { navigator.clipboard.writeText(scriptToPlainText(row.script) || 'No script'); alert('Script copied!'); return; }
     if (action.needsReason) setReasonFor({ rowId: row.id, action });
     else transition(row, action);
   };

@@ -7,6 +7,9 @@ import { scriptStats } from '../../utils/scriptDuration';
 import { saveDraft, loadDraft, clearDraft } from '../../utils/scriptDraft';
 import { isFeatureEnabled } from '../../utils/features';
 import { Teleprompter } from './Teleprompter';
+import { scriptToPlainText, scriptToHtml, sanitizeScriptHtml } from '../../utils/scriptRich';
+import dynamic from 'next/dynamic';
+const ScriptEditor = dynamic(() => import('./ScriptEditor'), { ssr: false });
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
@@ -202,12 +205,13 @@ function ScriptTab({ row, actor, patch }) {
     if (!canEdit) setEditing(false);
   }, [canEdit]);
 
-  const text = row.script || '';
+  const richEnabled = isFeatureEnabled('rich_editor');
+  const text = scriptToPlainText(row.script || '');
     const stats = scriptStats(editing ? draft : row.script);
 
   const doCopy = async () => {
     if (!text) return;
-    const ok = await copyText(text);
+    const ok = await copyText(scriptToPlainText(row.script || ''));
     if (ok) {
       setCopied(true);
       clearTimeout(timer.current);
@@ -283,18 +287,29 @@ function ScriptTab({ row, actor, patch }) {
       ) : null}
       {editing ? (
         <div>
-          <textarea
-            onBlur={() => {
-              if (draftsEnabled) saveDraft(window.localStorage, draftKey, { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current });
-            }}
-            autoFocus
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={18}
-            className={`${inputBase} resize-y text-[16px] leading-8`}
-            style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
-            placeholder="Write the script…"
-          />
+          {richEnabled ? (
+              <ScriptEditor 
+                value={draft}
+                onChange={setDraft}
+                onBlur={() => {
+                  if (draftsEnabled) saveDraft(window.localStorage, draftKey, { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current });
+                }}
+                autoFocus 
+              />
+            ) : (
+              <textarea
+                onBlur={() => {
+                  if (draftsEnabled) saveDraft(window.localStorage, draftKey, { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current });
+                }}
+                autoFocus
+                value={scriptToPlainText(draft)}
+                onChange={(e) => setDraft(e.target.value)}
+                rows={18}
+                className={`${inputBase} resize-y text-[16px] leading-8`}
+                style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
+                placeholder="Write the script…"
+              />
+            )}
           <div className="mt-3 flex justify-end gap-2">
             <button
               className={btnGhost}
@@ -334,17 +349,25 @@ function ScriptTab({ row, actor, patch }) {
         </div>
       ) : text ? (
         <>
-<article
-          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-6 text-[17px] leading-[1.9] text-zinc-200"
-          style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
-        >
-          {text.split(/\n{2,}/).map((para, i) => (
-            <p key={i} className="mb-5 whitespace-pre-wrap last:mb-0">
-              {para}
-            </p>
-          ))}
-        </article>
-          {isFeatureEnabled('teleprompter') && row.script ? (
+{richEnabled ? (
+          <article
+            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-6 text-[17px] leading-[1.9] text-zinc-200 [&_p]:mb-5 [&_p:last-child]:mb-0 [&_mark]:bg-yellow-400 [&_mark]:text-gray-900 [&_mark]:rounded-sm [&_mark]:px-1 [&_mark]:py-0.5 [&_u]:underline-offset-2"
+            style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
+            dangerouslySetInnerHTML={{ __html: sanitizeScriptHtml(scriptToHtml(row.script)) }}
+          />
+        ) : (
+          <article
+            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-6 text-[17px] leading-[1.9] text-zinc-200"
+            style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
+          >
+            {text.split(/\n{2,}/).map((para, i) => (
+              <p key={i} className="mb-5 whitespace-pre-wrap last:mb-0">
+                {para}
+              </p>
+            ))}
+          </article>
+        )}
+          {isFeatureEnabled('teleprompter') && text.trim() ? (
             <div className="mt-4">
               <button 
                 onClick={() => setShowPrompter(true)}
@@ -370,8 +393,8 @@ function ScriptTab({ row, actor, patch }) {
           <LockIcon /> {locked && !mgr ? 'Read-only — this script is locked. Only Managers and the Owner can edit it.' : 'Read-only — you need the “Edit script” permission to make changes.'}
         </p>
       ) : null}
-      {showPrompter && row.script ? (
-          <Teleprompter text={row.script} onClose={() => setShowPrompter(false)} />
+      {showPrompter && text.trim() ? (
+          <Teleprompter text={text} onClose={() => setShowPrompter(false)} />
         ) : null}
       </div>
     );
