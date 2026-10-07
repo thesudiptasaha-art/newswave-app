@@ -6,6 +6,7 @@ import { copyText, safeHttpUrl } from '../../utils/helpers';
 import { scriptStats } from '../../utils/scriptDuration';
 import { saveDraft, loadDraft, clearDraft } from '../../utils/scriptDraft';
 import { isFeatureEnabled } from '../../utils/features';
+import { Teleprompter } from './Teleprompter';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
@@ -140,6 +141,7 @@ function ScriptTab({ row, actor, patch }) {
   const canEdit = can(actor, 'can_edit_script') && (!locked || mgr);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(row.script || '');
+  const [showPrompter, setShowPrompter] = useState(false);
   const [copied, setCopied] = useState(false);
   const draftKey = `wd-script-draft:${row.id}`;
   const draftsEnabled = isFeatureEnabled('script_drafts');
@@ -331,7 +333,8 @@ function ScriptTab({ row, actor, patch }) {
           </div>
         </div>
       ) : text ? (
-        <article
+        <>
+<article
           className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-6 text-[17px] leading-[1.9] text-zinc-200"
           style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
         >
@@ -341,6 +344,17 @@ function ScriptTab({ row, actor, patch }) {
             </p>
           ))}
         </article>
+          {isFeatureEnabled('teleprompter') && row.script ? (
+            <div className="mt-4">
+              <button 
+                onClick={() => setShowPrompter(true)}
+                className="w-full rounded-xl bg-indigo-500/10 px-4 py-3 text-[14px] font-semibold text-indigo-300 transition hover:bg-indigo-500/20 border border-indigo-500/20 shadow-sm flex justify-center items-center gap-2"
+              >
+                Script Play
+              </button>
+            </div>
+          ) : null}
+          </>
       ) : (
         <div className="rounded-2xl border border-dashed border-white/[0.1] px-6 py-12 text-center text-[14px] text-zinc-500">
           No script yet.{canEdit ? ' Click Edit to write one.' : ''}
@@ -356,11 +370,14 @@ function ScriptTab({ row, actor, patch }) {
           <LockIcon /> {locked && !mgr ? 'Read-only — this script is locked. Only Managers and the Owner can edit it.' : 'Read-only — you need the “Edit script” permission to make changes.'}
         </p>
       ) : null}
-    </div>
-  );
-}
-
-function normalizeHashtags(v) {
+      {showPrompter && row.script ? (
+          <Teleprompter text={row.script} onClose={() => setShowPrompter(false)} />
+        ) : null}
+      </div>
+    );
+  }
+  
+  function normalizeHashtags(v) {
   return String(v || '')
     .split(/[\s,]+/)
     .map((w) => w.replace(/^#+/, '').trim())
