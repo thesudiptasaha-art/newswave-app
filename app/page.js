@@ -1124,7 +1124,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         Writer: r.writer || '',
         Presenter: r.presenter_name || '',
         'Video Editor': r.video_editor || '',
-        'Camera Person': r.camera_person || '',
+        'Cameraman': r.camera_person || '',
         Status: r.status,
         Publisher: r.publisher || '',
         'Published At': r.published_at ? new Date(r.published_at).toLocaleString() : '',

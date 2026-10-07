@@ -755,7 +755,7 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
            r.uploader === name;
   });
 
-  const roleTotals = { Writer: 0, Presenter: 0, 'Video Editor': 0, 'Camera Person': 0, Publisher: 0 };
+  const roleTotals = { Writer: 0, Presenter: 0, 'Video Editor': 0, 'Cameraman': 0, Publisher: 0 };
   const statusTotals = {};
   
   const getMyRoles = (r) => {
@@ -765,7 +765,7 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
     if (r.writer === name) roles.push('Writer');
     if (r.presenter_name === name) roles.push('Presenter');
     if (r.video_editor === name) roles.push('Video Editor');
-    if (r.camera_person === name) roles.push('Camera Person');
+    if (r.camera_person === name) roles.push('Cameraman');
     if (r.uploader === name) roles.push('Publisher');
     return roles;
   };
@@ -894,7 +894,7 @@ function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
       { key: 'writer', label: 'Writer' },
       { key: 'presenter_name', label: 'Presenter' },
       { key: 'video_editor', label: 'Video Editor' },
-      { key: 'camera_person', label: 'Camera Person' },
+      { key: 'camera_person', label: 'Cameraman' },
       { key: 'uploader', label: 'Publisher' },
       { key: 'idea_by', label: 'Idea' },
       { key: 'producer', label: 'Producer' },
