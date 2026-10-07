@@ -1,4 +1,6 @@
 'use client';
+import { purgeOldDrafts } from '../utils/scriptDraft';
+import { isFeatureEnabled } from '../utils/features';
 import { APP_NAME, APP_CREDIT } from '../utils/constants';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1895,6 +1897,12 @@ function NotificationBell({ memberId, onOpenContent }) {
 /* Auth gate: shows the login screen until someone is signed in. */
 export default function Page() {
   const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    if (isFeatureEnabled('script_drafts') && typeof window !== 'undefined') {
+      purgeOldDrafts(window.localStorage);
+    }
+  }, []);
 
   useEffect(() => {
     if (!supabase) {

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Icon, LockIcon } from './Icons';
 import { copyText, safeHttpUrl } from '../../utils/helpers';
 import { scriptStats } from '../../utils/scriptDuration';
+import { saveDraft, loadDraft, clearDraft } from '../../utils/scriptDraft';
+import { isFeatureEnabled } from '../../utils/features';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
@@ -139,6 +141,55 @@ function ScriptTab({ row, actor, patch }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(row.script || '');
   const [copied, setCopied] = useState(false);
+  const draftKey = `wd-script-draft:${row.id}`;
+  const draftsEnabled = isFeatureEnabled('script_drafts');
+  const [storedDraft, setStoredDraft] = useState(null);
+  const baseScriptRef = useRef(row.script || '');
+
+  useEffect(() => {
+    if (!draftsEnabled || !canEdit) return;
+    const sd = loadDraft(window.localStorage, draftKey);
+    if (sd && sd.text !== (row.script || '')) {
+      setStoredDraft(sd);
+    } else if (sd && sd.text === (row.script || '')) {
+      clearDraft(window.localStorage, draftKey);
+    }
+  }, [row.script, draftKey, draftsEnabled, canEdit]);
+
+  useEffect(() => {
+    if (!editing) baseScriptRef.current = row.script || '';
+  }, [row.script, editing]);
+
+  useEffect(() => {
+    if (!draftsEnabled || !canEdit || !editing) return;
+    const t = setTimeout(() => {
+      saveDraft(window.localStorage, draftKey, { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [draft, editing, draftKey, draftsEnabled, canEdit]);
+
+  useEffect(() => {
+    if (!draftsEnabled || !canEdit || !editing) return;
+    const handleBeforeUnload = (e) => {
+      if (draft !== (row.script || '')) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    const handleSaveNow = () => {
+      saveDraft(window.localStorage, draftKey, { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current });
+    };
+    const handleVisibility = () => { if (document.visibilityState === 'hidden') handleSaveNow(); };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', handleSaveNow);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pagehide', handleSaveNow);
+    };
+  }, [draft, editing, draftKey, draftsEnabled, canEdit, row.script]);
+
   const timer = useRef(null);
 
   useEffect(() => {
@@ -211,9 +262,29 @@ function ScriptTab({ row, actor, patch }) {
         </div>
       </div>
 
+      {storedDraft && !editing && canEdit ? (
+        <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-[13px] text-amber-200">
+          <div className="flex items-start gap-2">
+            <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <div>
+              <p className="font-semibold">Unsaved draft from {new Date(storedDraft.savedAt).toLocaleString()} found.</p>
+              {storedDraft.baseScript !== (row.script || '') ? (
+                <p className="mt-1 opacity-80">The script was changed by someone else after this draft was started.</p>
+              ) : null}
+              <div className="mt-2 flex gap-2">
+                <button onClick={() => { setDraft(storedDraft.text); baseScriptRef.current = storedDraft.baseScript; setEditing(true); setStoredDraft(null); }} className={`${btnGhost} !bg-amber-500 !text-amber-950 font-bold !border-transparent hover:!bg-amber-400`}>Restore draft</button>
+                <button onClick={() => { clearDraft(window.localStorage, draftKey); setStoredDraft(null); }} className={`${btnGhost} !border-amber-500/20 !text-amber-200 hover:!bg-amber-500/10`}>Discard draft</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {editing ? (
         <div>
           <textarea
+            onBlur={() => {
+              if (draftsEnabled) saveDraft(window.localStorage, draftKey, { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current });
+            }}
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -226,17 +297,33 @@ function ScriptTab({ row, actor, patch }) {
             <button
               className={btnGhost}
               onClick={() => {
-                setDraft(row.script || '');
-                setEditing(false);
-              }}
+                  setDraft(row.script || '');
+                  setEditing(false);
+                  if (draftsEnabled) { clearDraft(window.localStorage, draftKey); setStoredDraft(null); }
+                }}
             >
               Cancel
             </button>
             <button
               className={btnPrimary}
-              onClick={() => {
-                if (draft !== (row.script || '')) patch({ script: draft });
+              onClick={async () => {
+                if (draft === (row.script || '')) {
+                  setEditing(false);
+                  if (draftsEnabled) { clearDraft(window.localStorage, draftKey); setStoredDraft(null); }
+                  return;
+                }
+                const ok = await patch({ script: draft });
                 setEditing(false);
+                if (draftsEnabled) {
+                  if (ok) {
+                    clearDraft(window.localStorage, draftKey);
+                    setStoredDraft(null);
+                  } else {
+                    const record = { text: draft, savedAt: new Date().toISOString(), baseScript: baseScriptRef.current };
+                    saveDraft(window.localStorage, draftKey, record);
+                    setStoredDraft(record);
+                  }
+                }
               }}
             >
               Save script
