@@ -1087,7 +1087,12 @@ function NewsroomApp({ authUser, onSignOut }) {
       .filter((r) => channelFilter === 'all' || r.channel === channelFilter)
       .filter((r) => statusFilter === 'all' || r.status === statusFilter)
       .filter((r) => !q || [r.slug_name, r.title, r.presenter_name, r.writer, r.video_editor, r.content_uid, r.channel, r.thumbnail_text].some((v) => String(v || '').toLowerCase().includes(q)))
-      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      .sort((a, b) => {
+        if (a.scheduled_publish_time && b.scheduled_publish_time) return new Date(a.scheduled_publish_time) - new Date(b.scheduled_publish_time);
+        if (a.scheduled_publish_time) return -1;
+        if (b.scheduled_publish_time) return 1;
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      });
   }, [rows, channelFilter, statusFilter, search]);
   /* Rundown rows, with a channel header inserted before each channel group in "All Channels" view. */
   const tableItems = useMemo(() => {
