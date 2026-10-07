@@ -54,3 +54,7 @@ export const STATUS_META = {
   'Re-Shoot': { tone: 'text-pink-300 bg-pink-500/15 ring-pink-400/25', dot: 'bg-pink-400' },
 };
 export const ALL_STATUSES = Object.keys(STATUS_META);
+
+export const APP_NAME = 'WaveDesk';
+export const APP_CREDIT = 'Programmer, Developer, Architect, Product Manager — Sudipta Shaha';
+export const SCRIPT_WORDS_PER_MINUTE = 130;
