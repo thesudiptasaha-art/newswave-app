@@ -294,7 +294,10 @@ function PublisherTab({ row, actor, patch }) {
       ) : (
         <p className="text-[12px] text-zinc-500">Changes save automatically when you click away from a field.</p>
       )}
-      <Field label="Title" locked={!ok} lockMessage={msg}>
+      <Field label="Slug name" locked={!ok} lockMessage={msg} hint={`${(row.slug_name || '').length}/${SLUG_MAX}`}>
+          <BlurInput value={row.slug_name} disabled={!ok} maxLength={SLUG_MAX} onCommit={(v) => { const s = normalizeSlugInput(v); if (s) patch({ slug_name: s }); }} placeholder="Slug name" />
+        </Field>
+        <Field label="Title" locked={!ok} lockMessage={msg}>
         <BlurInput value={row.title} disabled={!ok} onCommit={(v) => patch({ title: v })} placeholder="Title" />
       </Field>
       <Field label="Thumbnail text" locked={!ok} lockMessage={msg}>

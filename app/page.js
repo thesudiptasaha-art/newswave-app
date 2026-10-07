@@ -1392,14 +1392,10 @@ function NewsroomApp({ authUser, onSignOut }) {
                                 {r.content_type || 'UNKNOWN'}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                              <BlurInput 
-                                value={r.slug_name} 
-                                onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                disabled={!can(actor, 'can_edit_metadata')} 
-                                className={`uppercase bg-transparent border border-transparent text-[18px] font-bold tracking-wide ${tc.text} px-1 -ml-1 rounded min-w-[150px] w-full max-w-full ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
-                                placeholder="No slug..."
-                              />
+                            <div className="flex items-center gap-1.5">
+                              <div className={`uppercase text-[18px] font-bold tracking-wide ${tc.text} px-1 -ml-1 truncate w-full min-w-[150px]`}>
+                                {r.slug_name || 'NO SLUG...'}
+                              </div>
                               {r.is_script_locked ? <LockIcon message="Script locked" className="h-4 w-4 shrink-0 text-white" /> : null}
                             </div>
                             {(() => {
@@ -1491,15 +1487,12 @@ function NewsroomApp({ authUser, onSignOut }) {
                         </td>
                         <td className="px-3 py-3 align-top w-[60%] relative">
                            <div className="flex flex-col justify-between h-full min-h-[90px]">
-                              <div className="flex items-start justify-end gap-1.5 text-right w-full" onClick={(e) => e.stopPropagation()}>
-                                 {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
-                                 <BlurInput 
-                                   value={r.slug_name} 
-                                   onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                   disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[16px] font-black text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
-                                   placeholder="Enter slug..."
-                                 />
-                              </div>
+                              <div className="flex items-start justify-end gap-1.5 text-right w-full">
+                                     {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
+                                     <div className={`uppercase text-right text-[16px] font-black ${CONTENT_TYPE_COLORS[r.content_type]?.text || 'text-zinc-300'} p-1 -mr-1 w-full leading-tight truncate`}>
+                                       {r.slug_name || 'ENTER SLUG...'}
+                                     </div>
+                                  </div>
                               <div className="flex flex-col items-end gap-2 mt-auto pt-2" onClick={(e) => e.stopPropagation()}>
                                  <ActionButtons actions={getActions(r, actor).slice(0, 2)} onRun={(a) => runAction(r, a)} compact />
                               </div>
@@ -1600,15 +1593,12 @@ function NewsroomApp({ authUser, onSignOut }) {
                           </td>
                           <td className="px-3 py-3 align-top w-[60%] relative">
                              <div className="flex flex-col justify-between h-full min-h-[90px]">
-                                <div className="flex items-start justify-end gap-1.5 text-right w-full" onClick={(e) => e.stopPropagation()}>
-                                   {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
-                                   <BlurInput 
-                                     value={r.slug_name} 
-                                     onCommit={(v) => patchRow(r.id, { slug_name: normalizeSlugInput(v) })} 
-                                     disabled={!can(actor, 'can_edit_metadata')} className={`bg-transparent border border-transparent text-right text-[16px] font-black text-white p-1 -mr-1 rounded w-full leading-tight ${can(actor, 'can_edit_metadata') ? 'hover:bg-white/[0.04] focus:bg-black focus:border-white/10' : 'opacity-50 cursor-not-allowed'}`}
-                                     placeholder="Enter slug..."
-                                   />
-                                </div>
+                                <div className="flex items-start justify-end gap-1.5 text-right w-full">
+                                     {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
+                                     <div className={`uppercase text-right text-[16px] font-black ${CONTENT_TYPE_COLORS[r.content_type]?.text || 'text-zinc-300'} p-1 -mr-1 w-full leading-tight truncate`}>
+                                       {r.slug_name || 'ENTER SLUG...'}
+                                     </div>
+                                  </div>
                                 <div className="flex flex-col items-end gap-2 mt-auto pt-2 scale-90 origin-bottom-right" onClick={(e) => e.stopPropagation()}>
                                    <ScheduleCell row={r} actor={actor} onSchedule={scheduleParked} />
                                 </div>

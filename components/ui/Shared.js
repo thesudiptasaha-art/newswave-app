@@ -90,7 +90,7 @@ export function SelectBox({ value, onChange, options, disabled = false, placehol
   );
 }
 
-export function BlurInput({ value, onCommit, disabled = false, placeholder, type = 'text', multiline = false, rows = 3, className }) {
+export function BlurInput({ value, onCommit, disabled = false, placeholder, type = 'text', multiline = false, rows = 3, className, maxLength }) {
   const [draft, setDraft] = useState(value || '');
   useEffect(() => {
     setDraft(value || '');
@@ -99,9 +99,10 @@ export function BlurInput({ value, onCommit, disabled = false, placeholder, type
     if ((draft || '') !== (value || '')) onCommit(draft);
   };
   const common = {
-    value: draft,
-    disabled,
-    placeholder,
+      value: draft,
+      disabled,
+      placeholder,
+      maxLength,
     onChange: (e) => setDraft(e.target.value),
     onBlur: commit,
     className: className || (disabled ? inputLocked : inputBase),
@@ -169,7 +170,7 @@ export function Toggle({ on, disabled, onChange }) {
 }
 
 export function ActionButtons({ actions, onRun, compact = false }) {
-  if (compact) actions = actions.filter(a => a.id !== 'hold' && a.id !== 'drop');
+  if (compact) actions = actions.filter(a => a.id !== 'hold' && a.id !== 'drop' && a.id !== 'download_script');
   if (!actions.length) return <p className={compact ? 'text-[12px] text-zinc-600' : 'text-[13px] text-zinc-600'}>{compact ? '—' : 'No actions available for you at this stage.'}</p>;
   const size = compact ? ' !px-2.5 !py-1 !text-[11px]' : '';
   return (
