@@ -537,7 +537,8 @@ function BulkScheduleModal({ onClose, team, channels, onAdd }) {
                     </select>
                   </td>
                   <td className="px-3 py-2">
-                    <input type="text" className={inputBase} value={r.slug_name} onChange={e => updateItem(r._id, 'slug_name', e.target.value)} placeholder="Slug..." />
+                    <input type="text" className={inputBase} value={r.slug_name} onChange={e => updateItem(r._id, 'slug_name', normalizeSlugInput(e.target.value))} placeholder="Slug..." maxLength={SLUG_MAX} />
+                    <div className="text-[9px] text-zinc-500 mt-0.5 text-right">{r.slug_name.length}/{SLUG_MAX}</div>
                     {r.error && !r.slug_name.trim() && <div className="text-[10px] text-red-400 mt-1">Required</div>}
                   </td>
                   <td className="px-3 py-2">
