@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Icon, LockIcon } from './Icons';
 import { copyText, safeHttpUrl } from '../../utils/helpers';
+import { scriptStats } from '../../utils/scriptDuration';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
@@ -149,8 +150,7 @@ function ScriptTab({ row, actor, patch }) {
   }, [canEdit]);
 
   const text = row.script || '';
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  const minutes = Math.max(1, Math.round(words / 150));
+    const stats = scriptStats(editing ? draft : row.script);
 
   const doCopy = async () => {
     if (!text) return;
@@ -167,7 +167,7 @@ function ScriptTab({ row, actor, patch }) {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-[12px] text-zinc-500">
           <span>
-            {words} words · about {minutes} min on air
+            {stats.words} words · {stats.label} on air
           </span>
           {locked ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-300 ring-1 ring-inset ring-amber-400/25 backdrop-blur-md">
@@ -644,8 +644,8 @@ export function DeleteModal({ row, onClose, onConfirm }) {
 
 const SHORT_FORMATS = ["Short Video", "Reel", "Photo Card", "Photo Story", "Post"];
 function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
-
-  const [tab, setTab] = useState('overview');
+    const savedScriptStats = scriptStats(row.script);
+    const [tab, setTab] = useState('overview');
   useEffect(() => {
     setTab('overview');
   }, [row.id]);
@@ -669,7 +669,12 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <TypeBadge type={row.content_type} />
                 <StatusBadge status={row.status} />
-                <span className="font-mono text-[11px] text-zinc-600">{row.content_uid}</span>
+                  {savedScriptStats.words > 0 && (
+                    <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-zinc-800 text-zinc-300">
+                      Script {savedScriptStats.label}
+                    </span>
+                  )}
+                  <span className="font-mono text-[11px] text-zinc-600">{row.content_uid}</span>
               </div>
               <h2 className="truncate text-[24px] font-black tracking-tight text-white">{row.slug_name || row.title || 'Untitled'}</h2>
               <p className="mt-0.5 text-[13px] text-zinc-500">
