@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Icon, LockIcon } from './Icons';
-import { copyText } from '../../utils/helpers';
+import { copyText, safeHttpUrl } from '../../utils/helpers';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
@@ -323,11 +323,11 @@ function LinkRow({ label, value, disabled, onCommit }) {
         <div className="flex-1">
           <BlurInput value={value} disabled={disabled} onCommit={onCommit} placeholder="https://…" />
         </div>
-        {value ? (
-          <a href={value} target="_blank" rel="noreferrer" className={`${btnGhost} !px-3`} title="Open link">
-            <Icon name="link" />
-          </a>
-        ) : null}
+        {safeHttpUrl(value) ? (
+            <a href={safeHttpUrl(value)} target="_blank" rel="noopener noreferrer" className={`${btnGhost} !px-3`} title="Open link">
+              <Icon name="link" />
+            </a>
+          ) : null}
       </div>
     </Field>
   );
@@ -432,11 +432,11 @@ function AssetsTab({ row, actor, patch }) {
               >
                 {s.published ? 'Published' : 'Pending'}
               </button>
-              {s.url ? (
-                <a href={s.url} target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-white">
-                  <Icon name="link" />
-                </a>
-              ) : null}
+              {safeHttpUrl(s.url) ? (
+                  <a href={safeHttpUrl(s.url)} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white">
+                    <Icon name="link" />
+                  </a>
+                ) : null}
               <button disabled={!active} onClick={() => patch({ shorts: row.shorts.filter((x) => x.id !== s.id) })} className="text-zinc-500 hover:text-red-400 disabled:opacity-40">
                 <Icon name="trash" />
               </button>
@@ -675,6 +675,14 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
               <p className="mt-0.5 text-[13px] text-zinc-500">
                 {row.channel || 'No channel'} · {formatDay(row.scheduled_publish_time)} {formatTime(row.scheduled_publish_time)}
               </p>
+                {safeHttpUrl(row.live_video_url) ? (
+                  <div className="mt-3">
+                    <a href={safeHttpUrl(row.live_video_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[12px] font-medium text-white transition hover:bg-white/20">
+                      <Icon name="link" className="h-3 w-3" />
+                      View Published Content
+                    </a>
+                  </div>
+                ) : null}
             </div>
             <button onClick={onClose} className="rounded-full p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-white" aria-label="Close drawer">
               <Icon name="x" className="h-5 w-5" />

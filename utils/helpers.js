@@ -38,3 +38,24 @@ export async function copyText(text) {
     }
   }
 }
+
+/* 
+  Returns a clean absolute URL string only if the value is an http:// or https:// link.
+  Examples: 
+  "https://youtu.be/x" -> "https://youtu.be/x"
+  "www.fb.com/x" -> "https://www.fb.com/x"
+  "javascript:alert(1)" -> null
+  "" -> null
+*/
+export function safeHttpUrl(value) {
+  if (!value || typeof value !== 'string') return null;
+  let urlStr = value.trim();
+  if (urlStr.startsWith('www.')) urlStr = 'https://' + urlStr;
+  try {
+    const u = new URL(urlStr);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
