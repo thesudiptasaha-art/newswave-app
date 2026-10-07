@@ -1,5 +1,6 @@
+import { APP_NAME } from '../utils/constants';
 export const metadata = {
-  title: 'NewsroomOps • Daily Rundown',
+  title: APP_NAME,
   description:
     'Real-time Daily Rundown & Content Operations for video production teams.',
 };

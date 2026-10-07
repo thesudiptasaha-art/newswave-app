@@ -1,3 +1,4 @@
+import { APP_NAME } from '../../utils/constants';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icon, LockIcon } from './Icons';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
@@ -144,7 +145,7 @@ export function FullScreenCard({ title, children }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-6">
       <div className="w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#121215] p-8 shadow-2xl shadow-black/60">
-        <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-400">NewsroomOps</div>
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-400">{APP_NAME}</div>
         <h1 className="mb-5 text-2xl font-semibold tracking-tight text-white">{title}</h1>
         {children}
       </div>

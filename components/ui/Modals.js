@@ -1100,7 +1100,7 @@ export function BackupModal({ onClose }) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `newsroom-backup-${stamp}.json`;
+        a.download = `wavedesk-backup-${stamp}.json`;
         a.click();
         URL.revokeObjectURL(url);
       } else if (format === 'excel') {
@@ -1149,7 +1149,7 @@ export function BackupModal({ onClose }) {
           XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Note: 'No data was truncated.' }]), 'README');
         }
 
-        XLSX.writeFile(wb, `newsroom-backup-${stamp}.xlsx`);
+        XLSX.writeFile(wb, `wavedesk-backup-${stamp}.xlsx`);
       }
       
       setProgress('Backup complete!');

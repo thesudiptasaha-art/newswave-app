@@ -1,4 +1,5 @@
 'use client';
+import { APP_NAME, APP_CREDIT } from '../utils/constants';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, LockIcon } from '../components/ui/Icons';
@@ -1135,7 +1136,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Rundown');
       const stamp = `${range.start.getFullYear()}-${pad(range.start.getMonth() + 1)}-${pad(range.start.getDate())}`;
-      XLSX.writeFile(wb, `newsroom-rundown-${stamp}.xlsx`);
+      XLSX.writeFile(wb, `wavedesk-rundown-${stamp}.xlsx`);
       notify('Excel exported', 'success');
     } catch (e) {
       notify(`Export failed: ${errText(e)}`, 'error');
@@ -1221,7 +1222,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[13px] font-bold text-black">N</div>
             <div className="leading-tight">
-              <div className="text-[15px] font-semibold tracking-tight text-white">NewsroomOps</div>
+              <div className="text-[15px] font-semibold tracking-tight text-white">{APP_NAME}</div>
               <div className="text-[11px] text-zinc-500">
                 {org ? org.name : ''} {supabase ? '' : '· demo mode'}
               </div>
@@ -1660,8 +1661,9 @@ function NewsroomApp({ authUser, onSignOut }) {
           <button className={`${btnGhost} text-red-400 hover:text-red-300`} onClick={() => downloadFullSystemBackup(rows)} title="Backup Entire System (JSON + CSV)">
             <Icon name="shield" /> Backup All
           </button>
-        </div>
-      </footer>
+          </div>
+          <div className="mt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
+        </footer>
       {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
       
         {showEmpReport ? (
@@ -1796,7 +1798,8 @@ function LoginScreen() {
         </button>
       </form>
       <p className="mt-5 text-[12px] leading-relaxed text-zinc-600">Your login is created by your Owner or a Manager. Forgot your password? Ask them to reset it.</p>
-    </FullScreenCard>
+        <p className="mt-6 text-center text-[10px] text-zinc-600/50">{APP_CREDIT}</p>
+      </FullScreenCard>
   );
 }
 
