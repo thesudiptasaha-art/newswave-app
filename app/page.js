@@ -710,14 +710,17 @@ function NewsroomApp({ authUser, onSignOut }) {
       .overlaps('short_days', days);
     if (req !== reqRef.current) return;
         /* Parked content (On Hold, or no date yet) is not tied to the date range, so load it separately. */
-    const [heldRes, nodateRes] = await Promise.all([
+    const [heldRes, nodateRes, draftDroppedRes, pastNotPubRes, emptyMetaRes] = await Promise.all([
       supabase.from('contents').select('*').eq('organization_id', org.id).eq('status', 'On Hold'),
       supabase.from('contents').select('*').eq('organization_id', org.id).is('scheduled_publish_time', null),
+      supabase.from('contents').select('*').eq('organization_id', org.id).in('status', ['Draft', 'Dropped']),
+      supabase.from('contents').select('*').eq('organization_id', org.id).lt('scheduled_publish_time', new Date().toISOString()).neq('status', 'Published').neq('status', 'Ready to Publish'),
+      supabase.from('contents').select('*').eq('organization_id', org.id).or('title.is.null,title.eq.').or('script.is.null,script.eq.'),
     ]);
     if (req !== reqRef.current) return;
     const seen = new Set();
     const merged = [];
-    [data || [], extra || [], heldRes.data || [], nodateRes.data || []].forEach((list) =>
+    [data || [], extra || [], heldRes.data || [], nodateRes.data || [], draftDroppedRes.data || [], pastNotPubRes.data || [], emptyMetaRes.data || []].forEach((list) =>
       list.forEach((r) => {
         if (!seen.has(r.id)) {
           seen.add(r.id);
