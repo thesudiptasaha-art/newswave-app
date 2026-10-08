@@ -777,10 +777,40 @@ const SHORT_FORMATS = ["Short Video", "Reel", "Photo Card", "Photo Story", "Post
 function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
     const savedScriptStats = scriptStats(row.script);
     const [tab, setTab] = useState('overview');
+  const [saveState, setSaveState] = useState({ status: 'idle', at: null });
+  const pendingRef = useRef(0);
+
+  useEffect(() => {
+    const fn = (e) => {
+      if (e.key !== 'Escape') return;
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.closest('aside')) el.blur();
+    };
+    window.addEventListener('keydown', fn, true);
+    return () => window.removeEventListener('keydown', fn, true);
+  }, []);
+
   useEffect(() => {
     setTab('overview');
+    pendingRef.current = 0;
+    setSaveState({ status: 'idle', at: null });
   }, [row.id]);
-  const patch = (p) => onPatch(row.id, p);
+
+  const patch = async (p) => {
+    pendingRef.current += 1;
+    setSaveState({ status: 'saving', at: null });
+    let ok = false;
+    try {
+      ok = await onPatch(row.id, p);
+    } catch (e) {
+      ok = false;
+    }
+    pendingRef.current -= 1;
+    if (pendingRef.current === 0) {
+      setSaveState(ok ? { status: 'saved', at: new Date().toISOString() } : { status: 'error', at: null });
+    }
+    return ok;
+  };
   const actions = getActions(row, actor);
   const tabs = [
     ['overview', 'Overview'],
@@ -820,9 +850,14 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
                   </div>
                 ) : null}
             </div>
-            <button onClick={onClose} className="rounded-full p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-white" aria-label="Close drawer">
-              <Icon name="x" className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {saveState.status === 'saving' && <span aria-live="polite" className="text-[11px] text-zinc-500">Saving…</span>}
+              {saveState.status === 'saved' && <span aria-live="polite" className="text-[11px] text-emerald-400">Saved ✓ {formatTime(saveState.at)}</span>}
+              {saveState.status === 'error' && <span aria-live="polite" className="text-[11px] text-red-400">Not saved</span>}
+              <button onClick={onClose} className="rounded-full p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-white" aria-label="Close drawer">
+                <Icon name="x" className="h-5 w-5" />
+              </button>
+            </div>
           </div>
           <nav className="-mb-px mt-4 flex gap-1 overflow-x-auto">
             {tabs.map(([id, label]) => (
