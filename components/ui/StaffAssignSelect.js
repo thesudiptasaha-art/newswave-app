@@ -29,7 +29,7 @@ export function StaffAssignSelect({ value, names, placeholder, onChange }) {
   );
 }
 
-export function StaffCell({ r, team, actor, patchRow }) {
+export function StaffCell({ r, team, actor, patchRow, notify }) {
   const actorCan = actor && actor.active !== false;
 
   const writers = team.filter((t) => t.can_write || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
@@ -48,7 +48,7 @@ export function StaffCell({ r, team, actor, patchRow }) {
             value={val}
             names={names}
             placeholder="+ Assign"
-            onChange={(v) => patchRow(r.id, { [field]: v })}
+            onChange={async (v) => { const ok = await patchRow(r.id, { [field]: v }); if (ok && notify) notify(v ? `${label.replace(/:$/, '')} → ${v}` : `${label.replace(/:$/, '')} cleared`, 'success'); }}
           />
         </div>
       );
