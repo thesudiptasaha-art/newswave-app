@@ -1676,30 +1676,79 @@ function NewsroomApp({ authUser, onSignOut }) {
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
             {showAuthority ? (
         <ModalShell onClose={() => setShowAuthority(false)} title="কর্তৃপক্ষ">
-          <div className="flex flex-col gap-3 p-4">
-            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setBulkOpen(true); }}>
-                <Icon name="calendar" /> Bulk Schedule Entry
-              </button>
-              <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowEmpReport(true); }}>
-                <Icon name="chart" /> Report
-              </button>
-              <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowBackup(true); }}>
-                <Icon name="download" /> Backup
-              </button>
-              <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowTeam(true); }}>
-              <Icon name="users" /> Team & permissions
-            </button>
-            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowAddChannel(true); }}>
-              <Icon name="plus" /> Add channel
-            </button>
-            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); downloadKPIReport(visible); }}>
-              <Icon name="chart" /> KPI report
-            </button>
-            <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); exportXlsx(); }}>
-              <Icon name="download" /> Excel export
-            </button>
-          </div>
-        </ModalShell>
+          <div className="flex flex-col gap-5 p-4 max-h-[75vh] overflow-y-auto">
+              
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">People & access</div>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowTeam(true); }}>
+                  <Icon name="users" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Team & permissions</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Add users, roles and permissions</span>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Channels</div>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowAddChannel(true); }}>
+                  <Icon name="plus" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Add channel</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Create a new channel</span>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Schedule</div>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setBulkOpen(true); }}>
+                  <Icon name="calendar" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Bulk Schedule Entry</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Add many rundown items at once</span>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Reports</div>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowEmpReport(true); }}>
+                  <Icon name="chart" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Report</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Employee work report</span>
+                  </div>
+                </button>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); downloadKPIReport(visible); }}>
+                  <Icon name="chart" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>KPI report</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Download the KPI report</span>
+                  </div>
+                </button>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); exportXlsx(); }}>
+                  <Icon name="download" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Excel export</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Export the rundown to Excel</span>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Data</div>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowBackup(true); }}>
+                  <Icon name="download" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Backup</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Back up all system data</span>
+                  </div>
+                </button>
+              </div>
+
+            </div>
+          </ModalShell>
       ) : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
