@@ -14,6 +14,7 @@ import { downloadContentArchive, downloadKPIReport, downloadFullSystemBackup, do
 import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
+import { StaffCell } from '../components/ui/StaffAssignSelect';
 import { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal } from '../components/ui/Modals';
 
 import {
@@ -1440,12 +1441,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                       })()}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
-                      <div className="flex flex-col gap-1 text-[11px]">
-                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Research & Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
-                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
-                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
-                        {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
-                      </div>
+                      <StaffCell r={r} team={team} actor={actor} patchRow={patchRow} />
                     </td>
                     
                     
@@ -1558,12 +1554,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                     </td>
                     <td className="whitespace-nowrap px-4 py-2 text-zinc-300">{r.channel || '—'}</td>
                     <td className="whitespace-nowrap px-4 py-2">
-                      <div className="flex flex-col gap-1 text-[11px]">
-                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Research & Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
-                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
-                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
-                        {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
-                      </div>
+                      <StaffCell r={r} team={team} actor={actor} patchRow={patchRow} />
                     </td>
                     <td className="px-4 py-2">
                       <StatusBadge status={r.status} />
