@@ -2,6 +2,7 @@
 import { purgeOldDrafts } from '../utils/scriptDraft';
 import { scriptToPlainText } from '../utils/scriptRich';
 import { isFeatureEnabled } from '../utils/features';
+import { playChime, unlockAudio } from '../utils/notifySound';
 import { APP_NAME, APP_CREDIT } from '../utils/constants';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1808,6 +1809,32 @@ function NotificationBell({ memberId, onOpenContent }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
+  
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const soundEnabledRef = useRef(true);
+
+  useEffect(() => {
+    if (isFeatureEnabled('notif_sound')) unlockAudio();
+    try {
+      if (typeof window !== 'undefined') {
+        const val = window.localStorage.getItem('wd-sound');
+        if (val !== null) {
+          const b = val === 'true';
+          setSoundEnabled(b);
+          soundEnabledRef.current = b;
+        }
+      }
+    } catch(e) {}
+  }, []);
+
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    soundEnabledRef.current = next;
+    try {
+      window.localStorage.setItem('wd-sound', String(next));
+    } catch(e) {}
+  };
 
   const load = useCallback(async () => {
     if (!supabase || !memberId) return;
@@ -1823,7 +1850,12 @@ function NotificationBell({ memberId, onOpenContent }) {
     if (!supabase || !memberId) return undefined;
     const ch = supabase
       .channel(`notifications-${memberId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `member_id=eq.${memberId}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `member_id=eq.${memberId}` }, (payload) => {
+        if (payload.eventType === 'INSERT' && isFeatureEnabled('notif_sound') && soundEnabledRef.current) {
+          playChime();
+        }
+        load();
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -1852,7 +1884,22 @@ function NotificationBell({ memberId, onOpenContent }) {
 
   if (!memberId) return null;
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className="relative flex items-center gap-1">
+      {isFeatureEnabled('notif_sound') ? (
+        <button
+          onClick={toggleSound}
+          className={`${btnGhost} relative !px-2`}
+          title="Notification sound on/off"
+          aria-label="Notification sound on/off"
+          aria-pressed={soundEnabled}
+        >
+          {soundEnabled ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-zinc-400"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-zinc-400"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          )}
+        </button>
+      ) : null}
       <button onClick={() => setOpen((o) => !o)} className={`${btnGhost} relative !px-3`} aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
           <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7zM10 20a2 2 0 0 0 4 0" />
