@@ -1441,9 +1441,9 @@ function NewsroomApp({ authUser, onSignOut }) {
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
                       <div className="flex flex-col gap-1 text-[11px]">
-                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
-                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
-                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
+                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Research & Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
+                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
+                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
                         {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
                       </div>
                     </td>
@@ -1559,9 +1559,9 @@ function NewsroomApp({ authUser, onSignOut }) {
                     <td className="whitespace-nowrap px-4 py-2 text-zinc-300">{r.channel || '—'}</td>
                     <td className="whitespace-nowrap px-4 py-2">
                       <div className="flex flex-col gap-1 text-[11px]">
-                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
-                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
-                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[60px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
+                        {r.writer ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Research & Script:</span><PersonName name={r.writer} team={team} hideDesignation /></div> : null}
+                        {r.presenter_name ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Presenter:</span><PersonName name={r.presenter_name} team={team} hideDesignation /></div> : null}
+                        {r.video_editor ? <div className="flex items-center gap-1.5"><span className="text-zinc-500 w-[110px] shrink-0">Video Edit:</span><PersonName name={r.video_editor} team={team} hideDesignation /></div> : null}
                         {!r.writer && !r.presenter_name && !r.video_editor && <span className="text-zinc-600 italic">Unassigned</span>}
                       </div>
                     </td>

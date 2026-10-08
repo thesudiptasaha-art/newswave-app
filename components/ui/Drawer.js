@@ -26,6 +26,9 @@ import {
 
 
 function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
+  const options = team.filter(t => !skillKey || t[skillKey] || t.role === 'owner' || t.role === 'manager');
+  const needsExtra = row[field] && !options.some(m => m.full_name === row[field]);
+  
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</label>
@@ -36,7 +39,8 @@ function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
         className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[13px] text-white transition focus:border-white/[0.15] focus:bg-white/[0.04] focus:outline-none focus:ring-4 focus:ring-white/[0.04] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <option value="">— Unassigned —</option>
-        {team.filter(t => !skillKey || t[skillKey] || t.role === 'owner' || t.role === 'manager').map(m => (
+        {needsExtra ? <option value={row[field]}>{row[field]}</option> : null}
+        {options.map(m => (
           <option key={m.id} value={m.full_name}>{m.full_name}</option>
         ))}
       </select>

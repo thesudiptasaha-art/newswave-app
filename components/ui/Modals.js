@@ -140,8 +140,8 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
         </Field>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="7 · Writer">
-            <SelectBox value={f.writer} onChange={(v) => set('writer', v)} options={activeNames} placeholder="Select writer" />
+          <Field label="7 · Research & Script">
+            <SelectBox value={f.writer} onChange={(v) => set('writer', v)} options={activeNames} placeholder="Select research & script" />
           </Field>
           <Field label="8 · Presenter">
             <SelectBox value={f.presenter_name} onChange={(v) => set('presenter_name', v)} options={activeNames} placeholder="Select presenter" />
@@ -385,7 +385,7 @@ function KpiModal({ rows, rangeLabel, onClose }) {
         <Block title="By channel" items={countBy(rows, (r) => r.channel)} />
         <Block title="By content type" items={countBy(rows, (r) => r.content_type)} />
         <Block title="By presenter" items={countBy(rows, (r) => r.presenter_name)} />
-        <Block title="By writer" items={countBy(rows, (r) => r.writer)} />
+        <Block title="By research & script" items={countBy(rows, (r) => r.writer)} />
         <Block title="By video editor" items={countBy(rows.filter((r) => r.video_editor), (r) => r.video_editor)} />
       </div>
     </ModalShell>
@@ -513,7 +513,7 @@ function BulkScheduleModal({ onClose, team, channels, onAdd }) {
                 <th className="px-3 py-2 w-[120px]">Channel *</th>
                 <th className="px-3 py-2 w-[130px]">Type *</th>
                 <th className="px-3 py-2">Slug Name *</th>
-                <th className="px-3 py-2 w-[140px]">Writer</th>
+                <th className="px-3 py-2 w-[140px]">Research & Script</th>
                 <th className="px-3 py-2 w-[140px]">Presenter</th>
                 <th className="px-3 py-2 w-[140px]">Video Editor</th>
                 <th className="px-3 py-2 w-[80px]">Actions</th>
@@ -756,14 +756,14 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
            r.uploader === name;
   });
 
-  const roleTotals = { Writer: 0, Presenter: 0, 'Video Editor': 0, 'Cameraman': 0, Publisher: 0 };
+  const roleTotals = { 'Research & Script': 0, Presenter: 0, 'Video Editor': 0, 'Cameraman': 0, Publisher: 0 };
   const statusTotals = {};
   
   const getMyRoles = (r) => {
     const roles = [];
     if (!actor) return roles;
     const name = actor.full_name;
-    if (r.writer === name) roles.push('Writer');
+    if (r.writer === name) roles.push('Research & Script');
     if (r.presenter_name === name) roles.push('Presenter');
     if (r.video_editor === name) roles.push('Video Editor');
     if (r.camera_person === name) roles.push('Cameraman');
@@ -892,7 +892,7 @@ function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
     });
 
     const ALL_ROLES = [
-      { key: 'writer', label: 'Writer' },
+      { key: 'writer', label: 'Research & Script' },
       { key: 'presenter_name', label: 'Presenter' },
       { key: 'video_editor', label: 'Video Editor' },
       { key: 'camera_person', label: 'Cameraman' },
