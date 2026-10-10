@@ -576,7 +576,7 @@ function BulkScheduleModal({ onClose, team, channels, onAdd }) {
   );
 }
 
-function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
+function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyWork }) {
   const [name, setName] = useState(member.full_name || '');
   const [designation, setDesignation] = useState(member.designation || '');
   const [avatar, setAvatar] = useState(member.avatar_url || '');
@@ -650,6 +650,11 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut }) {
       onClose={onClose}
       footer={
         <>
+          {onOpenMyWork ? (
+            <button className={btnGhost} onClick={onOpenMyWork}>
+              My Work
+            </button>
+          ) : null}
           <button className={btnGhost} onClick={onSignOut}>
             Sign out
           </button>

@@ -1708,14 +1708,10 @@ function NewsroomApp({ authUser, onSignOut }) {
             </button>
           ) : null}
           {isManager(actor) ? (
-              <button className={btnGhost} onClick={() => setShowKpi(true)}>
-                <Icon name="chart" /> KPI
-              </button>
-            ) : (
-              <button className={btnGhost} onClick={() => setShowMyWork(true)}>
-                <Icon name="user" /> My Work
-              </button>
-            )}
+            <button className={btnGhost} onClick={() => setShowKpi(true)}>
+              <Icon name="chart" /> KPI
+            </button>
+          ) : null}
           </div>
           <div className="mt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
         </footer>
@@ -1832,6 +1828,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           onClose={() => setShowProfile(false)}
           onSave={saveProfile}
           onSignOut={onSignOut}
+          onOpenMyWork={() => { setShowProfile(false); setShowMyWork(true); }}
         />
       ) : null}
       {showKpi ? <KpiModal rows={visible} rangeLabel={formatRangeLabel(range)} onClose={() => setShowKpi(false)} /> : null}
