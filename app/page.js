@@ -587,6 +587,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   authRef.current = { id: authId, email: authUser ? authUser.email || '' : '' };
   const [showProfile, setShowProfile] = useState(false);
     const [showMyWork, setShowMyWork] = useState(false);
+    const [showBin, setShowBin] = useState(false);
 
   /* Signed-in person's own team record, and who the app treats as the actor. */
   const me = useMemo(() => (authId ? team.find((m) => m.auth_user_id === authId) || null : null), [team, authId]);
@@ -1178,11 +1179,12 @@ function NewsroomApp({ authUser, onSignOut }) {
       else if (showAddChannel) setShowAddChannel(false);
       else if (showTeam) setShowTeam(false);
       else if (showKpi) setShowKpi(false);
+      else if (showBin) setShowBin(false);
       else if (selectedId) setSelectedId(null);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reasonFor, showNew, showAddChannel, showTeam, showKpi, selectedId]);
+  }, [reasonFor, showNew, showAddChannel, showTeam, showKpi, showBin, selectedId]);
   /* ---------------- my profile ---------------- */
   const saveProfile = async ({ full_name, designation, avatar_url }) => {
     if (!me) return false;
@@ -1529,9 +1531,14 @@ function NewsroomApp({ authUser, onSignOut }) {
           <div className="mb-4 relative flex flex-col items-center">
             <h2 className="text-[22px] font-semibold tracking-tight text-white text-center">PARKING ZONE</h2>
             <div className="w-full flex justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2">
-            <span className="text-[13px] text-zinc-500">
-              {parked.length} item{parked.length === 1 ? '' : 's'}
-            </span>
+            <div className="flex items-center gap-3">
+              <button className={`${btnGhost} !py-1 !px-3 !text-[12px] ${bin.length === 0 ? 'opacity-60' : ''}`} onClick={() => setShowBin(true)}>
+                Bin ({bin.length})
+              </button>
+              <span className="text-[13px] text-zinc-500">
+                {parked.length} item{parked.length === 1 ? '' : 's'}
+              </span>
+            </div>
           </div>
           </div>
           <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
@@ -1637,58 +1644,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           </div>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-[22px] font-semibold tracking-tight text-white text-center">BIN</h2>
-          <div className="mb-4 text-center mt-2 flex items-center justify-center">
-            <span className="inline-flex items-center rounded-md bg-zinc-800/80 px-2 py-1 text-[13px] font-medium text-zinc-300 ring-1 ring-inset ring-white/10">
-              {bin.length} item{bin.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="text-[13px] text-zinc-500 text-center mb-6">Dropped content that is missing a channel, slug or date &amp; time. Managers and the Owner can restore it.</div>
-          
-          <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="border-b border-white/[0.04] bg-white/[0.02] text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Slug Name</th>
-                  <th className="px-4 py-3 font-medium">Channel</th>
-                  <th className="px-4 py-3 font-medium">Missing</th>
-                  <th className="px-4 py-3 font-medium">Drop reason</th>
-                  <th className="px-4 py-3 font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.04]">
-                {bin.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-[13px] text-zinc-500 bg-[#0A0A0C]">Bin is empty.</td>
-                  </tr>
-                ) : bin.map((r) => {
-                  const restore = getActions(r, actor).find((a) => a.id === 'restore');
-                  return (
-                    <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer transition hover:bg-white/[0.04] border-b border-white/[0.04] last:border-0">
-                      <td className="px-4 py-3 font-medium text-white max-w-[300px] truncate">{r.slug_name || r.title || '-'}</td>
-                      <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">{r.channel || '-'}</td>
-                      <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">{missingFields(r).join(', ')}</td>
-                      <td className="px-4 py-3 text-zinc-400 max-w-[250px] truncate">{r.drop_reason || '-'}</td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        {restore && (
-                          <button
-                            disabled={!restore.allowed}
-                            title={restore.allowed ? 'Restore as Draft' : restore.why}
-                            onClick={() => runAction(r, restore)}
-                            className={`${btnPrimary} !px-3 !py-1.5 !text-[12px]`}
-                          >
-                            Restore
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
+
       </main>
 
       <footer className="mx-auto max-w-[1500px] px-5 pb-10 pt-2">
@@ -1832,6 +1788,52 @@ function NewsroomApp({ authUser, onSignOut }) {
         />
       ) : null}
       {showKpi ? <KpiModal rows={visible} rangeLabel={formatRangeLabel(range)} onClose={() => setShowKpi(false)} /> : null}
+      {showBin ? (
+        <ModalShell wide title="Bin" subtitle="Dropped content that is missing a channel, slug or date and time. Managers and the Owner can restore it." onClose={() => setShowBin(false)}>
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
+            <table className="w-full text-left text-sm text-zinc-300">
+              <thead className="border-b border-white/[0.04] bg-white/[0.02] text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Slug Name</th>
+                  <th className="px-4 py-3 font-medium">Channel</th>
+                  <th className="px-4 py-3 font-medium">Missing</th>
+                  <th className="px-4 py-3 font-medium">Drop reason</th>
+                  <th className="px-4 py-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {bin.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-8 text-center text-[13px] text-zinc-500 bg-[#0A0A0C]">Bin is empty.</td>
+                  </tr>
+                ) : bin.map((r) => {
+                  const restore = getActions(r, actor).find((a) => a.id === 'restore');
+                  return (
+                    <tr key={r.id} onClick={() => { setShowBin(false); setSelectedId(r.id); }} className="cursor-pointer transition hover:bg-white/[0.04] border-b border-white/[0.04] last:border-0">
+                      <td className="px-4 py-3 font-medium text-white max-w-[300px] truncate">{r.slug_name || r.title || '-'}</td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">{r.channel || '-'}</td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">{missingFields(r).join(', ')}</td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-[250px] truncate">{r.drop_reason || '-'}</td>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        {restore && (
+                          <button
+                            disabled={!restore.allowed}
+                            title={restore.allowed ? 'Restore as Draft' : restore.why}
+                            onClick={() => runAction(r, restore)}
+                            className={`${btnPrimary} !px-3 !py-1.5 !text-[12px]`}
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </ModalShell>
+      ) : null}
             {deleteFor && rows.find((r) => r.id === deleteFor) ? (
         <DeleteModal row={rows.find((r) => r.id === deleteFor)} onClose={() => setDeleteFor(null)} onConfirm={deleteContent} />
       ) : null}
