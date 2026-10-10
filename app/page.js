@@ -11,6 +11,7 @@ import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../component
 import { createClient } from '@supabase/supabase-js';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
 import { downloadContentArchive, downloadKPIReport, downloadUserReport } from '../services/exportService';
+import { fetchAllPages } from '../utils/fetchAll';
 import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
@@ -694,13 +695,16 @@ function NewsroomApp({ authUser, onSignOut }) {
     const req = ++reqRef.current;
     const from = range.start.toISOString();
     const to = addDays(range.end, 1).toISOString();
-    const { data, error } = await supabase
-      .from('contents')
-      .select('*')
-      .or(`organization_id.eq.${org.id},organization_id.is.null`)
-      .gte('scheduled_publish_time', from)
-      .lt('scheduled_publish_time', to)
-      .order('scheduled_publish_time', { ascending: true });
+    const { data, error } = await fetchAllPages(() =>
+      supabase
+        .from('contents')
+        .select('*')
+        .or(`organization_id.eq.${org.id},organization_id.is.null`)
+        .gte('scheduled_publish_time', from)
+        .lt('scheduled_publish_time', to)
+        .order('scheduled_publish_time', { ascending: true })
+        .order('id', { ascending: true })
+    );
     if (req !== reqRef.current) return;
     if (error) {
       notify(`Could not load rundown: ${errText(error)}`, 'error');
@@ -709,19 +713,22 @@ function NewsroomApp({ authUser, onSignOut }) {
         /* Also load contents whose SHORTS are due in this range (needs the short_days column). */
     const days = [];
     for (let d = new Date(range.start); d < addDays(range.end, 1) && days.length < 62; d = addDays(d, 1)) days.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
-    const { data: extra } = await supabase
-      .from('contents')
-      .select('*')
-      .or(`organization_id.eq.${org.id},organization_id.is.null`)
-      .overlaps('short_days', days);
+    const { data: extra } = await fetchAllPages(() =>
+      supabase
+        .from('contents')
+        .select('*')
+        .or(`organization_id.eq.${org.id},organization_id.is.null`)
+        .overlaps('short_days', days)
+        .order('id', { ascending: true })
+    );
     if (req !== reqRef.current) return;
         /* Parked / Bin content (On Hold, no date, or missing channel/slug) is not tied to the date range, so load it separately. */
     const [heldRes, nodateRes, draftDroppedRes, pastNotPubRes, emptyMetaRes] = await Promise.all([
-      supabase.from('contents').select('*').eq('organization_id', org.id).eq('status', 'On Hold'),
-      supabase.from('contents').select('*').eq('organization_id', org.id).is('scheduled_publish_time', null),
-      supabase.from('contents').select('*').eq('organization_id', org.id).in('status', ['Draft', 'Dropped']),
-      supabase.from('contents').select('*').eq('organization_id', org.id).lt('scheduled_publish_time', new Date().toISOString()).neq('status', 'Published').neq('status', 'Ready to Publish'),
-      supabase.from('contents').select('*').eq('organization_id', org.id).or('channel.is.null,channel.eq.,slug_name.is.null,slug_name.eq.'),
+      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).eq('status', 'On Hold').order('id', { ascending: true })),
+      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).is('scheduled_publish_time', null).order('id', { ascending: true })),
+      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).in('status', ['Draft', 'Dropped']).order('id', { ascending: true })),
+      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).lt('scheduled_publish_time', new Date().toISOString()).neq('status', 'Published').neq('status', 'Ready to Publish').order('id', { ascending: true })),
+      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).or('channel.is.null,channel.eq.,slug_name.is.null,slug_name.eq.').order('id', { ascending: true })),
     ]);
     if (req !== reqRef.current) return;
     const seen = new Set();
