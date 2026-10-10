@@ -1085,6 +1085,7 @@ export function BackupModal({ onClose }) {
           const { data, error: err } = await supabase
             .from(table)
             .select('*')
+            .order('id', { ascending: true })
             .range(page * pageSize, (page + 1) * pageSize - 1);
           if (err) throw new Error(`Table ${table} failed: ${err.message}`);
           if (!data || data.length === 0) break;
