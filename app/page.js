@@ -911,7 +911,12 @@ function NewsroomApp({ authUser, onSignOut }) {
     if (!ok) return;
     const when = new Date(iso);
     if (!(when >= range.start && when < addDays(range.end, 1))) setRange({ start: startOfDay(when), end: startOfDay(when) });
-    notify(`${row.slug_name || row.title || 'Content'} is on the rundown for ${formatStamp(iso)}`, 'success');
+    const stillMissing = missingFields({ ...row, scheduled_publish_time: iso });
+    if (stillMissing.length) {
+      notify(`Time saved, but still missing: ${stillMissing.join(', ')} - it stays in the Parking Zone`);
+    } else {
+      notify(`${row.slug_name || row.title || 'Content'} is on the rundown for ${formatStamp(iso)}`, 'success');
+    }
   };
   const createContent = async (data) => {
     if (!actor || actor.active === false) {
