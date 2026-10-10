@@ -10,7 +10,7 @@ import { Icon, LockIcon } from '../components/ui/Icons';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
 import { createClient } from '@supabase/supabase-js';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
-import { downloadContentArchive, downloadKPIReport, downloadFullSystemBackup, downloadUserReport } from '../services/exportService';
+import { downloadContentArchive, downloadKPIReport, downloadUserReport } from '../services/exportService';
 import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
@@ -1703,28 +1703,14 @@ function NewsroomApp({ authUser, onSignOut }) {
             </button>
           ) : null}
           {isManager(actor) ? (
-            <>
-              <button className={btnGhost} onClick={() => setShowTeam(true)}>
-                <Icon name="users" /> Team
-              </button>
               <button className={btnGhost} onClick={() => setShowKpi(true)}>
                 <Icon name="chart" /> KPI
               </button>
-              <button className={btnGhost} onClick={exportXlsx}>
-                <Icon name="download" /> Excel
+            ) : (
+              <button className={btnGhost} onClick={() => setShowMyWork(true)}>
+                <Icon name="user" /> My Work
               </button>
-            </>
-          ) : (
-            <button className={btnGhost} onClick={() => setShowMyWork(true)}>
-              <Icon name="user" /> My Work
-            </button>
-          )}
-          <button className={`${btnGhost} text-emerald-400 hover:text-emerald-300`} onClick={() => downloadKPIReport(visible)} title="Download KPI Excel for filtered data">
-            <Icon name="chart" /> KPI Report
-          </button>
-          <button className={`${btnGhost} text-red-400 hover:text-red-300`} onClick={() => downloadFullSystemBackup(rows)} title="Backup Entire System (JSON + CSV)">
-            <Icon name="shield" /> Backup All
-          </button>
+            )}
           </div>
           <div className="mt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
         </footer>
