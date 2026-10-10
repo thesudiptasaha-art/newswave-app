@@ -22,7 +22,7 @@ import {
   STATUS_META, ALL_STATUSES, isManager, isOwner, can, afterScript, afterShoot, getActions,
   startOfDay, addDays, sameDay, MONTHS, pad, formatRangeLabel, toLocalInput, fromLocalInput,
   formatTime, formatDay, formatStamp, SLUG_MAX, normalizeSlugInput, uid, generateUserUID,
-  makeContentUid, asArray, shortsInRange, rowTimeIn, isParked, normalizeRow, normalizeMember,
+  makeContentUid, asArray, shortsInRange, rowTimeIn, isParked, isComplete, isBin, missingFields, normalizeRow, normalizeMember,
   FIELD_PERM, TRACKED_FIELDS
 } from '../lib/core';
 
@@ -714,13 +714,13 @@ function NewsroomApp({ authUser, onSignOut }) {
       .or(`organization_id.eq.${org.id},organization_id.is.null`)
       .overlaps('short_days', days);
     if (req !== reqRef.current) return;
-        /* Parked content (On Hold, or no date yet) is not tied to the date range, so load it separately. */
+        /* Parked / Bin content (On Hold, no date, or missing channel/slug) is not tied to the date range, so load it separately. */
     const [heldRes, nodateRes, draftDroppedRes, pastNotPubRes, emptyMetaRes] = await Promise.all([
       supabase.from('contents').select('*').eq('organization_id', org.id).eq('status', 'On Hold'),
       supabase.from('contents').select('*').eq('organization_id', org.id).is('scheduled_publish_time', null),
       supabase.from('contents').select('*').eq('organization_id', org.id).in('status', ['Draft', 'Dropped']),
       supabase.from('contents').select('*').eq('organization_id', org.id).lt('scheduled_publish_time', new Date().toISOString()).neq('status', 'Published').neq('status', 'Ready to Publish'),
-      supabase.from('contents').select('*').eq('organization_id', org.id).or('title.is.null,title.eq.').or('script.is.null,script.eq.'),
+      supabase.from('contents').select('*').eq('organization_id', org.id).or('channel.is.null,channel.eq.,slug_name.is.null,slug_name.eq.'),
     ]);
     if (req !== reqRef.current) return;
     const seen = new Set();
@@ -880,7 +880,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     if (action.needsReason) setReasonFor({ rowId: row.id, action });
     else transition(row, action);
   };
-  /* Put a parked content (On Hold / no date) onto the rundown with a new publish time. */
+  /* Give a parked content (On Hold / incomplete) a new publish time. */
   const scheduleParked = async (row, iso) => {
     if (!iso) return;
     let ok = false;
@@ -1064,7 +1064,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     const endExclusive = addDays(range.end, 1);
     return rows
       .filter((r) => {
-        if (isParked(r)) return false;
+        if (!isComplete(r)) return false;
         const d = new Date(r.scheduled_publish_time);
         if (d >= range.start && d < endExclusive) return true;
         return shortsInRange(r, range.start, endExclusive).length > 0;
@@ -1087,7 +1087,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       return new Date(rowTimeIn(a, range.start, endExclusive) || 0) - new Date(rowTimeIn(b, range.start, endExclusive) || 0);
       });
   }, [rows, range, channelFilter, statusFilter, search, channels]);
-  /* On Hold + no-date content: shown in the table under the rundown. */
+  /* Parking Zone: On Hold content + incomplete content. */
   const parked = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows
@@ -1101,7 +1101,15 @@ function NewsroomApp({ authUser, onSignOut }) {
         if (b.scheduled_publish_time) return 1;
         return new Date(b.created_at || 0) - new Date(a.created_at || 0);
       });
-  }, [rows, channelFilter, statusFilter, search]);
+    }, [rows, channelFilter, statusFilter, search]);
+
+  const bin = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return rows
+      .filter(isBin)
+      .filter((r) => !q || [r.slug_name, r.title, r.channel, r.content_uid].some((v) => String(v || '').toLowerCase().includes(q)))
+      .sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+  }, [rows, search]);
   /* Rundown rows, with a channel header inserted before each channel group in "All Channels" view. */
   const tableItems = useMemo(() => {
     const items = [];
@@ -1537,13 +1545,17 @@ function NewsroomApp({ authUser, onSignOut }) {
                   <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]">
                     <td className="max-w-[220px] px-4 py-2">
                       {r.status === 'On Hold' ? (
-                        <>
-                          <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 ring-1 ring-inset ring-yellow-400/25">On hold</span>
-                          {r.hold_reason ? <div className="mt-1 truncate text-[12px] text-zinc-500">{r.hold_reason}</div> : null}
-                        </>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25">No date &amp; time</span>
-                      )}
+                          <>
+                            <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 ring-1 ring-inset ring-yellow-400/25">On hold</span>
+                            {r.hold_reason ? <div className="mt-1 truncate text-[12px] text-zinc-500">{r.hold_reason}</div> : null}
+                            {!isComplete(r) && <div className="mt-1 truncate text-[12px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>}
+                          </>
+                        ) : (
+                          <>
+                            <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25">Incomplete</span>
+                            <div className="mt-1 truncate text-[12px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>
+                          </>
+                        )}
                     </td>
                     <td className="px-3 py-2 border-r border-white/5 relative">
                       <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
@@ -1567,7 +1579,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               </tbody>
             </table>
             {parked.length === 0 ? (
-              <div className="px-6 py-10 text-center text-[13px] text-zinc-600">Nothing on hold, and nothing waiting for a date.</div>
+              <div className="px-6 py-10 text-center text-[13px] text-zinc-600">Nothing on hold, and nothing incomplete.</div>
             ) : null}
           </div>
         
@@ -1587,10 +1599,16 @@ function NewsroomApp({ authUser, onSignOut }) {
                              <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                              <div className="flex flex-col gap-2 pl-1">
                                 {r.status === 'On Hold' ? (
-                                  <span className="inline-flex items-center rounded-sm bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300 w-fit">On hold</span>
-                                ) : (
-                                  <span className="inline-flex items-center rounded-sm bg-zinc-500/15 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 w-fit">No date</span>
-                                )}
+                                    <>
+                                      <span className="inline-flex items-center rounded-sm bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300 w-fit">On hold</span>
+                                      {!isComplete(r) && <div className="text-[10px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="inline-flex items-center rounded-sm bg-zinc-500/15 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 w-fit">Incomplete</span>
+                                      <div className="text-[10px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>
+                                    </>
+                                  )}
                                 <div className="scale-90 origin-left"><TypeBadge type={r.content_type} /></div>
                              </div>
                           </td>
@@ -1609,6 +1627,59 @@ function NewsroomApp({ authUser, onSignOut }) {
                           </td>
                        </tr>
                  ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-[22px] font-semibold tracking-tight text-white text-center">BIN</h2>
+          <div className="mb-4 text-center mt-2 flex items-center justify-center">
+            <span className="inline-flex items-center rounded-md bg-zinc-800/80 px-2 py-1 text-[13px] font-medium text-zinc-300 ring-1 ring-inset ring-white/10">
+              {bin.length} item{bin.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="text-[13px] text-zinc-500 text-center mb-6">Dropped content that is missing a channel, slug or date &amp; time. Managers and the Owner can restore it.</div>
+          
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
+            <table className="w-full text-left text-sm text-zinc-300">
+              <thead className="border-b border-white/[0.04] bg-white/[0.02] text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Slug Name</th>
+                  <th className="px-4 py-3 font-medium">Channel</th>
+                  <th className="px-4 py-3 font-medium">Missing</th>
+                  <th className="px-4 py-3 font-medium">Drop reason</th>
+                  <th className="px-4 py-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {bin.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-8 text-center text-[13px] text-zinc-500 bg-[#0A0A0C]">Bin is empty.</td>
+                  </tr>
+                ) : bin.map((r) => {
+                  const restore = getActions(r, actor).find((a) => a.id === 'restore');
+                  return (
+                    <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer transition hover:bg-white/[0.04] border-b border-white/[0.04] last:border-0">
+                      <td className="px-4 py-3 font-medium text-white max-w-[300px] truncate">{r.slug_name || r.title || '-'}</td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">{r.channel || '-'}</td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">{missingFields(r).join(', ')}</td>
+                      <td className="px-4 py-3 text-zinc-400 max-w-[250px] truncate">{r.drop_reason || '-'}</td>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        {restore && (
+                          <button
+                            disabled={!restore.allowed}
+                            title={restore.allowed ? 'Restore as Draft' : restore.why}
+                            onClick={() => runAction(r, restore)}
+                            className={`${btnPrimary} !px-3 !py-1.5 !text-[12px]`}
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

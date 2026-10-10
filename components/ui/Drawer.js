@@ -53,6 +53,7 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
   const lockMsg = (label) => `You need the “${label}” permission`;
   const okMeta = can(actor, 'can_edit_metadata');
   const okSched = can(actor, 'can_reschedule');
+  const heldLock = row.status === 'On Hold' && !isManager(actor);
   const okPres = can(actor, 'can_change_presenter');
   const okChan = can(actor, 'can_change_channel');
   const okEditor = can(actor, 'can_assign_editor');
@@ -66,15 +67,15 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
           <Field label="Channel" locked={!okChan} lockMessage={lockMsg('Change channel')}>
             <SelectBox value={row.channel} disabled={!okChan} options={channels} onChange={(v) => patch({ channel: v })} />
           </Field>
-          <Field label="Scheduled publish" locked={!okSched} lockMessage={lockMsg('Reschedule')}>
-            <input
-              type="datetime-local"
-              disabled={!okSched}
-              value={toLocalInput(row.scheduled_publish_time)}
-              onChange={(e) => e.target.value && patch({ scheduled_publish_time: fromLocalInput(e.target.value) })}
-              className={`${okSched ? inputBase : inputLocked} [color-scheme:dark]`}
-            />
-          </Field>
+          <Field label="Scheduled publish" locked={!okSched || heldLock} lockMessage={heldLock ? 'Only Managers and the Owner can reschedule held content' : lockMsg('Reschedule')}>
+              <input
+                type="datetime-local"
+                disabled={!okSched || heldLock}
+                value={toLocalInput(row.scheduled_publish_time)}
+                onChange={(e) => e.target.value && patch({ scheduled_publish_time: fromLocalInput(e.target.value) })}
+                className={`${(okSched && !heldLock) ? inputBase : inputLocked} [color-scheme:dark]`}
+              />
+            </Field>
         </div>
       </section>
 
