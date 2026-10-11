@@ -34,3 +34,17 @@
 7. N12 (নোটিশ): নতুন `notices` টেবিল + RLS (`is_manager()` ব্যবহার) + realtime প্রকাশনায় যোগ।
 8. N10 (Show): `shows` টেবিল + contents-এ show_id/season/episode; guard-এ can_edit_metadata নিয়ম।
 9. N15 (প্ল্যাটফর্ম): target_platforms (তালিকা) থেকে প্ল্যাটফর্মভিত্তিক অবস্থার কাঠামো।
+
+## লাইভ ডেটাবেস সাইজ ও রো কাউন্ট (১১ অক্টোবর ২০২৬)
+
+| টেবিল | রো সংখ্যা | মোট আকার |
+|---|---|---|
+| `contents` | ২৯ | ৩৭৬ kB |
+| `notifications` | ৭৫৬ | ২৮৮ kB |
+| `team_members` | ২০ | ১১২ kB |
+| `content_uid_counters` | ১১ | ৬৪ kB |
+| `organizations` | ১ | ৩২ kB |
+| `channels` | ০ | ৩২ kB |
+| `team_members_legacy` | ১ | ৩২ kB |
+| `content_counters` | ০ | ৮ kB |
+| **মোট** | — | **~৯৪৪ kB** (৫০০ MB ফ্রি সীমার ০.২% মাত্র) |
