@@ -17,6 +17,8 @@ import { uploadReferenceFile } from '../services/fileUploadProvider';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
 import { StaffCell } from '../components/ui/StaffAssignSelect';
 import { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal } from '../components/ui/Modals';
+import { NoticeModal } from '../components/ui/NoticeModal';
+import { fetchNotices, createNotice, deleteNotice } from '../services/noticeService';
 
 import {
   DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, CONTENT_TYPE_COLORS, PLATFORMS, PERMISSIONS, ROLE_LABEL,
@@ -589,6 +591,9 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [showProfile, setShowProfile] = useState(false);
     const [showMyWork, setShowMyWork] = useState(false);
     const [showBin, setShowBin] = useState(false);
+    const [showNotices, setShowNotices] = useState(false);
+    const [notices, setNotices] = useState([]);
+    const [unreadNoticesCount, setUnreadNoticesCount] = useState(0);
 
   /* Signed-in person's own team record, and who the app treats as the actor. */
   const me = useMemo(() => (authId ? team.find((m) => m.auth_user_id === authId) || null : null), [team, authId]);
@@ -750,9 +755,25 @@ function NewsroomApp({ authUser, onSignOut }) {
     if (!error && data) setTeam(data.map(normalizeMember));
   }, [org]);
 
+  const loadNotices = useCallback(async () => {
+    if (!supabase || !org?.id) return;
+    const { data, error } = await fetchNotices(org.id);
+    if (!error && data) {
+      setNotices(data);
+      try {
+        const readAt = window.localStorage.getItem('wd-notices-read-at') || 0;
+        const unread = data.filter((n) => new Date(n.created_at).getTime() > Number(readAt)).length;
+        setUnreadNoticesCount(unread);
+      } catch (e) {}
+    }
+  }, [org]);
+
   useEffect(() => {
-    if (boot.phase === 'ready') fetchRows();
-  }, [boot.phase, fetchRows]);
+    if (boot.phase === 'ready') {
+      fetchRows();
+      if (isFeatureEnabled('notices')) loadNotices();
+    }
+  }, [boot.phase, fetchRows, loadNotices]);
 
   useEffect(() => {
     if (!supabase || boot.phase !== 'ready' || !org) return undefined;
@@ -760,11 +781,47 @@ function NewsroomApp({ authUser, onSignOut }) {
       .channel(`newsroom-${org.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contents' }, () => fetchRows())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => reloadTeam())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notices', filter: `organization_id=eq.${org.id}` }, (payload) => {
+        if (payload.eventType === 'INSERT' && isFeatureEnabled('notif_sound')) {
+          playChime();
+          notify(`নতুন নোটিশ: ${payload.new?.title || ''}`, 'info');
+        }
+        loadNotices();
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [boot.phase, org, fetchRows, reloadTeam]);
+  }, [boot.phase, org, fetchRows, reloadTeam, loadNotices, notify]);
+
+  const handlePostNotice = async ({ title, body, priority }) => {
+    if (!org?.id || !actor) return false;
+    const { data, error } = await createNotice({
+      organizationId: org.id,
+      title,
+      body,
+      authorId: actor.id,
+      authorName: actor.full_name || 'Authority',
+      priority,
+    });
+    if (error) {
+      notify('নোটিশ পোস্ট করতে ব্যর্থ: ' + error.message, 'error');
+      return false;
+    }
+    notify('নতুন নোটিশ সফলভাবে প্রচার করা হয়েছে!', 'success');
+    loadNotices();
+    return true;
+  };
+
+  const handleDeleteNotice = async (noticeId) => {
+    const { error } = await deleteNotice(noticeId);
+    if (error) {
+      notify('নোটিশ মুছতে ব্যর্থ: ' + error.message, 'error');
+      return;
+    }
+    notify('নোটিশ মুছে ফেলা হয়েছে', 'info');
+    loadNotices();
+  };
 
   /* ---------------- setup ---------------- */
   const setupOrg = async ({ orgName, ownerName, ownerEmail }) => {
@@ -1187,11 +1244,12 @@ function NewsroomApp({ authUser, onSignOut }) {
       else if (showTeam) setShowTeam(false);
       else if (showKpi) setShowKpi(false);
       else if (showBin) setShowBin(false);
+      else if (showNotices) setShowNotices(false);
       else if (selectedId) setSelectedId(null);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reasonFor, showNew, showAddChannel, showTeam, showKpi, showBin, selectedId]);
+  }, [reasonFor, showNew, showAddChannel, showTeam, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
   const saveProfile = async ({ full_name, designation, avatar_url }) => {
     if (!me) return false;
@@ -1675,6 +1733,26 @@ function NewsroomApp({ authUser, onSignOut }) {
               <Icon name="chart" /> KPI
             </button>
           ) : null}
+          {isFeatureEnabled('notices') ? (
+            <button
+              className={btnGhost + ' relative flex items-center gap-1.5'}
+              onClick={() => {
+                setShowNotices(true);
+                try {
+                  window.localStorage.setItem('wd-notices-read-at', String(Date.now()));
+                  setUnreadNoticesCount(0);
+                } catch (e) {}
+              }}
+              title="স্টেশন নোটিশ বোর্ড"
+            >
+              <Icon name="bell" /> নোটিশ
+              {unreadNoticesCount > 0 ? (
+                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-black">
+                  {unreadNoticesCount}
+                </span>
+              ) : null}
+            </button>
+          ) : null}
           </div>
           <div className="mt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
         </footer>
@@ -1695,6 +1773,15 @@ function NewsroomApp({ authUser, onSignOut }) {
 
         {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
+      {showNotices ? (
+        <NoticeModal
+          notices={notices}
+          actor={actor}
+          onClose={() => setShowNotices(false)}
+          onPostNotice={handlePostNotice}
+          onDeleteNotice={handleDeleteNotice}
+        />
+      ) : null}
             {showAuthority ? (
         <ModalShell onClose={() => setShowAuthority(false)} title="কর্তৃপক্ষ">
           <div className="flex flex-col gap-5 p-4 max-h-[75vh] overflow-y-auto">
