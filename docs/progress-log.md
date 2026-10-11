@@ -32,8 +32,11 @@
 | 0266e0d | N31 (১০ অক্টোবর): Bin = বাটন + পপআপ। `app/page.js` শুধু (+58 −56): পার্কিং জোনের শিরোনামের ডানদিকে "Bin (N)" বাটন (খালি হলে ঝাপসা, তবু চাপা যায়), পাশে "N items"; চাপলে `ModalShell wide` পপআপ (`showBin` স্টেট) — একই টেবিল (Slug Name, Channel, Missing, Drop reason, Restore); সারিতে ক্লিক করলে পপআপ বন্ধ হয়ে ড্রয়ার খোলে; Esc পপআপ বন্ধ করে; পাতার নিচের আলাদা BIN সেকশন সরানো। `bin` মেমো, Restore লজিক অপরিবর্তিত। যাচাই: eslint 0, build 0, পুশ করা ডিফ হুবহু এক। |
 | ee4ab73 | N32 (১০ অক্টোবর): ১০০০ সারির সীমা ঠিক। নতুন `utils/fetchAll.js` (`fetchAllPages(buildQuery, pageSize=1000, maxPages=50)` — `.range()` দিয়ে পাতা ধরে সব সারি; ত্রুটিতে `{data:null,error}`); `app/page.js` `fetchRows`-এর ৭টা কোয়েরিই (প্রধান তারিখ-পরিধি, shorts, held, no-date, Draft/Dropped, অতীত-অপ্রকাশিত, empty-meta) এখন `fetchAllPages` দিয়ে, প্রতিটায় স্থির সাজানো `.order('id')` (প্রধানটায় `scheduled_publish_time` তারপর `id`)। কোনো ফিল্টার/দেখানোর নিয়ম বদলায়নি। মোট +36 −17। যাচাই: নকল Supabase-এ ০/১/৯৯৯/১০০০/১০০১/২৫০০/৩০০০ সারি — সবই ঠিক সংখ্যা, ডুপ্লিকেট নেই, ত্রুটি-কেস ঠিক; eslint 0, build 0, পুশ করা ডিফ হুবহু এক। |
 | 0f3e0c4 | N33 (১০ অক্টোবর): ব্যাকআপে স্থির সাজানো। `components/ui/Modals.js` `BackupModal` → `performBackup`-এর পাতা-ধরা লুপে `.order('id', { ascending: true })` (+১ লাইন)। পাঁচটা টেবিলেই `id` আছে (organizations, team_members: uuid; channels, contents, notifications: bigint)। ফল: বড় টেবিলে ব্যাকআপের সারি বাদ/ডুপ্লিকেট হয় না। যাচাই: eslint 0, build 0, পুশ করা ডিফ হুবহু এক। |
-| **7a5c1a6** | **(১১ অক্টোবর): Next.js ১৬, React ও ডিপেন্ডেন্সি সিকিউরিটি আপগ্রেড।** Next.js 14.2.15 → 16.4.0 (Turbopack), React 18 → latest, অনিরাপদ `xlsx` বদলে কমিউনিটি ফর্ক `xlsx-js-style` (প্রোটোটাইপ পলিউশন ও ReDoS ফিক্সড — npm audit: 0 vulnerabilities)। `npm run build` সম্পূর্ণ সফল। |
-| **3c8fbb9** | **(১১ অক্টোবর): মাস্টার ডকুমেন্টেশন ও গাইড রি-অর্গানাইজেশন।** রুট `README.md`, `docs/business-and-operations.md` (৩-স্তর স্টোরেজ, আইপি ও ডকার বিতরণ), `docs/architecture-django-transition.md` (জ্যাঙ্গো মাইগ্রেশন ব্লুপ্রিন্ট ও Ninja/Celery/Channels গাইড), `docs/developer-guide-learning.md` (আর্কিটেকচার লার্নিং গাইড), `docs/antigravity-prompts.md` সম্পূর্ণ আপডেট এবং অপ্রয়োজনীয় ডেড কম্পোনেন্ট ফাইলস ক্লিনআপ। |
+| 7a5c1a6 | Antigravity দিয়ে (আমাকে না জানিয়ে) **Next ^16.4.0, React/ReactDOM ^19.3.0**; `xlsx` বদলে `xlsx-js-style ^1.2.0` (import বদল: app/page.js `exportXlsx`, Modals.js কর্মী রিপোর্ট Excel ও Backup Excel); মরা `components/ui/ActionButtons.js` মোছা; package-lock বড় বদল | আমার যাচাই পরে: eslint 0, build 0 (Next 16.4.0 Turbopack); পুরনো `xlsx` import বাকি নেই। **রানটাইমে টেস্ট হয়নি** (Tiptap, টেলিপ্রম্পটার পোর্টাল, Realtime, Excel ডাউনলোড) |
+| 3c8fbb9, 70ec21d | রিপোজিটরির `docs/*` ও README.md সাজানো; চারটা ০-বাইটের খালি ফাইল: `components/features/Drawer.js`, `components/features/RundownTable.js`, `components/layout/Sidebar.js`, `components/layout/TopHeader.js` | শুধু ডক |
+| 834206d | `sql/2026-10-11_storage_documents_rls.sql`: public `documents` বাকেট, ৫০ MB; authenticated সবার insert/update/delete (org বা মালিক ধরে সীমা নেই), select সবার | ব্যবহারকারী চালিয়ে আপলোড+প্রিভিউ টেস্ট করেছেন (রেফারেন্স ফাইল আপলোড এখন ঠিক) |
+| 375a1a1 | ডেটাবেস আকার ~944 kB (সীমা ৫০০ MB, ~০.২%): contents 29, notifications 756, team_members 20, content_uid_counters 11, organizations 1 | ডক |
+| **094c881** | **N12 নোটিশ বোর্ড** | eslint 0, build 0, পুশ করা ডিফ যাচাই-করা ডিফের সাথে ৪৮৬ লাইন হুবহু এক, বাংলা অক্ষর অক্ষত |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -50,7 +53,24 @@
 ## ডেটাবেস (Supabase) — সম্পন্ন
 - **DB-0 (৮ অক্টোবর, ব্যবহারকারী চালিয়েছেন, চেক তিনটাই true):** `contents.reference_files jsonb default '[]'` যোগ; `notify_content_insert/update` নোটিফিকেশনে "Writer" → "Research & Script"; `cascade_member_rename` এখন idea_by, producer, uploader, vfx, colorist, light_designer, sound_recordist, audio_mixer, video_switcher, live_audio-ও ধরে। Rollback `sql-db0.md`-এ।
 - ✅ **Storage documents বাকেট ফিক্স (১১ অক্টোবর):** `sql/2026-10-11_storage_documents_rls.sql` সফলভাবে কার্যকর। Assets ট্যাবে রেফারেন্স ফাইল আপলোড ও নতুন ট্যাবে প্রিভিউ সফলভাবে পরীক্ষিত।
+- ✅ **N12 নোটিশ বোর্ড (১১ অক্টোবর, 094c881):** `notices` টেবিল, RLS, Realtime, `NoticeModal.js`, `noticeService.js`, `app/page.js` বাটন ও লিসেনার সম্পন্ন ও কমিট/পুশ সম্পন্ন। ব্যবহারকারী Supabase-এ SQL চালিয়েছেন (`Success. No rows returned`)।
 - ⏳ DB-0-র পরের টেস্ট: TEST কনটেন্টে অ্যাসাইনে নোটিফিকেশনে "Research & Script" আসে কিনা।
+
+## N12 নোটিশ বোর্ড (094c881, ১১ অক্টোবর)
+- **SQL** `sql/2026-10-11_notices_table.sql` (ব্যবহারকারী চালিয়েছেন): টেবিল `notices` (id uuid, organization_id, title, body, author_id → team_members, author_name, priority normal/urgent/info, created_at, updated_at); ইনডেক্স; RLS — পড়া: `my_org_id()` ও `i_am_active()`, লেখা/বদল/মোছা: `my_org_id()` ও `is_manager()`; Realtime publication-এ যুক্ত। Rollback ফাইলের নিচে কমেন্টে (সতর্কতা: `alter publication … drop table if exists` লাইনটা অবৈধ সিনট্যাক্স; লাগলে `if exists` ছাড়া `alter publication supabase_realtime drop table notices;`)।
+- `services/noticeService.js`: `fetchNotices(orgId, limit=50)`, `createNotice(...)`, `deleteNotice(id)`।
+- `components/ui/NoticeModal.js`: ModalShell ফিড; Urgent লাল / Info নীল ব্যাজ; Manager/Owner-এর জন্য "+ নতুন নোটিশ দিন" ফর্ম ও মোছা (confirm সহ)।
+- `app/page.js`: স্টেট `showNotices`, `notices`, `unreadNoticesCount`; না-পড়া localStorage `wd-notices-read-at` দিয়ে; Realtime লিসেনার (`newsroom-${org.id}`) — INSERT-এ chime + টোস্ট (ফ্ল্যাগ `notif_sound`); ফুটারে "নোটিশ" বাটন + ব্যাজ (ফ্ল্যাগ `notices`); Esc চেইনে `showNotices`।
+- জানা ছোট খুঁত: (১) `bell` আইকন `Icons.js`-এ নেই — বাটনে আইকন ফাঁকা, লেখা দেখা যায়; (২) যিনি নোটিশ দেন তিনিও নিজের chime শোনেন ও নিজের নোটিশ ব্যাজে গোনা হয়; (৩) নোটিশ সম্পাদনা (update) UI নেই, শুধু policy আছে।
+- ব্যবহারকারীর চোখে-দেখা টেস্ট বাকি: Manager পোস্ট/মোছা; কর্মীর অ্যাকাউন্টে ফর্ম নেই কিন্তু নোটিশ+ব্যাজ+chime আছে; ফোনের মাপ; Esc।
+
+## ঝুঁকি/সিদ্ধান্ত বাকি
+1. **Next 16 / React 19 লাফ**: লাইভে স্মোক টেস্ট দরকার — লগইন, রানডাউন, ড্রয়ার, স্ক্রিপ্ট এডিটর (বোল্ড/হাইলাইট), টেলিপ্রম্পটার, বেল+সাউন্ড, Excel (রানডাউন, কর্মী রিপোর্ট, ব্যাকআপ Excel), ব্যাকআপ JSON, প্রোফাইল, Bin, নোটিশ। ফিরতি পথ: Vercel Deployments → 0f3e0c4-এর ডিপ্লয় "Promote to Production"।
+2. **documents বাকেট খুব উদার**: যেকোনো লগইন-করা সদস্য যেকোনো ফাইল মুছতে/বদলাতে পারে; লিংক জানলে যে কেউ দেখতে পারে। পরে: প্রাইভেট বাকেট + signed URL, অন্তত org/মালিক-ভিত্তিক update/delete।
+3. **ডক ডুপ্লিকেট**: রিপোর `docs/` আর Project `claude/*` — কোনটা মূল ঠিক করা বাকি।
+4. রিপোজিটরি private/public অজানা (GitHub API এই সেশনে 403)। বিক্রি/শেয়ারের আগে Private নিশ্চিত করা।
+5. খালি ৪টা প্লেসহোল্ডার ফাইল — মুছে ফেলা বা ব্যবহারের সিদ্ধান্ত।
+6. নিয়ম পুনরায়: Antigravity দিয়ে যা-ই করান, **কমিটের আগে ডিফ আমাকে দিন** (আজ Next 16 আমার যাচাই ছাড়া লাইভে গেছে)।
 
 ## লঞ্চ (১০ অক্টোবর)
 ব্যবহারকারী আজ লঞ্চ করছেন। লঞ্চের আগে: **আসল ব্যাকআপ = কর্তৃপক্ষ → Data → Backup → JSON** (ফুটারের "Backup All" বাদ গেছে); TEST কনটেন্ট মোছা; টিম অ্যাকাউন্ট/রোল/অনুমতি দেখা; ইউজার তৈরি পদ্ধতি (Supabase ফ্রি ইমেইল সীমা) ২–৩ জনে পরীক্ষা; ডিপ্লয়ের পর Ctrl+Shift+R ও Owner+সাধারণ কর্মীর স্মোক টেস্ট; Vercel আগের ডিপ্লয়ে ফেরার পথ জানা। My Work এখন নিজের নামের বাটনের (প্রোফাইল) ভেতরে। লঞ্চের পর শীঘ্রই: রাতের স্বয়ংক্রিয় ব্যাকআপ (pg_dump)।
@@ -94,6 +114,9 @@
 - **ডেটাবেস নিয়ম:** guard ট্রিগার (`guard_contents_update`) তালিকাভুক্ত কলামের বাইরে যেকোনো অ্যাকটিভ সদস্যকে বদলাতে দেয়; নতুন কলাম অরক্ষিত — দরকারে guard-এ নিয়ম।
 - `notify(msg, tone = 'info')`: টোন 'error' (লাল), 'success' (সবুজ), বাকি সব ধূসর।
 - প্রোফাইল বাটন (হেডার) শুধু `authUser && me` থাকলে আসে; ফুটারের কর্তৃপক্ষ/KPI `actor`-এর উপর নির্ভর করে।
+- **ডিফ সেভের নতুন পদ্ধতি (বাংলা ভাঙা এড়াতে, ১১ অক্টোবর):** `git diff --output="$env:USERPROFILE\Desktop\nXX.diff" <ফাইলগুলো>` (পাইপ + Out-File বাংলা অক্ষর নষ্ট করে — cp850 মোজিবেক; সরাসরি `--output` ভালো)। নতুন ফাইল থাকলে আগে `git add -N`।
+- **কমিট বার্তায় "Co-Authored-By" ও "Claude-Session" লাইন নয়** — ব্যবহারকারী চান না (১১ অক্টোবর)। কমিট প্রম্পটে শুধু এক লাইনের `git commit -m "..."`।
+- Icon নাম `Icons.js`-এর `ICON_PATHS`-এ না থাকলে ফাঁকা SVG দেখায় (ত্রুটি ছাড়া) — নতুন আইকন ব্যবহারে নামটা আছে কিনা মিলিয়ে নিতে হবে।
 
 ## ব্যবহারকারীর সিদ্ধান্ত
 - ট্যাবের টাইটেল শুধু "WaveDesk"।
@@ -109,6 +132,8 @@
 - **N31 (১০ অক্টোবর):** Bin আলাদা সেকশন নয়; পার্কিং জোনের শিরোনামের পাশে "Bin (N)" বাটন + পপআপ।
 - **N32, N33 (১০ অক্টোবর):** ১০০০ সারির সীমা ও ব্যাকআপের স্থির সাজানো লঞ্চের দিনেই করা।
 - **ফাইল ও সার্ভার (৮ অক্টোবর):** Supabase-এ শুধু টেক্সট; অফিসের নিজস্ব সার্ভারে সরানো (লক্ষ্য), কিন্তু আগে ~৬ মাস Supabase+Vercel ফ্রি; কোডবেজ অফিসের সাথে শেয়ার নয় (Docker ইমেজ + লিখিত চুক্তি); কাঁচা ফুটেজ LAN-এ NAS-এ, অ্যাপে ফাইলের পথ দেখানো জরুরী। বিস্তারিত file-management-plan.md।
+- **কমিট বার্তায় Claude-এর নাম/সেশন লাইন নয় (১১ অক্টোবর):** ব্যবহারকারী সিদ্ধান্ত নিয়েছেন কমিট মেসেজ হবে ক্লিন ও সরাসরি।
+- **AI-তৈরি কোডের কপিরাইট (১১ অক্টোবর):** ব্যবহারের অধিকার সাধারণত ব্যবহারকারীর; ব্যবসায়িক গোপনীয়তা + লিখিত চুক্তি + লাইব্রেরির লাইসেন্স তালিকা নিশ্চিত করা।
 
 ## পরে করব
 - মরা `components/ui/ActionButtons.js` সরানো।
