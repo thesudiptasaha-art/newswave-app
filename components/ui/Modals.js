@@ -953,7 +953,7 @@ function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
   }, [rows, localRange, team]);
 
   const handleExport = () => {
-    import('xlsx').then(XLSX => {
+    import('xlsx-js-style').then(XLSX => {
       const summarySheet = data.map(d => {
         const row = { Name: d.name, 'Total contents': d.total, 'Published': d.published };
         activeRoles.forEach(r => row[r] = d.roles[r] || 0);
@@ -1111,7 +1111,7 @@ export function BackupModal({ onClose }) {
         URL.revokeObjectURL(url);
       } else if (format === 'excel') {
         setProgress('Generating Excel file...');
-        const XLSX = await import('xlsx');
+        const XLSX = await import('xlsx-js-style');
         const wb = XLSX.utils.book_new();
 
         for (const table of tables) {

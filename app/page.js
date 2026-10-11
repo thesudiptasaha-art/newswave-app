@@ -1146,7 +1146,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   /* ---------------- export ---------------- */
   const exportXlsx = async () => {
     try {
-      const XLSX = await import('xlsx');
+      const XLSX = await import('xlsx-js-style');
       const data = visible.map((r) => ({
         Date: r.scheduled_publish_time ? new Date(r.scheduled_publish_time).toLocaleDateString() : '',
         Time: formatTime(r.scheduled_publish_time),
