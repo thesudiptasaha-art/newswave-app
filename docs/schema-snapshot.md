@@ -13,6 +13,7 @@
 - **content_counters / content_uid_counters**: UID কাউন্টার।
 - **নেই:** shows, notices, প্ল্যাটফর্মভিত্তিক অবস্থা, **reference_files কলাম**।
 - সব টেবিলে RLS চালু। Realtime প্রকাশনা: **contents, team_members, notifications** (channels নেই)।
+- 11 Oct update: table notices ADDED (sql/2026-10-11_notices_table.sql; realtime enabled; read = active members, write = manager/owner). Storage bucket documents ADDED (sql/2026-10-11_storage_documents_rls.sql).
 ## RLS (সংক্ষেপে)
 সব org-ভিত্তিক (`organization_id = my_org_id()`)। contents: select/insert/update `i_am_active()`, delete `is_manager()`। channels: insert/delete `is_manager()`। notifications: নিজের; delete নিজের বা manager। team_members: insert/delete manager (owner ছাড়া; manager তৈরি owner), update সব org-সদস্য (আসল সুরক্ষা ট্রিগারে)। organizations: শুধু select।
 `is_manager()` = role owner|manager এবং active।
@@ -25,6 +26,7 @@
 - **notify_content_insert / notify_content_update**: অ্যাসাইনমেন্ট নোটিফিকেশনের লেখা **"You were assigned as Writer on …"** — এখানে এখনও "Writer" (ডেটাবেসে হার্ডকোড)। স্ট্যাটাস-বদলের নোটিফিকেশনও এখানে।
 - assign_content_uid, set_short_days, perm_of, my_* ফাংশন স্বাভাবিক।
 ## ধরা পড়া সমস্যা ও করণীয় (অগ্রাধিকার)
+- DB-0 is DONE: see sql/2026-10-08_db0_reference_files_notifications_rename.sql
 1. **`reference_files` কলাম নেই** → Assets ট্যাবের রেফারেন্স ফাইল লাইভে সেভ হয় না (Save failed)। সমাধান: `alter table contents add column reference_files jsonb not null default '[]'` (যোগ-ভিত্তিক, নিরাপদ; guard আটকায় না)।
 2. **নোটিফিকেশনে "Writer"** → "Research & Script" (দুই ফাংশন `create or replace`)।
 3. **cascade_member_rename অসম্পূর্ণ** → সব ক্রেডিট কলাম ধরানো।

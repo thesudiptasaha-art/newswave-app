@@ -4,7 +4,7 @@
 > *Architect, Developer, Product Manager: Sudipta Shaha*
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.4.0-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.0.0-blue?logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-19.3.0-blue?logo=react)](https://react.dev/)
 [![Database](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com/)
 [![License](https://img.shields.io/badge/License-Proprietary-red)]()
 

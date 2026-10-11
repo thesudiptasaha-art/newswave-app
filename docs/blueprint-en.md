@@ -372,7 +372,7 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 | Notifications | Created by database triggers (section 6). The bell shows an unread count and updates live through Realtime. Clicking a notification opens that content. |
 | Live updates | Realtime on `contents`, `team_members` and `notifications`. |
 | KPI report | Modal for the current range: Total, Published, In progress (not Published, Dropped, On Hold or Draft), Past due (not Published or Dropped, publish time already passed), then counts by status, channel, type, presenter, writer and video editor. Parked items are not included. |
-| Excel export | The `xlsx` library, loaded on demand. Exports the rundown rows of the current range to `newsroom-rundown-<timestamp>.xlsx`, sheet "Rundown". Parked items are not included. |
+| Excel export | The `xlsx-js-style` library, loaded on demand. Exports the rundown rows of the current range to `newsroom-rundown-<timestamp>.xlsx`, sheet "Rundown". Parked items are not included. |
 | Dark and light theme | Footer button. Choice kept in the browser (`nw-theme` in local storage) and applied before first paint to avoid a flash. Light mode is a CSS override layer in `app/layout.js`. |
 | Fonts | Inter for Latin text, Noto Serif Bengali for Bengali glyphs everywhere, and a serif reading font for scripts. Loaded from Google Fonts. |
 | Profile photos | Picked in My profile, resized in the browser to a 384 px JPEG, uploaded to the `avatars` bucket. A pasted image link also works. |
@@ -384,7 +384,7 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-**Dependencies** (`package.json`): `next` 14.2.15, `react` and `react-dom` 18.3.1, `@supabase/supabase-js` 2.x, `xlsx` 0.18.5. Tailwind is loaded from its CDN in `app/layout.js`, not through a build step.
+**Dependencies** (`package.json`): `next` ^16.4.0, `react` and `react-dom` ^19.3.0, `@supabase/supabase-js` 2.x, `xlsx-js-style` ^1.2.0. Tailwind is loaded from its CDN in `app/layout.js`, not through a build step.
 
 ## 11. How it was built and how changes ship
 

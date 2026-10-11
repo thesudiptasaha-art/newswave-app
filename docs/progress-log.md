@@ -1,5 +1,7 @@
 # WaveDesk — অগ্রগতির লগ (৭–১১ অক্টোবর ২০২৬)
 
+Master documents live in docs/ in this repo. The Claude Project holds only a pointer.
+
 মূল ডকুমেন্টসমূহ: `docs/RULES.md` · `docs/blueprint-en.md` · `docs/blueprint-bn.md` · `docs/business-and-operations.md` · `docs/architecture-django-transition.md` · `docs/developer-guide-learning.md` · `docs/open-tasks.md` · `docs/progress-log.md` (ঐতিহাসিক পরিকল্পনার খসড়া: antigravity-tasks, schema-snapshot, file-management-plan)
 প্রতিটা কমিট আমি GitHub থেকে নিয়ে যাচাই করেছি (undefined-name চেক ০ এরর + `npm run build` সফল)।
 
@@ -145,6 +147,6 @@
 - `purgeOldDrafts`-এ নষ্ট ড্রাফট লুপের মাঝে মোছা (বিরল); কিছু ফাইলের শুরুতে অদৃশ্য BOM (ক্ষতিহীন)।
 - টেলিপ্রম্পটারে বোল্ড/হাইলাইট দেখানো; টেলিপ্রম্পটারে ক্লিকার (প্রেজেন্টেশন রিমোট) সমর্থন (open-tasks ঙ); রিচ এডিটর নতুন কনটেন্ট ফর্মে/লিস্ট/ইটালিক; Tiptap আপগ্রেড আলাদা কাজ।
 - Django-তে গেলে স্ক্রিপ্ট HTML সার্ভারে নিরাপদ করতে `nh3`/`bleach` (একই whitelist: p, br, strong, u, mark)।
-- Next.js 14.2.15-এ নিরাপত্তা সতর্কতা — আলাদা আপগ্রেড কাজ।
+- Next.js 14.2.15-এ নিরাপত্তা সতর্কতা — আলাদা আপগ্রেড কাজ। (DONE: upgraded to Next 16.4 / React 19.3 in commit 7a5c1a6, 11 Oct)
 - Antigravity "Allow" সেটিংস; D2 byproduct নাম, D3 role ticks, N21 level 2, রেভিনিউ ধাপ।
 - Vercel Hobby (ফ্রি) প্ল্যান অবাণিজ্যিক কাজের জন্য — শর্ত যাচাই।
