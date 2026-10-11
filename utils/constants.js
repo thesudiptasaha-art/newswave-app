@@ -19,11 +19,15 @@ export const CONTENT_TYPE_HINT = {
 };
 
 export const PLATFORMS = [
+  { id: 'web', label: 'Web Portal' },
   { id: 'youtube', label: 'YouTube' },
   { id: 'facebook', label: 'Facebook' },
   { id: 'instagram', label: 'Instagram' },
   { id: 'tiktok', label: 'TikTok' },
-  { id: 'web', label: 'Website' },
+  { id: 'x', label: 'X (Twitter)' },
+  { id: 'threads', label: 'Threads' },
+  { id: 'telegram', label: 'Telegram' },
+  { id: 'whatsapp', label: 'WhatsApp' },
 ];
 
 export const PERMISSIONS = [

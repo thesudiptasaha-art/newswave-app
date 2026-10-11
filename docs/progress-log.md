@@ -38,7 +38,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | 3c8fbb9, 70ec21d | রিপোজিটরির `docs/*` ও README.md সাজানো; চারটা ০-বাইটের খালি ফাইল: `components/features/Drawer.js`, `components/features/RundownTable.js`, `components/layout/Sidebar.js`, `components/layout/TopHeader.js` | শুধু ডক |
 | 834206d | `sql/2026-10-11_storage_documents_rls.sql`: public `documents` বাকেট, ৫০ MB; authenticated সবার insert/update/delete (org বা মালিক ধরে সীমা নেই), select সবার | ব্যবহারকারী চালিয়ে আপলোড+প্রিভিউ টেস্ট করেছেন (রেফারেন্স ফাইল আপলোড এখন ঠিক) |
 | 375a1a1 | ডেটাবেস আকার ~944 kB (সীমা ৫০০ MB, ~০.২%): contents 29, notifications 756, team_members 20, content_uid_counters 11, organizations 1 | ডক |
-| **094c881** | **N12 নোটিশ বোর্ড** | eslint 0, build 0, পুশ করা ডিফ যাচাই-করা ডিফের সাথে ৪৮৬ লাইন হুবহু এক, বাংলা অক্ষর অক্ষত |
+| 094c881 | N12 নোটিশ বোর্ড | eslint 0, build 0, পুশ করা ডিফ যাচাই-করা ডিফের সাথে ৪৮৬ লাইন হুবহু এক, বাংলা অক্ষর অক্ষত |
+| **N13, N15** | **N13 আর্থি লাইট থিম ও N15 প্যাকেজিং/প্রোডাকশন রূপান্তর** | Production ট্যাবে শুধু ফুটেজ/মাস্টার ফাইল (রেফারেন্স বাদ); Packaging ট্যাবে প্রতি প্ল্যাটফর্মের Published Link ও শর্ট কনটেন্ট (হুক, ক্যাপশন, সময়); ডাইনামিক `platforms` টেবিল ও `AddPlatformModal`; eslint 0, build 0 |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)

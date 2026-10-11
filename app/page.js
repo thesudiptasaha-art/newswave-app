@@ -16,7 +16,7 @@ import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
 import { StaffCell } from '../components/ui/StaffAssignSelect';
-import { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal } from '../components/ui/Modals';
+import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal } from '../components/ui/Modals';
 import { NoticeModal } from '../components/ui/NoticeModal';
 import { fetchNotices, createNotice, deleteNotice } from '../services/noticeService';
 
@@ -545,6 +545,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [org, setOrg] = useState(null);
   const [team, setTeam] = useState([]);
   const [channels, setChannels] = useState(DEFAULT_CHANNELS);
+  const [platforms, setPlatforms] = useState(PLATFORMS);
   const [rows, setRows] = useState([]);
   const [actorId, setActorId] = useState(null);
   const [range, setRange] = useState({ start: today, end: today });
@@ -573,6 +574,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   };
   const [showKpi, setShowKpi] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
+  const [showAddPlatform, setShowAddPlatform] = useState(false);
     const [showAuthority, setShowAuthority] = useState(false);
   const [reasonFor, setReasonFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
@@ -621,12 +623,32 @@ function NewsroomApp({ authUser, onSignOut }) {
     return out;
   };
 
+  const mergePlatforms = (list) => {
+    const seen = new Set();
+    const out = [];
+    (list || []).forEach((p) => {
+      const code = String(p.code || p.id || p.name).toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+      if (code && !seen.has(code)) {
+        seen.add(code);
+        out.push({ id: code, label: p.label || p.name || code });
+      }
+    });
+    PLATFORMS.forEach((p) => {
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        out.push(p);
+      }
+    });
+    return out;
+  };
+
   const loadWorkspace = useCallback(async () => {
     if (!supabase) {
       const d = buildDemo();
       setOrg(d.org);
       setTeam(d.team);
       setChannels(d.channels);
+      setPlatforms(PLATFORMS);
       setRows(d.rows);
       setActorId(d.team[0].id);
       setBoot({ phase: 'ready', message: '' });
@@ -646,9 +668,10 @@ function NewsroomApp({ authUser, onSignOut }) {
       return;
     }
     const o = orgs[0];
-    const [t, c] = await Promise.all([
+    const [t, c, p] = await Promise.all([
       supabase.from('team_members').select('*').eq('organization_id', o.id).order('created_at', { ascending: true }),
       supabase.from('channels').select('name').or(`organization_id.eq.${o.id},organization_id.is.null`),
+      supabase.from('platforms').select('*').or(`organization_id.eq.${o.id},organization_id.is.null`),
     ]);
     if (t.error) {
       setBoot({ phase: 'error', message: `${errText(t.error)} — did you run the SQL migration in Supabase?` });
@@ -658,6 +681,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     setOrg(o);
     setTeam(members);
     setChannels(mergeChannels(c.error ? [] : (c.data || []).map((x) => x.name)));
+    setPlatforms(mergePlatforms(p?.error ? [] : p?.data));
         const owner = members.find((m) => m.role === 'owner') || members[0];
     const auth = authRef.current;
     if (auth.id) {
@@ -1052,6 +1076,33 @@ function NewsroomApp({ authUser, onSignOut }) {
     return true;
   };
 
+  const addPlatform = async ({ name, code }) => {
+    if (!isManager(actor)) {
+      notify('Only the Owner and Managers can add platforms', 'error');
+      return false;
+    }
+    const cleanCode = (code || name).toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+    if (!cleanCode) {
+      notify('Platform code cannot be empty', 'error');
+      return false;
+    }
+    if (platforms.some((p) => p.id === cleanCode)) {
+      notify('That platform code already exists', 'error');
+      return false;
+    }
+    if (supabase) {
+      const { error } = await supabase.from('platforms').insert({ organization_id: org.id, name: name.trim(), code: cleanCode });
+      if (error) {
+        notify(`Could not add platform: ${errText(error)}`, 'error');
+        return false;
+      }
+    }
+    const newP = { id: cleanCode, label: name.trim() };
+    setPlatforms((list) => [...list, newP]);
+    notify(`Platform “${name}” added`, 'success');
+    return true;
+  };
+
   /* ---------------- team writes ---------------- */
   const canManageMember = (t) => !!actor && t.role !== 'owner' && (isOwner(actor) || (actor.role === 'manager' && actor.active !== false && t.role === 'general'));
 
@@ -1241,6 +1292,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       if (reasonFor) setReasonFor(null);
       else if (showNew) setShowNew(false);
       else if (showAddChannel) setShowAddChannel(false);
+      else if (showAddPlatform) setShowAddPlatform(false);
       else if (showTeam) setShowTeam(false);
       else if (showKpi) setShowKpi(false);
       else if (showBin) setShowBin(false);
@@ -1249,7 +1301,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reasonFor, showNew, showAddChannel, showTeam, showKpi, showBin, showNotices, selectedId]);
+  }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
   const saveProfile = async ({ full_name, designation, avatar_url }) => {
     if (!me) return false;
@@ -1756,7 +1808,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           </div>
           <div className="mt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
         </footer>
-      {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
+      {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} platforms={platforms} onAddPlatform={() => setShowAddPlatform(true)} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
       
         {showEmpReport ? (
           <EmployeeReportModal 
@@ -1804,6 +1856,17 @@ function NewsroomApp({ authUser, onSignOut }) {
                   <div className="flex flex-col items-start text-left">
                     <span>Add channel</span>
                     <span className="text-[11px] text-zinc-500 font-normal normal-case">Create a new channel</span>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Publish Platforms</div>
+                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); setShowAddPlatform(true); }}>
+                  <Icon name="plus" />
+                  <div className="flex flex-col items-start text-left">
+                    <span>Add publish platform</span>
+                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Add platform for distribution</span>
                   </div>
                 </button>
               </div>
@@ -1859,6 +1922,7 @@ function NewsroomApp({ authUser, onSignOut }) {
           </ModalShell>
       ) : null}
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
+      {showAddPlatform ? <AddPlatformModal existing={platforms} onClose={() => setShowAddPlatform(false)} onAdd={addPlatform} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
             
         {showMyWork && actor ? (

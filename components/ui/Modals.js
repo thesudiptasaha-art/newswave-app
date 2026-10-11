@@ -188,6 +188,73 @@ function AddChannelModal({ onClose, onAdd, existing }) {
   );
 }
 
+function AddPlatformModal({ onClose, onAdd, existing = [] }) {
+  const [name, setName] = useState('');
+  const [code, setCode] = useState('');
+
+  const autoCode = name.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+  const finalCode = (code.trim() || autoCode);
+  const dup = existing.some((p) => (p.id || '').toLowerCase() === finalCode.toLowerCase() || (p.label || '').toLowerCase() === name.trim().toLowerCase());
+
+  return (
+    <ModalShell
+      title="Add publish platform"
+      onClose={onClose}
+      footer={
+        <>
+          <button className={btnGhost} onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className={btnPrimary}
+            disabled={!name.trim() || !finalCode || dup}
+            onClick={async () => {
+              if (await onAdd({ name: name.trim(), code: finalCode })) onClose();
+            }}
+          >
+            Add platform
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <Field label="Platform display name">
+          <input
+            autoFocus
+            className={inputBase}
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (!code) setCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''));
+            }}
+            placeholder="e.g. WhatsApp Channel, Threads, Substack"
+          />
+        </Field>
+        <Field label="Platform identifier code" hint="Used internally for links and keys">
+          <input
+            className={inputBase}
+            value={code}
+            onChange={(e) => setCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+            placeholder={autoCode || "e.g. whatsapp"}
+          />
+        </Field>
+        {dup ? <p className="text-[12px] text-red-400">That platform name or code already exists.</p> : null}
+
+        <div className="pt-2 border-t border-white/[0.06]">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Existing platforms ({existing.length})</div>
+          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+            {existing.map((p) => (
+              <span key={p.id} className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] text-zinc-400">
+                {p.label || p.name} <span className="opacity-50 font-mono text-[9px]">({p.id})</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
 function ReasonModal({ title, label, onClose, onConfirm }) {
   const [reason, setReason] = useState('');
   return (
@@ -1059,7 +1126,7 @@ function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
   );
 }
 
-export { NewContentModal, AddChannelModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal };
+export { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal };
 
 
 export function BackupModal({ onClose }) {

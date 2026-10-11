@@ -480,13 +480,17 @@ select jsonb_pretty(jsonb_build_object(
 ```text
 Read docs/RULES.md first and follow it strictly. Work on a separate git branch named themes (do not touch main).
  
-TASK N13 — User-selectable themes: Dark, Light, Ocean, Forest, Sunset
-Today the theme is 'dark' or 'light': app/page.js (around lines 554-562) stores it in localStorage key 'nw-theme', app/layout.js sets class 'light' on <html> with an inline script before paint, and app/layout.js contains the CSS that restyles the app for the light class.
-1. First read how the light theme is implemented in app/layout.js and report in 5 lines. Do NOT rewrite Tailwind classes across components.
-2. Add three themes the same way light mode works today: html classes `theme-ocean` (deep blue/teal dark background, cyan/sky accent), `theme-forest` (deep green dark background, emerald accent), `theme-sunset` (warm dark plum/brown background, orange/amber accent). Implement them as CSS overrides (CSS variables where practical) placed next to the light theme CSS. Keep the same dark base layout, good text contrast (readable white-ish text), and make sure badges, status colors, modals, the drawer, tables and the teleprompter overlay remain readable. 'light' and 'dark' must look exactly as they do today.
-3. Replace the Light/Dark toggle button in the footer with a small theme picker (a button that opens a short list of 5 themes with a color dot each, current one marked). Keep the same footer position and size. Store the choice in the same localStorage key 'nw-theme' (values: dark, light, ocean, forest, sunset; the old values keep working). Choice applies instantly and stays for that user's browser.
-4. Update the inline script in app/layout.js so every theme class is applied before first paint (no flash). Fall back to dark for unknown values. Wrap storage access in try/catch. Put the theme list (id, label, dot color) in utils/constants.js. Skip the picker (fall back to the old dark/light toggle) if isFeatureEnabled('themes') is false.
-5. No database changes. No other changes.
+TASK N13 — Earthy Paper Light Theme (2 versions: Dark & Light)
+Today the theme toggle in the footer switches between 'dark' and 'light':
+- Dark is working well and will remain untouched.
+- Redesign the Light theme (`lightCss` in app/layout.js) to be warm, natural, and eye-friendly:
+  1. Background: Warm natural paper / parchment tone (e.g., `#fbf8f2` / `#f6f3eb`) instead of stark sterile white.
+  2. Surfaces & Panels (cards, modals, drawer): Soft warm linen / creamy off-white (`#f2eee5` / `#ffffff`) with warm subtle borders (`#e4ded3`).
+  3. Primary buttons (Save, Confirm, Active): Earthy Olive Green (`#4d6b32` / `#405828`) with clean light text.
+  4. Destructive / Drop / Alert buttons: Earthy Maroon / Terracotta Red (`#7c2d2d` / `#6a2424`).
+  5. Text: Warm charcoal / espresso (`#2b2723`, secondary `#59524a`) to avoid eye strain.
+  6. No 5-theme picker needed — keep the clean 2-state footer toggle (Light / Dark).
+No database changes.
 ```
  
 **টেস্ট:** ফুটারের থিম বাটন থেকে পাঁচটা থিম বদলে দেখুন। প্রতিটায় টেবিল, ড্রয়ার, মডাল, স্ট্যাটাস ব্যাজ পড়া যায় কিনা দেখুন। পাতা রিফ্রেশ করলে বাছা থিম থাকবে ও ঝলক (flash) দেবে না।

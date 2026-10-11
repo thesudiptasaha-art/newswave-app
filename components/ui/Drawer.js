@@ -14,7 +14,6 @@ import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
 import { downloadContentArchive } from '../../services/exportService';
 import { uploadFile, generateFileName } from '../../services/storageService';
-import { uploadReferenceFile } from '../../services/fileUploadProvider';
 import {
   DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LABEL,
   STATUS_META, ALL_STATUSES, isManager, isOwner, can, afterScript, afterShoot, getActions,
@@ -48,7 +47,7 @@ function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
   );
 }
 
-function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
+function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch, actions, onRun, onAddPlatform }) {
   const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);
   const lockMsg = (label) => `You need the “${label}” permission`;
   const okMeta = can(actor, 'can_edit_metadata');
@@ -77,6 +76,15 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
               />
             </Field>
         </div>
+        <Field label="Slug name" locked={!okMeta} lockMessage={lockMsg('Edit metadata')} hint={`${(row.slug_name || '').length}/${SLUG_MAX}`}>
+          <BlurInput value={row.slug_name} disabled={!okMeta} maxLength={SLUG_MAX} onCommit={(v) => { const s = normalizeSlugInput(v); if (s) patch({ slug_name: s }); }} placeholder="Slug name" />
+        </Field>
+        <Field label="Title" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
+          <BlurInput value={row.title} disabled={!okMeta} onCommit={(v) => patch({ title: v })} placeholder="Title" />
+        </Field>
+        <Field label="Thumbnail text (Hook)" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
+          <BlurInput value={row.thumbnail_text} disabled={!okMeta} onCommit={(v) => patch({ thumbnail_text: v })} placeholder="Hook on the thumbnail" />
+        </Field>
       </section>
 
       <section>
@@ -120,8 +128,8 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
           <BlurInput value={row.archive_shelf_id} disabled={!okMeta} onCommit={(v) => patch({ archive_shelf_id: v })} placeholder="e.g. SHELF-A12" />
         </Field>
         <Field label="Target platforms" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
-          <div className="flex flex-wrap gap-2">
-            {PLATFORMS.map((p) => {
+          <div className="flex flex-wrap items-center gap-2">
+            {(platforms || PLATFORMS).map((p) => {
               const on = row.target_platforms.includes(p.id);
               return (
                 <button
@@ -132,10 +140,20 @@ function OverviewTab({ row, actor, team, channels, patch, actions, onRun }) {
                     on ? 'border-sky-400/50 bg-sky-500/15 text-sky-200' : 'border-white/[0.08] bg-white/[0.03] text-zinc-400'
                   } ${okMeta && !on ? 'hover:bg-white/[0.08]' : ''}`}
                 >
-                  {p.label}
+                  {p.label || p.name}
                 </button>
               );
             })}
+            {onAddPlatform && isManager(actor) ? (
+              <button
+                type="button"
+                onClick={onAddPlatform}
+                className="rounded-full border border-dashed border-sky-400/40 bg-sky-500/10 px-3 py-1.5 text-[12px] font-medium text-sky-300 transition hover:bg-sky-500/20"
+                title="Add a new publish platform"
+              >
+                + Add platform
+              </button>
+            ) : null}
           </div>
         </Field>
       </section>
@@ -388,11 +406,6 @@ function ScriptTab({ row, actor, patch }) {
           No script yet.{canEdit ? ' Click Edit to write one.' : ''}
         </div>
       )}
-            {row.content_type === 'PACKAGE' ? (
-        <div className="mt-6">
-          <LinkRow label="Raw footage link (goes straight to the editor)" value={row.raw_footage_link} disabled={!actor || actor.active === false} onCommit={(v) => patch({ raw_footage_link: v })} />
-        </div>
-      ) : null}
 {!canEdit && !editing ? (
         <p className="mt-3 flex items-center gap-1.5 text-[12px] text-zinc-500">
           <LockIcon /> {locked && !mgr ? 'Read-only — this script is locked. Only Managers and the Owner can edit it.' : 'Read-only — you need the “Edit script” permission to make changes.'}
@@ -414,40 +427,6 @@ function ScriptTab({ row, actor, patch }) {
     .join(' ');
 }
 
-function PublisherTab({ row, actor, patch }) {
-  const ok = can(actor, 'can_edit_metadata');
-  const msg = 'You need the “Edit metadata” permission';
-  return (
-    <div className="space-y-5">
-      {!ok ? (
-        <p className="flex items-center gap-1.5 text-[12px] text-zinc-500">
-          <LockIcon message={msg} /> Read-only — {msg.toLowerCase()} to make changes.
-        </p>
-      ) : (
-        <p className="text-[12px] text-zinc-500">Changes save automatically when you click away from a field.</p>
-      )}
-      <Field label="Slug name" locked={!ok} lockMessage={msg} hint={`${(row.slug_name || '').length}/${SLUG_MAX}`}>
-          <BlurInput value={row.slug_name} disabled={!ok} maxLength={SLUG_MAX} onCommit={(v) => { const s = normalizeSlugInput(v); if (s) patch({ slug_name: s }); }} placeholder="Slug name" />
-        </Field>
-        <Field label="Title" locked={!ok} lockMessage={msg}>
-        <BlurInput value={row.title} disabled={!ok} onCommit={(v) => patch({ title: v })} placeholder="Title" />
-      </Field>
-      <Field label="Thumbnail text" locked={!ok} lockMessage={msg}>
-        <BlurInput value={row.thumbnail_text} disabled={!ok} onCommit={(v) => patch({ thumbnail_text: v })} placeholder="Hook on the thumbnail" />
-      </Field>
-      <Field label="Post caption / social copy" locked={!ok} lockMessage={msg}>
-        <BlurInput multiline rows={6} value={row.post_caption} disabled={!ok} onCommit={(v) => patch({ post_caption: v })} placeholder="Caption that goes out with the post…" />
-      </Field>
-      <Field label="SEO keywords / tags" locked={!ok} lockMessage={msg} hint="comma separated">
-        <BlurInput multiline rows={3} value={row.seo_keywords} disabled={!ok} onCommit={(v) => patch({ seo_keywords: v })} placeholder="budget, fiscal year, economy" />
-      </Field>
-      <Field label="Hashtags (#)" locked={!ok} lockMessage={msg} hint="# is added for you">
-        <BlurInput multiline rows={2} value={row.hashtags} disabled={!ok} onCommit={(v) => patch({ hashtags: normalizeHashtags(v) })} placeholder="#budget #economy" />
-      </Field>
-    </div>
-  );
-}
-
 function LinkRow({ label, value, disabled, onCommit }) {
   return (
     <Field label={label} locked={disabled} lockMessage="Inactive members cannot edit">
@@ -465,140 +444,332 @@ function LinkRow({ label, value, disabled, onCommit }) {
   );
 }
 
-function AssetsTab({ row, actor, patch }) {
+function getPublishedLinks(row) {
+  if (row.published_links && typeof row.published_links === 'object') {
+    return row.published_links;
+  }
+  if (row.live_video_url && typeof row.live_video_url === 'string') {
+    const trimmed = row.live_video_url.trim();
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch (_) {}
+    }
+    if (safeHttpUrl(trimmed)) {
+      const first = (row.target_platforms && row.target_platforms[0]) || 'youtube';
+      return { [first]: trimmed };
+    }
+  }
+  return {};
+}
+
+function ProductionTab({ row, actor, patch }) {
   const active = !!actor && actor.active !== false;
-  const [title, setTitle] = useState('');
-  const [platform, setPlatform] = useState('youtube');
-  const [format, setFormat] = useState('Short Video');
-  const [url, setUrl] = useState('');
-  const [thumbText, setThumbText] = useState('');
-  const updateShort = (id, p) => patch({ shorts: row.shorts.map((s) => (s.id === id ? { ...s, ...p } : s)) });
-  const [shortWhen, setShortWhen] = useState('');
-  const nextShortN = row.shorts.reduce((m, s, i) => Math.max(m, s.n || i + 1), 0) + 1;
-  const shortUid = (s, i) => `${row.content_uid || 'CON'}-SHORT${pad(s.n || i + 1)}`;
   return (
     <div className="space-y-6">
       <section className="space-y-4">
         <LinkRow label="Raw footage" value={row.raw_footage_link} disabled={!active} onCommit={(v) => patch({ raw_footage_link: v })} />
         <LinkRow label="Project file" value={row.project_file_url} disabled={!active} onCommit={(v) => patch({ project_file_url: v })} />
         <LinkRow label="Master export" value={row.master_export_url} disabled={!active} onCommit={(v) => patch({ master_export_url: v })} />
-        <LinkRow label="Live video URL" value={row.live_video_url} disabled={!active} onCommit={(v) => patch({ live_video_url: v })} />
       </section>
-      <section className="border-t border-white/[0.08] pt-4 mt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">References & Attachments</div>
-        </div>
-        <div className="space-y-3">
-          {/* List of uploaded references (saved in a new array column 'reference_files', assuming it might be initialized) */}
-          {(row.reference_files || []).map((ref, idx) => (
-             <div key={idx} className="flex items-center justify-between rounded-xl bg-white/[0.02] border border-white/[0.05] p-2.5">
-               <a href={ref.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-sky-400 hover:underline">{ref.name}</a>
-               <button onClick={() => {
-                 const newRefs = row.reference_files.filter((_, i) => i !== idx);
-                 patch({ reference_files: newRefs });
-               }} className="text-zinc-500 hover:text-red-400"><Icon name="trash" className="h-4 w-4" /></button>
-             </div>
-          ))}
+    </div>
+  );
+}
 
-          {/* Upload Button */}
-          {active && (
-            <div className="relative">
-              <input 
-                type="file" 
-                id={`upload-ref-${row.id}`}
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-                  try {
-                    const url = await uploadReferenceFile(file);
-                    const newRef = { name: file.name, url };
-                    patch({ reference_files: [...(row.reference_files || []), newRef] });
-                    alert('File uploaded successfully!');
-                  } catch(err) {
-                    alert('Upload failed. ' + err.message);
-                  }
-                }}
-              />
-              <label 
-                htmlFor={`upload-ref-${row.id}`} 
-                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/[0.05] px-4 py-2 text-[13px] font-medium text-zinc-300 transition hover:bg-white/[0.1] w-full border border-dashed border-white/[0.2]"
-              >
-                <Icon name="plus" className="h-4 w-4" /> Upload Document/Reference
-              </label>
-            </div>
-          )}
+function PackagingTab({ row, actor, patch, platforms = PLATFORMS, onAddPlatform }) {
+  const active = !!actor && actor.active !== false;
+  const ok = can(actor, 'can_edit_metadata');
+  const msg = 'You need the “Edit metadata” permission';
+
+  // Short Content Creation Form State
+  const [shortPlatforms, setShortPlatforms] = useState(
+    row.target_platforms && row.target_platforms.length > 0 ? row.target_platforms : ['youtube', 'facebook']
+  );
+  const [captionText, setCaptionText] = useState('');
+  const [onVideoText, setOnVideoText] = useState('');
+  const [shortWhen, setShortWhen] = useState('');
+  const [shortUrl, setShortUrl] = useState('');
+
+  const nextShortN = row.shorts.reduce((m, s, i) => Math.max(m, s.n || i + 1), 0) + 1;
+  const shortUid = (s, i) => `${row.content_uid || 'CON'}-SHORT${pad(s.n || i + 1)}`;
+  const updateShort = (id, p) => patch({ shorts: row.shorts.map((s) => (s.id === id ? { ...s, ...p } : s)) });
+
+  // Published links per platform
+  const pubLinks = getPublishedLinks(row);
+  const allPlatforms = platforms || PLATFORMS;
+  const targetPlatforms = Array.from(new Set([
+    ...(row.target_platforms && row.target_platforms.length > 0 ? row.target_platforms : allPlatforms.map((p) => p.id)),
+    ...Object.keys(pubLinks),
+  ]));
+
+  const onCommitPublishedLink = (platformId, val) => {
+    const updated = { ...pubLinks, [platformId]: (val || '').trim() };
+    if (!updated[platformId]) delete updated[platformId];
+    
+    const hasKeys = Object.keys(updated).length > 0;
+    const payload = {
+      live_video_url: hasKeys ? JSON.stringify(updated) : '',
+    };
+    if ('published_links' in row) {
+      payload.published_links = updated;
+    }
+    patch(payload);
+  };
+
+  const handleAddShort = () => {
+    if (!captionText.trim() && !onVideoText.trim()) return;
+    const newShort = {
+      id: uid(),
+      n: nextShortN,
+      title: captionText.trim() || onVideoText.trim(),
+      caption: captionText.trim(),
+      on_video_text: onVideoText.trim(),
+      thumb_text: onVideoText.trim(),
+      platforms: shortPlatforms.length > 0 ? shortPlatforms : ['youtube'],
+      platform: shortPlatforms[0] || 'youtube',
+      url: shortUrl.trim(),
+      publish_at: fromLocalInput(shortWhen),
+      published: false,
+    };
+    patch({ shorts: [...row.shorts, newShort] });
+    setCaptionText('');
+    setOnVideoText('');
+    setShortWhen('');
+    setShortUrl('');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 1. Post Caption, SEO & Hashtags */}
+      <section className="space-y-4">
+        {!ok ? (
+          <p className="flex items-center gap-1.5 text-[12px] text-zinc-500">
+            <LockIcon message={msg} /> Read-only — {msg.toLowerCase()} to make changes.
+          </p>
+        ) : (
+          <p className="text-[12px] text-zinc-500">Changes save automatically when you click away from a field.</p>
+        )}
+        <Field label="Post caption / social copy" locked={!ok} lockMessage={msg}>
+          <BlurInput multiline rows={4} value={row.post_caption} disabled={!ok} onCommit={(v) => patch({ post_caption: v })} placeholder="Caption that goes out with the post…" />
+        </Field>
+        <Field label="SEO keywords / tags" locked={!ok} lockMessage={msg} hint="comma separated">
+          <BlurInput multiline rows={2} value={row.seo_keywords} disabled={!ok} onCommit={(v) => patch({ seo_keywords: v })} placeholder="budget, fiscal year, economy" />
+        </Field>
+        <Field label="Hashtags (#)" locked={!ok} lockMessage={msg} hint="# is added for you">
+          <BlurInput multiline rows={2} value={row.hashtags} disabled={!ok} onCommit={(v) => patch({ hashtags: normalizeHashtags(v) })} placeholder="#budget #economy" />
+        </Field>
+      </section>
+
+      {/* 2. Published Link (One for each platform) */}
+      <section className="border-t border-white/[0.08] pt-4">
+        <div className="mb-2">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Published Links</div>
+          <p className="text-[12px] text-zinc-500">Published live URLs for each platform where this content is live.</p>
+        </div>
+        <div className="space-y-3 mt-3">
+          {targetPlatforms.map((pId) => {
+            const pMeta = allPlatforms.find((p) => p.id === pId) || { id: pId, label: pId };
+            const currentUrl = pubLinks[pId] || '';
+            return (
+              <Field key={pId} label={`${pMeta.label} Published Link`} locked={!active} lockMessage="Inactive members cannot edit">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <BlurInput
+                      value={currentUrl}
+                      disabled={!active}
+                      onCommit={(v) => onCommitPublishedLink(pId, v)}
+                      placeholder={`https://${pId}.com/…`}
+                    />
+                  </div>
+                  {safeHttpUrl(currentUrl) ? (
+                    <a
+                      href={safeHttpUrl(currentUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${btnGhost} !px-3`}
+                      title={`Open ${pMeta.label} link`}
+                    >
+                      <Icon name="link" />
+                    </a>
+                  ) : null}
+                </div>
+              </Field>
+            );
+          })}
         </div>
       </section>
-      <section>
+
+      {/* 3. Short Content (Stripped down: platform toggles, Caption, On Video Text, Date & Time) */}
+      <section className="border-t border-white/[0.08] pt-4">
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Shorts & reels ({row.shorts.length})</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Short Content ({row.shorts.length})</div>
         </div>
+
+        {/* Existing Short Content Items */}
         <div className="space-y-2">
-          {row.shorts.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="truncate font-mono text-[11px] text-zinc-500">{shortUid(s, i)}</div>
-                  <select
-                    value={s.format || 'Short Video'}
-                    onChange={(e) => updateShort(s.id, { format: e.target.value })}
-                    disabled={!active}
-                    className="appearance-none bg-zinc-800 text-[9px] font-bold text-zinc-300 uppercase tracking-wider px-1.5 py-0.5 rounded cursor-pointer border border-transparent hover:border-zinc-600 focus:outline-none disabled:opacity-50"
-                  >
-                    {SHORT_FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
+          {row.shorts.map((s, i) => {
+            const itemPlatforms = s.platforms && Array.isArray(s.platforms) && s.platforms.length > 0
+              ? s.platforms
+              : (s.platform ? [s.platform] : []);
+
+            return (
+              <div key={s.id} className="flex flex-col gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[11px] text-zinc-500">{shortUid(s, i)}</span>
+                    <div className="flex flex-wrap gap-1">
+                      {itemPlatforms.map((pid) => {
+                        const pm = allPlatforms.find((p) => p.id === pid);
+                        return (
+                          <span key={pid} className="rounded-full bg-sky-500/10 border border-sky-400/20 px-2 py-0.5 text-[10px] font-medium text-sky-300">
+                            {pm?.label || pid}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={!active}
+                      onClick={() => updateShort(s.id, { published: !s.published })}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset disabled:opacity-50 transition ${
+                        s.published ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25' : 'bg-white/[0.04] text-zinc-400 ring-white/10'
+                      }`}
+                    >
+                      {s.published ? 'Published' : 'Pending'}
+                    </button>
+                    {safeHttpUrl(s.url) ? (
+                      <a href={safeHttpUrl(s.url)} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white" title="Open short URL">
+                        <Icon name="link" />
+                      </a>
+                    ) : null}
+                    <button disabled={!active} onClick={() => patch({ shorts: row.shorts.filter((x) => x.id !== s.id) })} className="text-zinc-500 hover:text-red-400 disabled:opacity-40" title="Delete short">
+                      <Icon name="trash" />
+                    </button>
+                  </div>
                 </div>
-                <div className="truncate text-[13px] text-zinc-100">{s.title}</div>
-                {s.thumb_text ? <div className="truncate text-[12px] text-sky-300/80">Thumb: {s.thumb_text}</div> : null}
-                <div className="truncate text-[12px] text-amber-300/80">{s.publish_at ? `Upload: ${formatStamp(s.publish_at)}` : 'No upload time set'}</div>
-                <div className="truncate text-[11px] text-zinc-500">
-                  {PLATFORMS.find((p) => p.id === s.platform)?.label || s.platform}
-                  {s.url ? ` · ${s.url}` : ''}
+
+                {s.on_video_text || s.thumb_text ? (
+                  <div className="text-[12px] text-amber-300/90 font-medium">
+                    <span className="text-zinc-500 text-[11px] font-normal uppercase mr-1">On Video:</span>
+                    {s.on_video_text || s.thumb_text}
+                  </div>
+                ) : null}
+
+                {s.caption || s.title ? (
+                  <div className="text-[13px] text-zinc-200 whitespace-pre-wrap">
+                    {s.caption || s.title}
+                  </div>
+                ) : null}
+
+                <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 border-t border-white/[0.04]">
+                  <span>{s.publish_at ? `Publish: ${formatStamp(s.publish_at)}` : 'No publish time set'}</span>
+                  {s.url ? <span className="truncate max-w-[200px] text-zinc-400">{s.url}</span> : null}
                 </div>
               </div>
-              <button
-                disabled={!active}
-                onClick={() => updateShort(s.id, { published: !s.published })}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset disabled:opacity-50 ${s.published ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25' : 'bg-white/[0.04] text-zinc-400 ring-white/10'}`}
-              >
-                {s.published ? 'Published' : 'Pending'}
-              </button>
-              {safeHttpUrl(s.url) ? (
-                  <a href={safeHttpUrl(s.url)} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white">
-                    <Icon name="link" />
-                  </a>
-                ) : null}
-              <button disabled={!active} onClick={() => patch({ shorts: row.shorts.filter((x) => x.id !== s.id) })} className="text-zinc-500 hover:text-red-400 disabled:opacity-40">
-                <Icon name="trash" />
-              </button>
-            </div>
-          ))}
-          {row.shorts.length === 0 ? <p className="text-[13px] text-zinc-600">No shorts or reels yet.</p> : null}
+            );
+          })}
+          {row.shorts.length === 0 ? <p className="text-[13px] text-zinc-600">No short content yet.</p> : null}
         </div>
-        <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 sm:grid-cols-2">
-          <input className={inputBase} placeholder="Short title" value={title} disabled={!active} onChange={(e) => setTitle(e.target.value)} />
-          <SelectBox value={platform} onChange={setPlatform} options={PLATFORMS.map((p) => ({ value: p.id, label: p.label }))} disabled={!active} />
-          <SelectBox value={format} onChange={setFormat} options={SHORT_FORMATS.map((f) => ({ value: f, label: f }))} disabled={!active} />
-          <input className={inputBase} placeholder="Short thumb text (hook)" value={thumbText} disabled={!active} onChange={(e) => setThumbText(e.target.value)} />
-          <input className={inputBase} placeholder="URL (optional)" value={url} disabled={!active} onChange={(e) => setUrl(e.target.value)} />
-            <div className="sm:col-span-2">
-            <div className="mb-1 text-[11px] text-zinc-500">Upload date & time (optional)</div>
-            <input type="datetime-local" className={`${inputBase} [color-scheme:dark]`} value={shortWhen} disabled={!active} onChange={(e) => setShortWhen(e.target.value)} />
+
+        {/* Add Short Content Form */}
+        <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
+          <div className="text-[12px] font-semibold text-zinc-300">Add Short Content</div>
+
+          {/* Platform selection toggle similar to main content */}
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 block mb-1.5">Target Platforms</label>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {allPlatforms.map((p) => {
+                const on = shortPlatforms.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    disabled={!active}
+                    onClick={() => {
+                      setShortPlatforms((prev) =>
+                        prev.includes(p.id) ? prev.filter((x) => x !== p.id) : [...prev, p.id]
+                      );
+                    }}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] transition disabled:cursor-not-allowed ${
+                      on
+                        ? 'border-sky-400/50 bg-sky-500/15 text-sky-200 font-medium'
+                        : 'border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:bg-white/[0.08]'
+                    }`}
+                  >
+                    {p.label || p.name}
+                  </button>
+                );
+              })}
+              {onAddPlatform && isManager(actor) ? (
+                <button
+                  type="button"
+                  onClick={onAddPlatform}
+                  className="rounded-full border border-dashed border-sky-400/40 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-300 transition hover:bg-sky-500/20"
+                  title="Add a new publish platform"
+                >
+                  + Add
+                </button>
+              ) : null}
+            </div>
           </div>
-          <button
-            className={`${btnPrimary} sm:col-span-2`}
-            disabled={!active || !title.trim()}
-            onClick={() => {
-              patch({ shorts: [...row.shorts, { id: uid(), n: nextShortN, title: title.trim(), thumb_text: thumbText.trim(), platform, format, url: url.trim(), publish_at: fromLocalInput(shortWhen), published: false }] });
-              setShortWhen('');
-              setTitle('');
-              setThumbText('');
-              setUrl('');
-            }}
-          >
-            <Icon name="plus" /> Add short / reel
-          </button>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 block mb-1">On Video Text</label>
+              <input
+                className={inputBase}
+                placeholder="Text overlay appearing on the video…"
+                value={onVideoText}
+                disabled={!active}
+                onChange={(e) => setOnVideoText(e.target.value)}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 block mb-1">Caption Text</label>
+              <textarea
+                rows={2}
+                className={`${inputBase} resize-y`}
+                placeholder="Short caption / social copy…"
+                value={captionText}
+                disabled={!active}
+                onChange={(e) => setCaptionText(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 block mb-1">Publish Date & Time</label>
+              <input
+                type="datetime-local"
+                className={`${inputBase} [color-scheme:dark]`}
+                value={shortWhen}
+                disabled={!active}
+                onChange={(e) => setShortWhen(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 block mb-1">Published Link (optional)</label>
+              <input
+                className={inputBase}
+                placeholder="https://…"
+                value={shortUrl}
+                disabled={!active}
+                onChange={(e) => setShortUrl(e.target.value)}
+              />
+            </div>
+
+            <button
+              className={`${btnPrimary} sm:col-span-2 mt-1`}
+              disabled={!active || (!captionText.trim() && !onVideoText.trim())}
+              onClick={handleAddShort}
+            >
+              <Icon name="plus" /> Add Short Content
+            </button>
+          </div>
         </div>
       </section>
     </div>
@@ -774,10 +945,9 @@ export function DeleteModal({ row, onClose, onConfirm }) {
 }
 
 
-const SHORT_FORMATS = ["Short Video", "Reel", "Photo Card", "Photo Story", "Post"];
-function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete }) {
+function Drawer({ row, actor, team, channels, platforms = PLATFORMS, onClose, onPatch, onRun, onDelete, onAddPlatform }) {
     const savedScriptStats = scriptStats(row.script);
-    const [tab, setTab] = useState('overview');
+    const [tab, setTab] = useState('editorial');
   const [saveState, setSaveState] = useState({ status: 'idle', at: null });
   const pendingRef = useRef(0);
 
@@ -792,7 +962,7 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
   }, []);
 
   useEffect(() => {
-    setTab('overview');
+    setTab('editorial');
     pendingRef.current = 0;
     setSaveState({ status: 'idle', at: null });
   }, [row.id]);
@@ -814,12 +984,11 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
   };
   const actions = getActions(row, actor);
   const tabs = [
-    ['overview', 'Overview'],
-    ['script', 'Script Desk'],
-    ['assets', 'Assets & Shorts'],
+    ['editorial', 'Editorial'],
+    ['script', 'Script'],
+    ['production', 'Production'],
+    ['packaging', 'Packaging'],
     ['qc', 'QC & Audit'],
-    ['metadata', 'Publisher'],
-    
   ];
   return (
     <div className="fixed inset-0 z-50">
@@ -842,14 +1011,47 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
               <p className="mt-0.5 text-[13px] text-zinc-500">
                 {row.channel || 'No channel'} · {formatDay(row.scheduled_publish_time)} {formatTime(row.scheduled_publish_time)}
               </p>
-                {safeHttpUrl(row.live_video_url) ? (
-                  <div className="mt-3">
-                    <a href={safeHttpUrl(row.live_video_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[12px] font-medium text-white transition hover:bg-white/20">
-                      <Icon name="link" className="h-3 w-3" />
-                      View Published Content
-                    </a>
+              {(() => {
+                const links = getPublishedLinks(row);
+                const validEntries = Object.entries(links).filter(([_, u]) => safeHttpUrl(u));
+                if (validEntries.length === 0) {
+                  if (safeHttpUrl(row.live_video_url)) {
+                    return (
+                      <div className="mt-3">
+                        <a
+                          href={safeHttpUrl(row.live_video_url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[12px] font-medium text-white transition hover:bg-white/20"
+                        >
+                          <Icon name="link" className="h-3 w-3" />
+                          View Published Content
+                        </a>
+                      </div>
+                    );
+                  }
+                  return null;
+                }
+                return (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {validEntries.map(([pId, u]) => {
+                      const pMeta = PLATFORMS.find((p) => p.id === pId);
+                      return (
+                        <a
+                          key={pId}
+                          href={safeHttpUrl(u)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[12px] font-medium text-white transition hover:bg-white/20"
+                        >
+                          <Icon name="link" className="h-3 w-3" />
+                          {pMeta?.label || pId}
+                        </a>
+                      );
+                    })}
                   </div>
-                ) : null}
+                );
+              })()}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {saveState.status === 'saving' && <span aria-live="polite" className="text-[11px] text-zinc-500">Saving…</span>}
@@ -873,12 +1075,11 @@ function Drawer({ row, actor, team, channels, onClose, onPatch, onRun, onDelete 
           </nav>
         </header>
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {tab === 'overview' ? <OverviewTab row={row} actor={actor} team={team} channels={channels} patch={patch} actions={actions} onRun={(a) => onRun(row, a)} /> : null}
+          {tab === 'editorial' ? <EditorialTab row={row} actor={actor} team={team} channels={channels} platforms={platforms} patch={patch} actions={actions} onRun={(a) => onRun(row, a)} onAddPlatform={onAddPlatform} /> : null}
           {tab === 'script' ? <ScriptTab row={row} actor={actor} patch={patch} /> : null}
-          {tab === 'assets' ? <AssetsTab row={row} actor={actor} patch={patch} /> : null}
+          {tab === 'production' ? <ProductionTab row={row} actor={actor} patch={patch} /> : null}
+          {tab === 'packaging' ? <PackagingTab row={row} actor={actor} patch={patch} platforms={platforms} onAddPlatform={onAddPlatform} /> : null}
           {tab === 'qc' ? <QcTab row={row} actor={actor} patch={patch} /> : null}
-          {tab === 'metadata' ? <PublisherTab row={row} actor={actor} patch={patch} /> : null}
-          
         </div>
         <footer className="border-t border-white/[0.08] bg-black/70 px-6 py-4 backdrop-blur-xl">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Next step</div>
