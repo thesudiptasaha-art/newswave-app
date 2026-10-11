@@ -110,4 +110,4 @@ Realtime notifications sent to team members.
 
 ## Storage Buckets
 * `avatars` (Public bucket) — Stores user profile photos.
-* `documents` (Private bucket, reference files) — Under configuration/RLS review.
+* `documents` (Public bucket, reference files & briefs) — Configured via `sql/2026-10-11_storage_documents_rls.sql` with authenticated insert/update/delete and public select for browser previews.
