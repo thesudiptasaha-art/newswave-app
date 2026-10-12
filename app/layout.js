@@ -191,6 +191,28 @@ const lightCss = `
     background-color: #ffffff;
     border-color: rgba(85, 107, 47, 0.6);
   }
+
+  /* teleprompter: always black background and white text in both themes */
+  html.light .teleprompter-root,
+  html.light [class~="teleprompter-root"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+  html.light .teleprompter-root .text-white,
+  html.light .teleprompter-root [class*="text-white"] {
+    color: #ffffff !important;
+  }
+  html.light .teleprompter-root [class*="text-white/70"] {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  /* script duration badge in drawer top section: high visibility in light theme */
+  html.light .script-duration-badge,
+  html.light [class~="script-duration-badge"] {
+    background-color: #e5ded2 !important;
+    color: #241f19 !important;
+    border-color: rgba(105, 85, 60, 0.3) !important;
+  }
 `;
 export default function RootLayout({ children }) {
   return (

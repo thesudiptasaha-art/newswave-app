@@ -108,6 +108,28 @@ Realtime notifications sent to team members.
 
 ---
 
+### 6. `notices`
+Global station notice board and editorial announcements.
+* `id` (`uuid`, PRIMARY KEY, default `gen_random_uuid()`)
+* `notice_uid` (`text`, UNIQUE) — Human-readable identifier (e.g., `NOTICE-20261012_001`), assigned via `notices_assign_uid` trigger or service fallback.
+* `organization_id` (`uuid`, FK to `organizations.id` on delete cascade)
+* `title` (`text`) — Announcement headline.
+* `body` (`text`) — Detailed bulletin text.
+* `author_id` (`uuid`, FK to `team_members.id` on delete set null)
+* `author_name` (`text`) — Name of author/manager posting notice.
+* `priority` (`text`, check in `'normal'`, `'urgent'`, `'info'`)
+* `created_at` (`timestamptz`)
+* `updated_at` (`timestamptz`)
+
+---
+
+### 7. `notice_uid_counters`
+Daily atomic counter table behind `NOTICE-YYYYMMDD_NNN`.
+* `day` (`text`, PRIMARY KEY) — Asia/Dhaka calendar date formatted as `YYYYMMDD`.
+* `last_seq` (`integer`, default 0) — Last assigned sequence number for that date.
+
+---
+
 ## Storage Buckets
 * `avatars` (Public bucket) — Stores user profile photos.
 * `documents` (Public bucket, reference files & briefs) — Configured via `sql/2026-10-11_storage_documents_rls.sql` with authenticated insert/update/delete and public select for browser previews.

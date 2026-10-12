@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { clampFontSize, speedToPixelsPerSecond, computeScroll } from '../../utils/teleprompter';
 
@@ -192,15 +192,19 @@ export function Teleprompter({ text, onClose }) {
   if (typeof document === 'undefined') return null;
   return createPortal(
     <div 
-      className="fixed inset-0 z-[100] bg-black text-white" 
-      style={{ fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif' }}
+      className="teleprompter-root fixed inset-0 z-[100]" 
+      style={{
+        backgroundColor: '#000000',
+        color: '#ffffff',
+        fontFamily: 'Georgia, "Noto Serif Bengali", "Times New Roman", serif'
+      }}
       onMouseMove={pingControls}
       onTouchStart={pingControls}
     >
       {/* Reading guide */}
       <div className="pointer-events-none absolute left-0 right-0 z-10 border-t-2 border-red-500/30" style={{ top: '35%' }} />
-      <div className="pointer-events-none absolute left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent h-32 top-0" />
-      <div className="pointer-events-none absolute left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent h-32 bottom-0" />
+      <div className="pointer-events-none absolute left-0 right-0 z-10 h-32 top-0" style={{ background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent)' }} />
+      <div className="pointer-events-none absolute left-0 right-0 z-10 h-32 bottom-0" style={{ background: 'linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent)' }} />
 
       {/* Scroller */}
       <div 
@@ -213,7 +217,7 @@ export function Teleprompter({ text, onClose }) {
           <div 
             ref={contentRef}
             className="whitespace-pre-wrap font-medium" 
-            style={{ fontSize: `${fontSize}px`, lineHeight: 1.5 }}
+            style={{ fontSize: `${fontSize}px`, lineHeight: 1.5, color: '#ffffff' }}
           >
             {text}
           </div>
@@ -222,7 +226,8 @@ export function Teleprompter({ text, onClose }) {
 
       {/* Controls */}
       <div 
-        className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center flex-wrap justify-center max-w-[96vw] gap-1 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3 rounded-full bg-zinc-900/90 shadow-2xl backdrop-blur transition-all duration-300 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+        className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center flex-wrap justify-center max-w-[96vw] gap-1 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3 rounded-full shadow-2xl backdrop-blur transition-all duration-300 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+        style={{ backgroundColor: 'rgba(24, 24, 27, 0.92)' }}
       >
         <button onClick={togglePlay} onMouseDown={preventFocus} className={btnClass} title="Play/Pause (Space)">
           <SvgIcon path={playing ? ICONS.pause : ICONS.play} className="h-7 w-7" />
@@ -255,6 +260,24 @@ export function Teleprompter({ text, onClose }) {
       <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .teleprompter-root,
+        html.light .teleprompter-root {
+          background-color: #000000 !important;
+          color: #ffffff !important;
+        }
+        html.light .teleprompter-root .text-white,
+        html.light .teleprompter-root [class*="text-white"] {
+          color: #ffffff !important;
+        }
+        html.light .teleprompter-root [class*="text-white/70"] {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+        html.light .teleprompter-root [class*="bg-white/20"] {
+          background-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        html.light .teleprompter-root [class*="hover:bg-white/10"]:hover {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+        }
       `}} />
     </div>
   , document.body);

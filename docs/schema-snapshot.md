@@ -14,6 +14,7 @@
 - **নেই:** shows, notices, প্ল্যাটফর্মভিত্তিক অবস্থা, **reference_files কলাম**।
 - সব টেবিলে RLS চালু। Realtime প্রকাশনা: **contents, team_members, notifications** (channels নেই)।
 - 11 Oct update: table notices ADDED (sql/2026-10-11_notices_table.sql; realtime enabled; read = active members, write = manager/owner). Storage bucket documents ADDED (sql/2026-10-11_storage_documents_rls.sql).
+- 12 Oct update: notices টেবিলে `notice_uid text unique` যুক্ত; `notice_uid_counters` টেবিল ও `notices_assign_uid` ট্রিগার যোগ (NOTICE-YYYYMMDD_NNN দৈনিক কাউন্টার, Asia/Dhaka সময়); মাইগ্রেশন ও ব্যাকফিল: `sql/2026-10-12_notices_uid_and_counter.sql`।
 ## RLS (সংক্ষেপে)
 সব org-ভিত্তিক (`organization_id = my_org_id()`)। contents: select/insert/update `i_am_active()`, delete `is_manager()`। channels: insert/delete `is_manager()`। notifications: নিজের; delete নিজের বা manager। team_members: insert/delete manager (owner ছাড়া; manager তৈরি owner), update সব org-সদস্য (আসল সুরক্ষা ট্রিগারে)। organizations: শুধু select।
 `is_manager()` = role owner|manager এবং active।

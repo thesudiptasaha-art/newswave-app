@@ -31,22 +31,58 @@ export async function fetchNotices(organizationId, limit = 50) {
  * @param {string} [noticeData.authorId]
  * @param {string} noticeData.authorName
  * @param {'normal'|'urgent'|'info'} [noticeData.priority]
+ * @param {string} [noticeData.noticeUid]
  */
-export async function createNotice({ organizationId, title, body, authorId, authorName, priority = 'normal' }) {
+export async function createNotice({ organizationId, title, body, authorId, authorName, priority = 'normal', noticeUid }) {
   if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
 
-  const { data, error } = await supabase
+  let uidToInsert = noticeUid;
+  if (!uidToInsert) {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const todayPrefix = `NOTICE-${yyyy}${mm}${dd}_`;
+
+    try {
+      const { data: existing } = await supabase
+        .from('notices')
+        .select('notice_uid')
+        .eq('organization_id', organizationId)
+        .ilike('notice_uid', `${todayPrefix}%`);
+
+      const nextNum = (existing || []).length + 1;
+      uidToInsert = `${todayPrefix}${String(nextNum).padStart(3, '0')}`;
+    } catch (e) {
+      uidToInsert = `${todayPrefix}001`;
+    }
+  }
+
+  const payload = {
+    organization_id: organizationId,
+    title: title.trim(),
+    body: body.trim(),
+    author_id: authorId || null,
+    author_name: authorName,
+    priority,
+  };
+
+  if (uidToInsert) {
+    payload.notice_uid = uidToInsert;
+  }
+
+  let { data, error } = await supabase
     .from('notices')
-    .insert({
-      organization_id: organizationId,
-      title: title.trim(),
-      body: body.trim(),
-      author_id: authorId || null,
-      author_name: authorName,
-      priority,
-    })
+    .insert(payload)
     .select()
     .single();
+
+  if (error && error.message && error.message.includes('notice_uid')) {
+    delete payload.notice_uid;
+    const retry = await supabase.from('notices').insert(payload).select().single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   return { data, error };
 }

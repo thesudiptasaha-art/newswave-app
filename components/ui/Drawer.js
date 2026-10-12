@@ -1001,7 +1001,7 @@ function Drawer({ row, actor, team, channels, platforms = PLATFORMS, onClose, on
                 <TypeBadge type={row.content_type} />
                 <StatusBadge status={row.status} />
                   {savedScriptStats.words > 0 && (
-                    <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-zinc-800 text-zinc-300">
+                    <span className="script-duration-badge inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded border border-white/10 bg-zinc-800 text-zinc-200">
                       Script {savedScriptStats.label}
                     </span>
                   )}
