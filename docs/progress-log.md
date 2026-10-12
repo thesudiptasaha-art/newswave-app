@@ -58,6 +58,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **DB-0 (৮ অক্টোবর, ব্যবহারকারী চালিয়েছেন, চেক তিনটাই true):** `contents.reference_files jsonb default '[]'` যোগ; `notify_content_insert/update` নোটিফিকেশনে "Writer" → "Research & Script"; `cascade_member_rename` এখন idea_by, producer, uploader, vfx, colorist, light_designer, sound_recordist, audio_mixer, video_switcher, live_audio-ও ধরে। Rollback `sql-db0.md`-এ।
 - ✅ **Storage documents বাকেট ফিক্স (১১ অক্টোবর):** `sql/2026-10-11_storage_documents_rls.sql` সফলভাবে কার্যকর। Assets ট্যাবে রেফারেন্স ফাইল আপলোড ও নতুন ট্যাবে প্রিভিউ সফলভাবে পরীক্ষিত।
 - ✅ **N12 নোটিশ বোর্ড (১১ অক্টোবর, 094c881):** `notices` টেবিল, RLS, Realtime, `NoticeModal.js`, `noticeService.js`, `app/page.js` বাটন ও লিসেনার সম্পন্ন ও কমিট/পুশ সম্পন্ন। ব্যবহারকারী Supabase-এ SQL চালিয়েছেন (`Success. No rows returned`)।
+- ✅ **১২ অক্টোবরের মাইগ্রেশন সম্পন্ন:** ব্যবহারকারী Supabase SQL Editor-এ ৩টি স্ক্রিপ্টই সফলভাবে চালিয়েছেন — `platforms` টেবিল+RLS (`sql/2026-10-12_platforms_table.sql`), `contents.published_links` কলাম (`sql/2026-10-12_packaging_published_links.sql`), এবং `notice_uid` ও দৈনিক কাউন্টার ট্রিগার (`sql/2026-10-12_notices_uid_and_counter.sql`)।
 - ⏳ DB-0-র পরের টেস্ট: TEST কনটেন্টে অ্যাসাইনে নোটিফিকেশনে "Research & Script" আসে কিনা।
 
 ## N12 নোটিশ বোর্ড (094c881, ১১ অক্টোবর)
