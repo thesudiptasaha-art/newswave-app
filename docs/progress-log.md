@@ -41,6 +41,9 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | 094c881 | N12 নোটিশ বোর্ড | eslint 0, build 0, পুশ করা ডিফ যাচাই-করা ডিফের সাথে ৪৮৬ লাইন হুবহু এক, বাংলা অক্ষর অক্ষত |
 | 0f2f2d8 | N13 আর্থি লাইট থিম ও N15 প্যাকেজিং/প্রোডাকশন রূপান্তর | Production ট্যাবে শুধু ফুটেজ/মাস্টার ফাইল (রেফারেন্স বাদ); Packaging ট্যাবে প্রতি প্ল্যাটফর্মের Published Link ও শর্ট কনটেন্ট (হুক, ক্যাপশন, সময়); ডাইনামিক `platforms` টেবিল ও `AddPlatformModal`; eslint 0, build 0 |
 | UI Polish | স্লাগ কালার স্বাভাবিক ও থিম কনট্রাস্ট ফিক্স (১২ অক্টোবর) | ১. স্লাগ টেক্সট দুই থিমেই সাধারণ ফন্ট কালার (text-white; ডার্কে সাদা, লাইটে চারকোল `#28231d`) — রানডাউন (ডেস্কটপ ও মোবাইল) এবং পার্কিং (মোবাইল) থেকে কন্টেন্ট-টাইপ রঙ সরানো; ২. টেলিপ্রম্পটার লাইট ও ডার্ক উভয় থিমেই স্থায়ী ব্ল্যাক ব্যাকগ্রাউন্ড (`#000000`) ও সাদা টেক্সট (`#ffffff`) — `.teleprompter-root` রুট ও লাইট থিম সিএসএস ওভাররাইড প্রোটেকশন; ৩. ড্রয়ারের শীর্ষে স্ক্রিপ্ট ডিউরেশন ব্যাজ লাইট থিমে স্পষ্ট দৃশ্যমান (`.script-duration-badge`: `#e5ded2` ব্যাকগ্রাউন্ড, `#241f19` ডার্ক টেক্সট); eslint 0, build 0 |
+| b19ea5a | 12 Oct: notice uid, live search (NoticeModal), theme contrast fixes for slug, teleprompter and drawer duration | verified: eslint 0, build 0 |
+| 835b813 | 12 Oct: docs record that the three Oct 12 SQL migrations were run live (notices uid and counter, platforms table, published_links column) | docs only |
+| b405250 | N35 (12 Oct): (1) added missing bell and info icons to Icons.js; (2) createNotice no longer builds notice_uid on the client - the database trigger notices_assign_uid assigns it; (3) no chime or toast for the person who posted the notice (author_id compared with actorIdRef); (4) app/page.js and Modals.js now import the single supabase client from services/supabase.js instead of two extra createClient calls. 4 files, +7 -36. | verified: eslint 0, build 0, pushed diff identical |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -75,7 +78,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
   - **লাইভ সার্চ বার:** নোটিশ বোর্ডে আইডি (যেমন `NOTICE-20261012_001`), শিরোনাম, বডি বা লেখক লিখে ইনস্ট্যান্ট ফিল্টার; নোটিশ কাউন্টার ও সার্চ রিসেট বাটন।
   - **আইডি প্রদর্শন ও কপি:** নোটিশ কার্ডের শিরোনামের পাশে `NOTICE-YYYYMMDD_NNN` সবুজ ব্যাজ; ক্লিকে ক্লিপবোর্ডে কপি ও "কপি হয়েছে!" অ্যানিমেশন।
   - **ফলব্যাক ডিসপ্লে:** ডাটাবেসে পুরনো কোনো নোটিশে `notice_uid` নাল/খালি থাকলেও ক্লায়েন্ট-সাইডে তারিখ ও ক্রমানুসারে স্বয়ংক্রিয় UID বসিয়ে দেখানো ও কপি সাপোর্ট।
-- `services/noticeService.js`: `createNotice`-এ স্বয়ংক্রিয় দৈনিক ক্রম গুনে `notice_uid` তৈরি ও ডাটাবেসে সেভ; কলাম না থাকলে নিরাপদ ফলব্যাক।
+- `services/noticeService.js`: `createNotice`-এ স্বয়ংক্রিয় দৈনিক ক্রম গুনে `notice_uid` তৈরি ও ডাটাবেসে সেভ; কলাম না থাকলে নিরাপদ ফলব্যাক। (UPDATED in N35, b405250: the client-side counting was removed; the database trigger assigns notice_uid. Optional noticeUid parameter remains.)
 - `lib/core.js`: `makeNoticeUid` জেনারেটর হেল্পার ফাংশন যোগ ও এক্সপোর্ট।
 
 ## ঝুঁকি/সিদ্ধান্ত বাকি
@@ -131,6 +134,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **ডিফ সেভের নতুন পদ্ধতি (বাংলা ভাঙা এড়াতে, ১১ অক্টোবর):** `git diff --output="$env:USERPROFILE\Desktop\nXX.diff" <ফাইলগুলো>` (পাইপ + Out-File বাংলা অক্ষর নষ্ট করে — cp850 মোজিবেক; সরাসরি `--output` ভালো)। নতুন ফাইল থাকলে আগে `git add -N`।
 - **কমিট বার্তায় "Co-Authored-By" ও "Claude-Session" লাইন নয়** — ব্যবহারকারী চান না (১১ অক্টোবর)। কমিট প্রম্পটে শুধু এক লাইনের `git commit -m "..."`।
 - Icon নাম `Icons.js`-এর `ICON_PATHS`-এ না থাকলে ফাঁকা SVG দেখায় (ত্রুটি ছাড়া) — নতুন আইকন ব্যবহারে নামটা আছে কিনা মিলিয়ে নিতে হবে।
+- Antigravity audit (12 Oct) checked against code: real - bell and info icons missing (fixed N35), multiple createClient (fixed N35), own notice chime (fixed N35), My Work only checks 5 roles (writer, presenter, video_editor, camera_person, uploader) and misses producer, idea_by, vfx, colorist and the others, Tailwind CDN in production, app/page.js too big and every realtime change refetches 7 queries (N34). NOT real: "ghost permission keys" - can_change_channel and can_change_presenter exist in utils/constants.js PERMISSIONS; the real issue is that lib/core.js keeps an older second copy of the PERMISSIONS list without them (drift risk).
+- Do not trust an AI audit without checking the code: two of its claims were wrong or exaggerated.
 
 ## ব্যবহারকারীর সিদ্ধান্ত
 - ট্যাবের টাইটেল শুধু "WaveDesk"।
