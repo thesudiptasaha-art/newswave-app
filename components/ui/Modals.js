@@ -12,11 +12,8 @@ import {
 
 import { downloadUserReport, downloadContentArchive } from '../../services/exportService';
 import { generateFileName, uploadFile } from '../../services/storageService';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../services/supabase';
 import { resizeToJpeg } from '../../utils/helpers';
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
   const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);

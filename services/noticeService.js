@@ -37,26 +37,6 @@ export async function createNotice({ organizationId, title, body, authorId, auth
   if (!supabase) return { data: null, error: new Error('Supabase client not initialized') };
 
   let uidToInsert = noticeUid;
-  if (!uidToInsert) {
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const todayPrefix = `NOTICE-${yyyy}${mm}${dd}_`;
-
-    try {
-      const { data: existing } = await supabase
-        .from('notices')
-        .select('notice_uid')
-        .eq('organization_id', organizationId)
-        .ilike('notice_uid', `${todayPrefix}%`);
-
-      const nextNum = (existing || []).length + 1;
-      uidToInsert = `${todayPrefix}${String(nextNum).padStart(3, '0')}`;
-    } catch (e) {
-      uidToInsert = `${todayPrefix}001`;
-    }
-  }
 
   const payload = {
     organization_id: organizationId,

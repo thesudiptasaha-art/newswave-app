@@ -8,7 +8,7 @@ import { APP_NAME, APP_CREDIT } from '../utils/constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, LockIcon } from '../components/ui/Icons';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../services/supabase';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
 import { downloadContentArchive, downloadKPIReport, downloadUserReport } from '../services/exportService';
 import { fetchAllPages } from '../utils/fetchAll';
@@ -28,16 +28,6 @@ import {
   makeContentUid, asArray, shortsInRange, rowTimeIn, isParked, isComplete, isBin, missingFields, normalizeRow, normalizeMember,
   FIELD_PERM, TRACKED_FIELDS
 } from '../lib/core';
-
-
-
-
-/* ------------------------------------------------------------------ */
-/* Supabase client (falls back to demo mode when env vars are absent)  */
-/* ------------------------------------------------------------------ */
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                           */
@@ -584,6 +574,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const teamRef = useRef([]);
   const reqRef = useRef(0);
   const toastTimer = useRef(null);
+  const actorIdRef = useRef(null);
   rowsRef.current = rows;
   teamRef.current = team;
 
@@ -601,6 +592,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const me = useMemo(() => (authId ? team.find((m) => m.auth_user_id === authId) || null : null), [team, authId]);
   const switcherOn = !authId || isOwner(me);
   const actor = useMemo(() => (authId && !isOwner(me) ? me : team.find((m) => m.id === actorId) || null), [team, actorId, authId, me]);
+  actorIdRef.current = actor?.id ?? null;
 
   const notify = useCallback((msg, tone = 'info') => {
     setToast({ msg, tone });
@@ -806,7 +798,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contents' }, () => fetchRows())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => reloadTeam())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notices', filter: `organization_id=eq.${org.id}` }, (payload) => {
-        if (payload.eventType === 'INSERT' && isFeatureEnabled('notif_sound')) {
+        if (payload.eventType === 'INSERT' && isFeatureEnabled('notif_sound') && payload.new?.author_id !== actorIdRef.current) {
           playChime();
           notify(`নতুন নোটিশ: ${payload.new?.title || ''}`, 'info');
         }
