@@ -48,6 +48,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | ebfdd87 | N36-B (18 Oct): `sql/2026-10-18_storage_platforms_rls_tighten.sql` - record of the SQL already run live (documents bucket: no update/delete, insert only for active members; platforms policies require an active member) | policy list checked live |
 | f93a864 | N36-C (18 Oct): added Change presenter and Change channel to the live PERMISSIONS list in lib/core.js; removed the dead copy in utils/constants.js | verified: eslint 0, build 0, pushed diff identical |
 | fe93b53 | N36-D (18 Oct): removed 4 fake download buttons (Archive ZIP in drawer, KPI report in Authority menu, download_script action, My Work Download Zip), removed the broken legacy avatar upload field, "Script copied" now uses notify | verified: eslint 0, build 0, pushed diff identical |
+| 703bef2 | N36-F (18 Oct): My Work now counts all 14 credit roles from one MY_WORK_ROLES list in components/ui/Modals.js (first 5 roles always shown, the other 9 only when above zero) | verified: eslint 0, build 0, pushed diff identical |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -165,7 +166,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **অনুমতি তালিকার ত্রুটি (f93a864):** চালু UI `lib/core.js`-এর তালিকা ব্যবহার করে, তাতে Change presenter ও Change channel ছিল না, তাই টিম পর্দা থেকে এই দুটো অনুমতি দেওয়া যেত না (অথচ Drawer ও ডাটাবেস গার্ড দুটোই চায়)। যোগ করা হয়েছে; `utils/constants.js`-এর মরা কপি মুছেছে।
 - **নকল বাটন (fe93b53):** `exportService.js`-এর `downloadContentArchive`, `downloadKPIReport`, `downloadFullSystemBackup` শুধু `alert` দেখানো placeholder ছিল। ড্রয়ারের "Archive ZIP", Authority-র "KPI report", `download_script` অ্যাকশন ও My Work-এর "Download Zip" সরানো হয়েছে। প্রোফাইলের পুরনো ছবি আপলোড ঘর (`avatars` RLS-এ সবসময় ফেল করত) মুছেছে। "Script copied" এখন `notify`। আসল Archive/KPI রিপোর্ট পরে বানানো হলে বাটন ফেরানো হবে।
 - **বাকি পরিষ্কার:** অব্যবহৃত `ExportButtons.js` ও exportService-এর তিন placeholder মোছা; `confirm()` ২ জায়গায় (সদস্য সরানো, নোটিশ মোছা) সুন্দর নিশ্চিতকরণ বক্সে বদলানো।
-- **মালিকের লাইভ টেস্ট বাকি:** টিমে নতুন দুই সুইচ, ড্রয়ারের ফুটার, Authority মেনু, My Work, প্রোফাইল ছবি, Copy Script বার্তা।
+- **My Work (703bef2):** আগে মাত্র ৫টা ভূমিকা (Research & Script, Presenter, Video Editor, Cameraman, Publisher) গোনা হতো; এখন Idea, Producer, VFX, Colorist, Light Design, Sound Record, Audio Mixing, Video Switch, Live Audio সহ ১৪টা। নতুন ৯টা শুধু সংখ্যা ০-এর বেশি হলে "ভূমিকা অনুযায়ী মোট"-এ দেখায়।
+- **মালিকের লাইভ টেস্ট বাকি:** টিমে নতুন দুই সুইচ, ড্রয়ারের ফুটার, Authority মেনু, My Work, প্রোফাইল ছবি, Copy Script বার্তা, My Work-এ Producer/Idea-ওয়ালা কনটেন্ট।
 - **GitHub:** রিপো এখন Public (শুধু যাচাইয়ের জন্য); কাজ শেষে Private করা হবে। workflow ফাইল পুশ করতে টোকেনে `workflow` অনুমতি লাগে।
 
 ## পরে করব
