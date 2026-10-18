@@ -12,7 +12,6 @@ import dynamic from 'next/dynamic';
 const ScriptEditor = dynamic(() => import('./ScriptEditor'), { ssr: false });
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from './Badges';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from './Shared';
-import { downloadContentArchive } from '../../services/exportService';
 import { uploadFile, generateFileName } from '../../services/storageService';
 import {
   DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LABEL,
@@ -1084,36 +1083,6 @@ function Drawer({ row, actor, team, channels, platforms = PLATFORMS, onClose, on
         <footer className="border-t border-white/[0.08] bg-black/70 px-6 py-4 backdrop-blur-xl">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Next step</div>
           <ActionButtons actions={actions} onRun={(a) => onRun(row, a)} />
-          <div className="mt-3 border-t border-white/[0.06] pt-3 flex items-center gap-3">
-            
-            {(() => {
-              const isManagerOrOwner = isManager(actor);
-              const isInvolved = actor && [
-                row.idea_by, row.writer, row.producer, row.camera_person, row.video_editor, row.uploader,
-                row.presenter_name, row.vfx, row.colorist, row.light_designer, row.sound_recordist, row.audio_mixer,
-                row.video_switcher, row.live_audio
-              ].includes(actor.full_name);
-              const canDownload = isManagerOrOwner || isInvolved;
-              return canDownload ? (
-                <button
-                  onClick={() => downloadContentArchive(row)}
-                  title="Download Full Archive (PDF + Script + Logs)"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[12px] font-medium text-indigo-300 transition hover:bg-indigo-500/20"
-                >
-                  <Icon name="download" className="h-3.5 w-3.5" /> Archive ZIP
-                </button>
-              ) : (
-                <button
-                  disabled
-                  title="You must be assigned to this content to download its archive."
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-zinc-500 cursor-not-allowed"
-                >
-                  <Icon name="download" className="h-3.5 w-3.5" /> Archive ZIP
-                </button>
-              );
-            })()}
-
-          </div>
           <div className="mt-3 border-t border-white/[0.06] pt-3">
             <button
               className={btnDanger}

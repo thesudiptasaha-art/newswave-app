@@ -10,7 +10,7 @@ import { Icon, LockIcon } from '../components/ui/Icons';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
 import { supabase } from '../services/supabase';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
-import { downloadContentArchive, downloadKPIReport, downloadUserReport } from '../services/exportService';
+import { downloadUserReport } from '../services/exportService';
 import { fetchAllPages } from '../utils/fetchAll';
 import { uploadFile, generateFileName } from '../services/storageService';
 import { uploadReferenceFile } from '../services/fileUploadProvider';
@@ -956,8 +956,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   );
 
   const runAction = (row, action) => {
-    if (action.id === 'download_script') { downloadContentArchive(row); return; }
-    if (action.id === 'copy_script') { navigator.clipboard.writeText(scriptToPlainText(row.script) || 'No script'); alert('Script copied!'); return; }
+    if (action.id === 'copy_script') { navigator.clipboard.writeText(scriptToPlainText(row.script) || 'No script'); notify('Script copied', 'success'); return; }
     if (action.needsReason) setReasonFor({ rowId: row.id, action });
     else transition(row, action);
   };
@@ -1881,13 +1880,6 @@ function NewsroomApp({ authUser, onSignOut }) {
                   <div className="flex flex-col items-start text-left">
                     <span>Report</span>
                     <span className="text-[11px] text-zinc-500 font-normal normal-case">Employee work report</span>
-                  </div>
-                </button>
-                <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); downloadKPIReport(visible); }}>
-                  <Icon name="chart" />
-                  <div className="flex flex-col items-start text-left">
-                    <span>KPI report</span>
-                    <span className="text-[11px] text-zinc-500 font-normal normal-case">Download the KPI report</span>
                   </div>
                 </button>
                 <button className={btnGhost + " justify-start"} onClick={() => { setShowAuthority(false); exportXlsx(); }}>

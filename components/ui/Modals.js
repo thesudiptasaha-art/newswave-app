@@ -10,8 +10,7 @@ import {
   SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays, sameDay, shortsInRange
 } from '../../lib/core';
 
-import { downloadUserReport, downloadContentArchive } from '../../services/exportService';
-import { generateFileName, uploadFile } from '../../services/storageService';
+import { downloadUserReport } from '../../services/exportService';
 import { supabase } from '../../services/supabase';
 import { resizeToJpeg } from '../../utils/helpers';
 
@@ -753,29 +752,6 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
         <Field label="Job designation" hint="optional">
           <input className={inputBase} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Producer" />
         </Field>
-        <Field label="Profile Picture (Upload)" hint="optional">
-          <div className="flex items-center gap-3">
-            <input 
-              type="file" 
-              accept="image/*"
-              className="text-[12px] text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-[12px] file:text-white hover:file:bg-white/20"
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                try {
-                  const fileName = generateFileName(file.name);
-                  // Make sure you have created an 'avatars' bucket in Supabase!
-                  const url = await uploadFile('avatars', fileName, file);
-                  setAvatar(url);
-                  alert('Avatar uploaded successfully!');
-                } catch (err) {
-                  alert('Upload failed: ' + err.message);
-                }
-              }}
-            />
-            {avatar && <img src={avatar} alt="Avatar Preview" className="h-8 w-8 rounded-full object-cover border border-white/20" />}
-          </div>
-        </Field>
         <Field label="New password" hint="leave empty to keep the current one">
           <input type="password" autoComplete="new-password" className={inputBase} value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
@@ -856,9 +832,6 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
             <h2 className="text-[18px] font-semibold text-white">My Work: {actor?.full_name}</h2>
             <div className="text-[13px] text-zinc-400">{rangeLabel}</div>
           </div>
-          <button className={btnGhost} onClick={() => myItems.forEach(r => downloadContentArchive(r))}>
-            <Icon name="download" /> Download Zip
-          </button>
         </div>
         <div className="flex-1 overflow-auto p-6 bg-black/90">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
