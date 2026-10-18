@@ -1,0 +1,37 @@
+name: Nightly DB backup
+
+on:
+  schedule:
+    - cron: '30 17 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Dump database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: docker run --rm postgres:17 pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges --schema=public --schema=auth > backup.sql
+
+      - name: Verify dump
+        run: test -s backup.sql
+
+      - name: Compress dump
+        run: gzip backup.sql
+
+      - name: Encrypt dump
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" --symmetric --cipher-algo AES256 --output backup.sql.gz.gpg backup.sql.gz
+          rm -f backup.sql.gz
+
+      - name: Upload backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backup.sql.gz.gpg
+          retention-days: 30
