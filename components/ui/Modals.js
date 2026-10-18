@@ -778,6 +778,22 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
   );
 }
 
+const MY_WORK_ROLES = [
+  ['writer', 'Research & Script'],
+  ['presenter_name', 'Presenter'],
+  ['video_editor', 'Video Editor'],
+  ['camera_person', 'Cameraman'],
+  ['uploader', 'Publisher'],
+  ['idea_by', 'Idea'],
+  ['producer', 'Producer'],
+  ['vfx', 'Visual Effects'],
+  ['colorist', 'Colorist'],
+  ['light_designer', 'Light Design'],
+  ['sound_recordist', 'Sound Record'],
+  ['audio_mixer', 'Audio Mixing'],
+  ['video_switcher', 'Video Switch'],
+  ['live_audio', 'Live Audio Mixing'],
+];
 
 function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
   const endExclusive = addDays(range.end, 1);
@@ -794,11 +810,7 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
 
     if (!actor) return false;
     const name = actor.full_name;
-    return r.writer === name || 
-           r.presenter_name === name || 
-           r.video_editor === name || 
-           r.camera_person === name || 
-           r.uploader === name;
+    return MY_WORK_ROLES.some(([field]) => r[field] === name);
   });
 
   const roleTotals = { 'Research & Script': 0, Presenter: 0, 'Video Editor': 0, 'Cameraman': 0, Publisher: 0 };
@@ -808,11 +820,7 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
     const roles = [];
     if (!actor) return roles;
     const name = actor.full_name;
-    if (r.writer === name) roles.push('Research & Script');
-    if (r.presenter_name === name) roles.push('Presenter');
-    if (r.video_editor === name) roles.push('Video Editor');
-    if (r.camera_person === name) roles.push('Cameraman');
-    if (r.uploader === name) roles.push('Publisher');
+    MY_WORK_ROLES.forEach(([field, label]) => { if (r[field] === name) roles.push(label); });
     return roles;
   };
 
