@@ -30,17 +30,6 @@ export const PLATFORMS = [
   { id: 'whatsapp', label: 'WhatsApp' },
 ];
 
-export const PERMISSIONS = [
-  { key: 'can_edit_script', label: 'Edit script', hint: 'Write, edit and save scripts' },
-  { key: 'can_edit_metadata', label: 'Edit metadata', hint: 'Title, thumbnail text, research & script, Cameraman, platforms' },
-  { key: 'can_assign_editor', label: 'Assign editor', hint: 'Change or assign the video editor' },
-  { key: 'can_reschedule', label: 'Reschedule', hint: 'Change scheduled date & publish time' },
-  { key: 'can_change_presenter', label: 'Change presenter', hint: 'Update the presenter assignment' },
-  { key: 'can_change_channel', label: 'Change channel', hint: 'Switch channel / platform' },
-  { key: 'can_approve_script', label: 'Approve script', hint: 'Approve or send back submitted scripts' },
-  { key: 'can_review_video', label: 'Review video', hint: 'Approve edited videos or request revisions' },
-];
-
 export const ROLE_LABEL = { owner: 'Owner', manager: 'Manager', general: 'General' };
 
 export const STATUS_META = {
