@@ -44,6 +44,10 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | b19ea5a | 12 Oct: notice uid, live search (NoticeModal), theme contrast fixes for slug, teleprompter and drawer duration | verified: eslint 0, build 0 |
 | 835b813 | 12 Oct: docs record that the three Oct 12 SQL migrations were run live (notices uid and counter, platforms table, published_links column) | docs only |
 | b405250 | N35 (12 Oct): (1) added missing bell and info icons to Icons.js; (2) createNotice no longer builds notice_uid on the client - the database trigger notices_assign_uid assigns it; (3) no chime or toast for the person who posted the notice (author_id compared with actorIdRef); (4) app/page.js and Modals.js now import the single supabase client from services/supabase.js instead of two extra createClient calls. 4 files, +7 -36. | verified: eslint 0, build 0, pushed diff identical |
+| 76e0955 | N36-A (18 Oct): `.github/workflows/db-backup.yml` - nightly pg_dump (public + auth schemas) at 23:30 Dhaka, gzip + gpg AES256, uploaded as a GitHub artifact for 30 days | first manual run green, artifact 114 KB |
+| ebfdd87 | N36-B (18 Oct): `sql/2026-10-18_storage_platforms_rls_tighten.sql` - record of the SQL already run live (documents bucket: no update/delete, insert only for active members; platforms policies require an active member) | policy list checked live |
+| f93a864 | N36-C (18 Oct): added Change presenter and Change channel to the live PERMISSIONS list in lib/core.js; removed the dead copy in utils/constants.js | verified: eslint 0, build 0, pushed diff identical |
+| fe93b53 | N36-D (18 Oct): removed 4 fake download buttons (Archive ZIP in drawer, KPI report in Authority menu, download_script action, My Work Download Zip), removed the broken legacy avatar upload field, "Script copied" now uses notify | verified: eslint 0, build 0, pushed diff identical |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -153,6 +157,16 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **ফাইল ও সার্ভার (৮ অক্টোবর):** Supabase-এ শুধু টেক্সট; অফিসের নিজস্ব সার্ভারে সরানো (লক্ষ্য), কিন্তু আগে ~৬ মাস Supabase+Vercel ফ্রি; কোডবেজ অফিসের সাথে শেয়ার নয় (Docker ইমেজ + লিখিত চুক্তি); কাঁচা ফুটেজ LAN-এ NAS-এ, অ্যাপে ফাইলের পথ দেখানো জরুরী। বিস্তারিত file-management-plan.md।
 - **কমিট বার্তায় Claude-এর নাম/সেশন লাইন নয় (১১ অক্টোবর):** ব্যবহারকারী সিদ্ধান্ত নিয়েছেন কমিট মেসেজ হবে ক্লিন ও সরাসরি।
 - **AI-তৈরি কোডের কপিরাইট (১১ অক্টোবর):** ব্যবহারের অধিকার সাধারণত ব্যবহারকারীর; ব্যবসায়িক গোপনীয়তা + লিখিত চুক্তি + লাইব্রেরির লাইসেন্স তালিকা নিশ্চিত করা।
+
+## ১৮ অক্টোবর ২০২৬ (N36)
+- **ব্যাকআপ (76e0955):** প্রতি রাত ২৩:৩০ (ঢাকা) `pg_dump` (public + auth স্কিমা), gzip + gpg AES256 দিয়ে তালা দেওয়া, GitHub artifact হিসেবে ৩০ দিন। Secrets: `SUPABASE_DB_URL` (Session pooler, পোর্ট 5432) ও `BACKUP_PASSPHRASE` (মালিক আলাদা জায়গায় লিখে রেখেছেন)। প্রথম হাতে-চালানো রান সবুজ, ১১৪ KB। সীমা: স্টোরেজের ফাইল যায় না; ব্যাকআপ GitHub-এই থাকে, তাই মাসে একবার একটা কপি নিজের কম্পিউটারে বা ড্রাইভে রাখা; রিস্টোর পরীক্ষা এখনও বাকি।
+- **নিরাপত্তা SQL (ebfdd87):** `documents` বাকেটে update/delete নিয়ম বাদ, insert শুধু সক্রিয় সদস্য; `platforms`-এর তিন নিয়মে সক্রিয় সদস্য যাচাই। বাকেট এখনও পাবলিক (পুরনো লিংক বাঁচাতে); পরে private + signed link। রেফারেন্স/ডকুমেন্ট আপলোড ফিচার মালিক আগেই অ্যাপ থেকে বন্ধ করেছেন।
+- **`published_links` সিদ্ধান্ত:** কোনো বদল নয়। ড্রয়ারে যেকোনো সক্রিয় সদস্য লিংক বসাতে পারে (ইচ্ছাকৃত, আপলোডারের জন্য); `guard_contents_update` নিষ্ক্রিয় বা অন্য সংস্থার লোককে আগে থেকেই আটকায়। `can_edit_metadata` বাধ্যতামূলক করলে আপলোডারের কাজ ভাঙত।
+- **অনুমতি তালিকার ত্রুটি (f93a864):** চালু UI `lib/core.js`-এর তালিকা ব্যবহার করে, তাতে Change presenter ও Change channel ছিল না, তাই টিম পর্দা থেকে এই দুটো অনুমতি দেওয়া যেত না (অথচ Drawer ও ডাটাবেস গার্ড দুটোই চায়)। যোগ করা হয়েছে; `utils/constants.js`-এর মরা কপি মুছেছে।
+- **নকল বাটন (fe93b53):** `exportService.js`-এর `downloadContentArchive`, `downloadKPIReport`, `downloadFullSystemBackup` শুধু `alert` দেখানো placeholder ছিল। ড্রয়ারের "Archive ZIP", Authority-র "KPI report", `download_script` অ্যাকশন ও My Work-এর "Download Zip" সরানো হয়েছে। প্রোফাইলের পুরনো ছবি আপলোড ঘর (`avatars` RLS-এ সবসময় ফেল করত) মুছেছে। "Script copied" এখন `notify`। আসল Archive/KPI রিপোর্ট পরে বানানো হলে বাটন ফেরানো হবে।
+- **বাকি পরিষ্কার:** অব্যবহৃত `ExportButtons.js` ও exportService-এর তিন placeholder মোছা; `confirm()` ২ জায়গায় (সদস্য সরানো, নোটিশ মোছা) সুন্দর নিশ্চিতকরণ বক্সে বদলানো।
+- **মালিকের লাইভ টেস্ট বাকি:** টিমে নতুন দুই সুইচ, ড্রয়ারের ফুটার, Authority মেনু, My Work, প্রোফাইল ছবি, Copy Script বার্তা।
+- **GitHub:** রিপো এখন Public (শুধু যাচাইয়ের জন্য); কাজ শেষে Private করা হবে। workflow ফাইল পুশ করতে টোকেনে `workflow` অনুমতি লাগে।
 
 ## পরে করব
 - মরা `components/ui/ActionButtons.js` সরানো।
