@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, LockIcon } from '../components/ui/Icons';
 import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
 import { supabase } from '../services/supabase';
-import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
+import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, ConfirmDialog, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
 import { downloadUserReport } from '../services/exportService';
 import { fetchAllPages } from '../utils/fetchAll';
 import { uploadFile, generateFileName } from '../services/storageService';
@@ -563,6 +563,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     } catch (e) {}
   };
   const [showKpi, setShowKpi] = useState(false);
+  const [confirmReq, setConfirmReq] = useState(null);
   const [showAddChannel, setShowAddChannel] = useState(false);
   const [showAddPlatform, setShowAddPlatform] = useState(false);
     const [showAuthority, setShowAuthority] = useState(false);
@@ -1145,12 +1146,20 @@ function NewsroomApp({ authUser, onSignOut }) {
     }
   };
 
-  const removeMember = async (t) => {
+  const removeMember = (t) => {
     if (!canManageMember(t)) {
       notify('You cannot remove this member', 'error');
       return;
     }
-    if (typeof window !== 'undefined' && !window.confirm(`Remove ${t.full_name} from the team?`)) return;
+    setConfirmReq({
+      title: 'Remove member',
+      message: `Remove ${t.full_name} from the team?`,
+      confirmLabel: 'Remove',
+      onConfirm: () => doRemoveMember(t),
+    });
+  };
+
+  const doRemoveMember = async (t) => {
     if (supabase) {
       const { error } = await supabase.from('team_members').delete().eq('id', t.id);
       if (error) {
@@ -1908,6 +1917,15 @@ function NewsroomApp({ authUser, onSignOut }) {
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showAddPlatform ? <AddPlatformModal existing={platforms} onClose={() => setShowAddPlatform(false)} onAdd={addPlatform} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
+      {confirmReq ? (
+        <ConfirmDialog
+          title={confirmReq.title}
+          message={confirmReq.message}
+          confirmLabel={confirmReq.confirmLabel}
+          onCancel={() => setConfirmReq(null)}
+          onConfirm={() => { const run = confirmReq.onConfirm; setConfirmReq(null); run(); }}
+        />
+      ) : null}
             
         {showMyWork && actor ? (
           <MyWorkModal 

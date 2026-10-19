@@ -142,6 +142,33 @@ export function ModalShell({ title, subtitle, onClose, children, footer, wide = 
   );
 }
 
+export function ConfirmDialog({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = true, onConfirm, onCancel }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [onCancel]);
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label={title}>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative w-full max-w-sm rounded-2xl border border-white/[0.1] bg-[#121215] p-6 shadow-2xl shadow-black/60">
+        <h2 className="text-[16px] font-semibold tracking-tight text-white">{title}</h2>
+        <p className="mt-2 text-[13px] leading-relaxed text-zinc-400">{message}</p>
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button type="button" autoFocus className={btnGhost} onClick={onCancel}>{cancelLabel}</button>
+          <button type="button" className={danger ? btnDanger : btnPrimary} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FullScreenCard({ title, children }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-6">

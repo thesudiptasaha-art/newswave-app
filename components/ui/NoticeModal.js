@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Icon } from './Icons';
-import { inputBase, btnPrimary, btnGhost, btnDanger, ModalShell } from './Shared';
+import { inputBase, btnPrimary, btnGhost, btnDanger, ModalShell, ConfirmDialog } from './Shared';
 import { isManager, isOwner, formatStamp } from '../../lib/core';
 import { copyText } from '../../utils/helpers';
 
@@ -14,6 +14,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
   const canManage = actor && (isManager(actor) || isOwner(actor));
   
   const [showForm, setShowForm] = useState(false);
+  const [confirmId, setConfirmId] = useState(null);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [priority, setPriority] = useState('normal');
@@ -52,8 +53,11 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('আপনি কি নিশ্চিত যে এই নোটিশটি মুছে ফেলতে চান?')) return;
+  const handleDelete = (id) => {
+    setConfirmId(id);
+  };
+
+  const runDelete = async (id) => {
     setDeletingId(id);
     try {
       await onDeleteNotice(id);
@@ -119,7 +123,8 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
   }, [noticesWithUid, searchQuery]);
 
   return (
-    <ModalShell
+    <>
+      <ModalShell
       title="নোটিশ বোর্ড (Notice Board)"
       subtitle="স্টেশনের সম্পাদকীয় ও অফিশিয়াল নির্দেশনাবলী"
       wide
@@ -339,5 +344,16 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
         </div>
       </div>
     </ModalShell>
+    {confirmId ? (
+      <ConfirmDialog
+        title="নোটিশ মুছুন"
+        message="আপনি কি নিশ্চিত যে এই নোটিশটি মুছে ফেলতে চান?"
+        confirmLabel="মুছুন"
+        cancelLabel="বাতিল"
+        onCancel={() => setConfirmId(null)}
+        onConfirm={() => { const id = confirmId; setConfirmId(null); runDelete(id); }}
+      />
+    ) : null}
+  </>
   );
 }
