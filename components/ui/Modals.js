@@ -7,12 +7,14 @@ import { RoleBadge, DesignationPill } from './Badges';
 import {
   DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LABEL,
   isManager, isOwner, can, toLocalInput, fromLocalInput, formatDay, formatTime, 
-  SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays, sameDay, shortsInRange
+  SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays, sameDay, shortsInRange,
+  normalizeRow
 } from '../../lib/core';
 
 import { downloadUserReport } from '../../services/exportService';
 import { supabase } from '../../services/supabase';
 import { resizeToJpeg } from '../../utils/helpers';
+import { fetchAllPages } from '../../utils/fetchAll';
 
 function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
   const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);
@@ -909,15 +911,73 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
 }
 
 
-function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
+function EmployeeReportModal({ rows, range, team, orgId, onClose, onOpenContent }) {
   const [localRange, setLocalRange] = useState({ start: range.start, end: range.end });
   const [data, setData] = useState([]);
   const [activeRoles, setActiveRoles] = useState([]);
+  const [reportRows, setReportRows] = useState(rows);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    if (!supabase || !orgId) {
+      setReportRows(rows);
+      return undefined;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setLoadError('');
+    const endExclusive = addDays(localRange.end, 1);
+    const from = localRange.start.toISOString();
+    const to = endExclusive.toISOString();
+    const days = [];
+    for (let d = new Date(localRange.start); d < endExclusive && days.length < 400; d = addDays(d, 1)) {
+      days.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    }
+    (async () => {
+      const main = await fetchAllPages(() =>
+        supabase
+          .from('contents')
+          .select('*')
+          .or(`organization_id.eq.${orgId},organization_id.is.null`)
+          .gte('scheduled_publish_time', from)
+          .lt('scheduled_publish_time', to)
+          .order('id', { ascending: true })
+      );
+      const extra = await fetchAllPages(() =>
+        supabase
+          .from('contents')
+          .select('*')
+          .or(`organization_id.eq.${orgId},organization_id.is.null`)
+          .overlaps('short_days', days)
+          .order('id', { ascending: true })
+      );
+      if (cancelled) return;
+      if (main.error || extra.error) {
+        setLoadError('Could not load report data: ' + ((main.error || extra.error).message || 'unknown error'));
+        setLoading(false);
+        return;
+      }
+      const seen = new Set();
+      const merged = [];
+      [main.data || [], extra.data || []].forEach((list) =>
+        list.forEach((r) => {
+          if (!seen.has(r.id)) {
+            seen.add(r.id);
+            merged.push(normalizeRow(r));
+          }
+        })
+      );
+      setReportRows(merged);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [localRange, orgId]);
 
   useEffect(() => {
     const endExclusive = addDays(localRange.end, 1);
     
-    const validRows = rows.filter(r => {
+    const validRows = reportRows.filter(r => {
       let inRange = false;
       if (r.scheduled_publish_time) {
          const d = new Date(r.scheduled_publish_time);
@@ -995,7 +1055,7 @@ function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
     finalData.sort((a, b) => b.total - a.total);
     setActiveRoles(sortedRoles);
     setData(finalData);
-  }, [rows, localRange, team]);
+  }, [reportRows, localRange, team]);
 
   const handleExport = () => {
     import('xlsx-js-style').then(XLSX => {
@@ -1056,9 +1116,13 @@ function EmployeeReportModal({ rows, range, team, onClose, onOpenContent }) {
               <input type="date" className={inputBase + " [color-scheme:dark] w-36 !py-1"} value={toDateInput(localRange.end)} onChange={e => handleDateChange('end', e.target.value)} />
             </div>
           </div>
-          <button className={btnGhost} onClick={handleExport}>
-            <Icon name="download" /> Download Excel
-          </button>
+          <div className="flex items-center gap-3">
+            {loading ? <span className="text-[12px] text-zinc-500">Loading...</span> : null}
+            {loadError ? <span className="text-[12px] text-red-300">{loadError}</span> : null}
+            <button className={btnGhost} onClick={handleExport} disabled={loading}>
+              <Icon name="download" /> Download Excel
+            </button>
+          </div>
         </div>
         <div className="flex-1 p-6 overflow-auto bg-[#1a1a1f]">
           <table className="w-full text-left text-[13px] border border-white/[0.08] rounded-xl overflow-hidden">

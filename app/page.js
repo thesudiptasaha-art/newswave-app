@@ -1815,6 +1815,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             rows={rows} 
             range={range} 
             team={team} 
+            orgId={org ? org.id : null}
             onClose={() => setShowEmpReport(false)} 
             onOpenContent={(r) => { setShowEmpReport(false); setSelectedId(r.id); }}
           />
