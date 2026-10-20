@@ -1398,6 +1398,28 @@ function NewsroomApp({ authUser, onSignOut }) {
               <Icon name="plus" /> New Content
             </button>
             
+            {isFeatureEnabled('notices') ? (
+              <button
+                className={btnGhost + ' relative flex items-center gap-1.5'}
+                onClick={() => {
+                  setShowNotices(true);
+                  try {
+                    window.localStorage.setItem('wd-notices-read-at', String(Date.now()));
+                    setUnreadNoticesCount(0);
+                  } catch (e) {}
+                }}
+                title="স্টেশন নোটিশ বোর্ড"
+                aria-label="স্টেশন নোটিশ বোর্ড"
+              >
+                <Icon name="board" />
+                <span className="hidden sm:inline">নোটিশ</span>
+                {unreadNoticesCount > 0 ? (
+                  <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-black">
+                    {unreadNoticesCount}
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
                       {supabase && me ? (
               <NotificationBell
                 memberId={me.id}
@@ -1778,26 +1800,6 @@ function NewsroomApp({ authUser, onSignOut }) {
           {isManager(actor) ? (
             <button className={btnGhost} onClick={() => setShowKpi(true)}>
               <Icon name="chart" /> KPI
-            </button>
-          ) : null}
-          {isFeatureEnabled('notices') ? (
-            <button
-              className={btnGhost + ' relative flex items-center gap-1.5'}
-              onClick={() => {
-                setShowNotices(true);
-                try {
-                  window.localStorage.setItem('wd-notices-read-at', String(Date.now()));
-                  setUnreadNoticesCount(0);
-                } catch (e) {}
-              }}
-              title="স্টেশন নোটিশ বোর্ড"
-            >
-              <Icon name="bell" /> নোটিশ
-              {unreadNoticesCount > 0 ? (
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-black">
-                  {unreadNoticesCount}
-                </span>
-              ) : null}
             </button>
           ) : null}
           </div>
