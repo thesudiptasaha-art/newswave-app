@@ -742,17 +742,15 @@ function NewsroomApp({ authUser, onSignOut }) {
     );
     if (req !== reqRef.current) return;
         /* Parked / Bin content (On Hold, no date, or missing channel/slug) is not tied to the date range, so load it separately. */
-    const [heldRes, nodateRes, draftDroppedRes, pastNotPubRes, emptyMetaRes] = await Promise.all([
+    const [heldRes, nodateRes, emptyMetaRes] = await Promise.all([
       fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).eq('status', 'On Hold').order('id', { ascending: true })),
       fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).is('scheduled_publish_time', null).order('id', { ascending: true })),
-      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).in('status', ['Draft', 'Dropped']).order('id', { ascending: true })),
-      fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).lt('scheduled_publish_time', new Date().toISOString()).neq('status', 'Published').neq('status', 'Ready to Publish').order('id', { ascending: true })),
       fetchAllPages(() => supabase.from('contents').select('*').eq('organization_id', org.id).or('channel.is.null,channel.eq.,slug_name.is.null,slug_name.eq.').order('id', { ascending: true })),
     ]);
     if (req !== reqRef.current) return;
     const seen = new Set();
     const merged = [];
-    [data || [], extra || [], heldRes.data || [], nodateRes.data || [], draftDroppedRes.data || [], pastNotPubRes.data || [], emptyMetaRes.data || []].forEach((list) =>
+    [data || [], extra || [], heldRes.data || [], nodateRes.data || [], emptyMetaRes.data || []].forEach((list) =>
       list.forEach((r) => {
         if (!seen.has(r.id)) {
           seen.add(r.id);
