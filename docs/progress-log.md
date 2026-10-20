@@ -51,6 +51,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | 703bef2 | N36-F (18 Oct): My Work now counts all 14 credit roles from one MY_WORK_ROLES list in components/ui/Modals.js (first 5 roles always shown, the other 9 only when above zero) | verified: eslint 0, build 0, pushed diff identical |
 | e3535f7 | N36-H (19 Oct): new ConfirmDialog component in components/ui/Shared.js (z-70, Esc closes only the dialog, Cancel focused by default) replaces the two browser confirm() popups: remove team member (app/page.js) and delete notice (NoticeModal.js) | verified: eslint 0, build 0, pushed diff identical |
 | e180bc2 | N36-I (19 Oct): EmployeeReportModal now fetches its own contents for the From/To dates it shows (own query, Loading state, error message, Download Excel disabled while loading); app/page.js passes orgId | verified: eslint 0, build 0, pushed diff identical |
+| 1876cdf | N37-A (20 Oct): removed dead code: components/ui/ExportButtons.js deleted; the 3 alert placeholders removed from services/exportService.js (downloadUserReport kept); 4 unused import lines removed (app/page.js x3, Drawer.js x1) | verified: eslint 0, build 0, pushed diff identical |
+| 1d2c1cb | N37-B / N34 (20 Oct): fetchRows in app/page.js now runs 5 queries instead of 7 (removed the "all Draft/Dropped" and "past not published" queries and their merge entries) | verified: eslint 0, build 0, pushed diff identical, live test ok |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -167,7 +169,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **`published_links` সিদ্ধান্ত:** কোনো বদল নয়। ড্রয়ারে যেকোনো সক্রিয় সদস্য লিংক বসাতে পারে (ইচ্ছাকৃত, আপলোডারের জন্য); `guard_contents_update` নিষ্ক্রিয় বা অন্য সংস্থার লোককে আগে থেকেই আটকায়। `can_edit_metadata` বাধ্যতামূলক করলে আপলোডারের কাজ ভাঙত।
 - **অনুমতি তালিকার ত্রুটি (f93a864):** চালু UI `lib/core.js`-এর তালিকা ব্যবহার করে, তাতে Change presenter ও Change channel ছিল না, তাই টিম পর্দা থেকে এই দুটো অনুমতি দেওয়া যেত না (অথচ Drawer ও ডাটাবেস গার্ড দুটোই চায়)। যোগ করা হয়েছে; `utils/constants.js`-এর মরা কপি মুছেছে।
 - **নকল বাটন (fe93b53):** `exportService.js`-এর `downloadContentArchive`, `downloadKPIReport`, `downloadFullSystemBackup` শুধু `alert` দেখানো placeholder ছিল। ড্রয়ারের "Archive ZIP", Authority-র "KPI report", `download_script` অ্যাকশন ও My Work-এর "Download Zip" সরানো হয়েছে। প্রোফাইলের পুরনো ছবি আপলোড ঘর (`avatars` RLS-এ সবসময় ফেল করত) মুছেছে। "Script copied" এখন `notify`। আসল Archive/KPI রিপোর্ট পরে বানানো হলে বাটন ফেরানো হবে।
-- **বাকি পরিষ্কার:** অব্যবহৃত `ExportButtons.js` ও exportService-এর তিন placeholder মোছা; `confirm()` ২ জায়গায় (সদস্য সরানো, নোটিশ মোছা) সুন্দর নিশ্চিতকরণ বক্সে বদলানো।
+- **বাকি পরিষ্কার:** ✅ সবই সম্পন্ন — `confirm()` বদল (e3535f7, ১৯ অক্টোবর); `ExportButtons.js` ও exportService-এর তিন placeholder মোছা (1876cdf, ২০ অক্টোবর)।
 - **My Work (703bef2):** আগে মাত্র ৫টা ভূমিকা (Research & Script, Presenter, Video Editor, Cameraman, Publisher) গোনা হতো; এখন Idea, Producer, VFX, Colorist, Light Design, Sound Record, Audio Mixing, Video Switch, Live Audio সহ ১৪টা। নতুন ৯টা শুধু সংখ্যা ০-এর বেশি হলে "ভূমিকা অনুযায়ী মোট"-এ দেখায়।
 - **মালিকের লাইভ টেস্ট বাকি:** টিমে নতুন দুই সুইচ, ড্রয়ারের ফুটার, Authority মেনু, My Work, প্রোফাইল ছবি, Copy Script বার্তা, My Work-এ Producer/Idea-ওয়ালা কনটেন্ট।
 - **GitHub:** রিপো এখন Public (শুধু যাচাইয়ের জন্য); কাজ শেষে Private করা হবে। workflow ফাইল পুশ করতে টোকেনে `workflow` অনুমতি লাগে।
@@ -179,9 +181,15 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **নতুন লিনাক্স পিসি (১৯ অক্টোবর):** প্রজেক্ট `~/Documents/newswave-app`; Antigravity IDE বসানো; Node 22; `git pull` করে `3100301` পর্যন্ত আনা হয়েছে, `npm run build` সফল। `.env.local` এই পিসিতে নেই (কোড বদল, বিল্ড, কমিটের জন্য লাগে না; শুধু লোকালে `npm run dev` চালাতে লাগে)। লিনাক্সে ডিফ সেভ: `git diff --output="$HOME/nXX.diff" <ফাইল>`। পুশে ইউজারনেম `thesudiptasaha-art` ও পাসওয়ার্ডের জায়গায় টোকেন; পাসওয়ার্ড লাইন কখনও চ্যাটে নয়।
 - **মালিকের পরীক্ষা (১৯ অক্টোবর):** ConfirmDialog ও Employee Report পরীক্ষা শেষ, ঠিক আছে।
 
+## ২০ অক্টোবর ২০২৬ (N37)
+- **N37-A (1876cdf):** মরা কোড পরিষ্কার — `ExportButtons.js` মোছা, `exportService.js` থেকে তিন `alert` placeholder মোছা (আসল `downloadUserReport` আছে, টিম মোডালে ব্যবহার হয়), `app/page.js`-এর তিনটা ও `Drawer.js`-এর একটা অব্যবহৃত import-লাইন মোছা।
+- **N37-B / N34 (1d2c1cb):** `fetchRows` এখন ৫টা কোয়েরি চালায় (আগে ৭টা)। KPI-র "Past due" সংখ্যা বদলায়নি, কারণ KPI মোডাল শুধু বাছা তারিখ-পরিধির কনটেন্ট (`visible`) পায়। মালিক লাইভে রানডাউন, Parking Zone, Bin ও Hold/Drop পরীক্ষা করেছেন, ঠিক আছে।
+- **বাকি অব্যবহৃত import:** `app/page.js`, `Drawer.js`, `Modals.js`, `NoticeModal.js`-এ আরও অনেক অব্যবহৃত import ও ভেরিয়েবল আছে (eslint `no-unused-vars` ধরে)। আলাদা পরিষ্কার-কাজ। `services/storageService.js` ও `services/fileUploadProvider.js` এখন কেউ ব্যবহার করে না (আপলোড ফিচার বন্ধ); মুছবে কিনা পরে সিদ্ধান্ত।
+- **documents বাকেটের সিদ্ধান্ত (২০ অক্টোবর):** আপলোড ফিচার বন্ধ, তাই বাকেট private ও signed link এখন দরকার নেই। ছোট কাজ বাকি (ঐচ্ছিক): Supabase Storage-এ `documents` বাকেটের পুরনো ফাইল দেখা, অকাজের হলে মুছে `nw_documents_insert_active` নীতি বাদ দেওয়া।
+
 ## পরে করব
-- মরা `components/ui/ActionButtons.js` সরানো।
-- `services/exportService.js`-এর stub `downloadFullSystemBackup` (এখন শুধু `ExportButtons.js` ব্যবহার করে) — ওটাও সরানো/আসলটার সাথে জোড়া দেওয়া যাবে।
+- ~~মরা `components/ui/ActionButtons.js` সরানো।~~ ✅ আগেই মুছে ফেলা হয়েছে।
+- ~~`services/exportService.js`-এর stub `downloadFullSystemBackup`~~ ✅ মুছে ফেলা হয়েছে (1876cdf)।
 - Drawer টুলটিপ "Let writers edit…" বদলাবে কিনা — সিদ্ধান্ত।
 - `StaffCell` প্রতি সারিতে নামের তালিকা নতুন করে বানায় (ছোট কাজ)।
 - DB পরিষ্কার: পুরনো ডুপ্লিকেট কলাম (writer_name, editor_name, script_body, raw_footage_url, presenter, publisher, script_locked) ও `team_members_legacy`; `channels.name` গ্লোবাল ইউনিক (N14-এর সময়); guard-এ skill-flag/নতুন কলামের নিয়ম।
