@@ -1,11 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Existing placeholders (since I didn't actually write the full file in previous turns due to code splitting simulation, I'll mock them)
-export function downloadContentArchive(row) { alert('Archiving content ' + row.id); }
-export function downloadKPIReport(rows) { alert('Downloading KPI report for ' + rows.length + ' items'); }
-export function downloadFullSystemBackup(rows) { alert('Full system backup initiated'); }
-
 export function downloadUserReport(member, rows, startDate, endDate) {
   const doc = new jsPDF('landscape');
   
