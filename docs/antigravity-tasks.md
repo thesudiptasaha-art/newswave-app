@@ -2,7 +2,7 @@
  
 **অ্যাপের নাম: WaveDesk** (৭ অক্টোবর ঠিক। blueprint-notes.md-এর "নাম TBD" লেখাটা পুরনো।)
 **ক্রেডিট:** Programmer, Developer, Architect, Product Manager — Sudipta Shaha (দেখাবে: লগইন পাতার নিচে + ফুটারে, ছোট করে)
-রিপো: https://github.com/thesudiptasaha-art/newswave-app (visibility must be checked and set to Private by the owner)
+রিপো: https://github.com/thesudiptasaha/WaveDesk (visibility must be checked and set to Private by the owner)
  
 ## কাজের নিয়ম
 - একটা কাজ → localhost-এ টেস্ট → GitHub-এ পুশ → পরের কাজ।

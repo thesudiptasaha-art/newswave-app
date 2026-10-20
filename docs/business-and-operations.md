@@ -93,7 +93,7 @@ A single video newsroom produces **500 GB to 1.5 TB of raw video files every sin
 
 ## 5. Feature Management & Plan Tiering
 
-WaveDesk uses a modular feature-flagging pattern in [`utils/features.js`](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/utils/features.js). This allows instant activation or gating of features per customer plan without code changes:
+WaveDesk uses a modular feature-flagging pattern in [`utils/features.js`](utils/features.js). This allows instant activation or gating of features per customer plan without code changes:
 
 | Feature Key | Feature Name | Basic Plan | Pro Plan | Enterprise Plan |
 |---|---|:---:|:---:|:---:|

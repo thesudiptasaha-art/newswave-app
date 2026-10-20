@@ -44,7 +44,7 @@ When transitioning to Django, there are two primary architectural paths. Here is
 
 ## 3. The 1:1 Mapping: Current Next.js/Supabase ➔ Future Django
 
-WaveDesk was intentionally developed following the **"Django-Ready" rule set** in [`docs/RULES.md`](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/RULES.md). Because business logic was decoupled from React, the translation into Python is straightforward:
+WaveDesk was intentionally developed following the **"Django-Ready" rule set** in [`docs/RULES.md`](docs/RULES.md). Because business logic was decoupled from React, the translation into Python is straightforward:
 
 ```
 ┌─────────────────────────────────┐        ┌──────────────────────────────────┐

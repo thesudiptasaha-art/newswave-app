@@ -1,6 +1,6 @@
 # WaveDesk — Database Schema Reference (Supabase / PostgreSQL)
 
-This document provides a single source of truth for the Supabase database schema used by WaveDesk (`newsroom-ops` / `newswave-app`).
+This document provides a single source of truth for the Supabase database schema used by WaveDesk (formerly `newsroom-ops` / `newswave-app`; the GitHub repo is now `WaveDesk`).
 
 ## Tables Overview
 

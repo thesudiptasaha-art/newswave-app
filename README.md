@@ -67,8 +67,8 @@ WaveDesk is engineered around four core tenets:
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/thesudiptasaha-art/newswave-app.git
-cd newswave-app
+git clone https://github.com/thesudiptasaha/WaveDesk.git
+cd WaveDesk
 npm install
 ```
 
@@ -94,20 +94,20 @@ npm run build
 
 ## 📚 Master Documentation Index
 
-All in-depth architectural blueprints, business strategies, database schemas, and developer learning guides are maintained in the [`docs/`](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs) folder:
+All in-depth architectural blueprints, business strategies, database schemas, and developer learning guides are maintained in the [`docs/`](docs) folder:
 
 | Document | Purpose |
 |---|---|
-| 📜 [**RULES.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/RULES.md) | **Strict Development Rules** for any developer or AI agent (Scope bounds, safety checks). |
-| 📘 [**blueprint-en.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/blueprint-en.md) | **Master Technical & Product Blueprint (English)** — Component architecture, state flow, security models. |
-| 📕 [**blueprint-bn.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/blueprint-bn.md) | **Master Product Blueprint (Bangla)** — Complete feature roadmap, Django vision, editorial pipeline. |
-| 💼 [**business-and-operations.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/business-and-operations.md) | **Business & Operations Guide** — Multi-tenancy, IP protection, Docker distribution, NAS storage economics. |
-| 🐍 [**architecture-django-transition.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/architecture-django-transition.md) | **Python + Django Migration Blueprint** — 1:1 mapping from Next.js/Supabase to Django models, Ninja/DRF & Celery. |
-| 🎓 [**developer-guide-learning.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/developer-guide-learning.md) | **Developer & Architecture Learning Guide** — Learn professional software architecture using WaveDesk. |
-| 📋 [**open-tasks.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/open-tasks.md) | **Active Task Tracker** — Upcoming database tasks (N12, N14, N10), theme switcher, storage fixes. |
-| 📈 [**progress-log.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/progress-log.md) | **Complete Progress Log** — Chronological audit of all commits, lessons learned, and verified fixes. |
-| 🗄️ [**schema-reference.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/schema-reference.md) | **Database Schema Reference** — Tables, columns, triggers, indexes, and RLS policies. |
-| 💾 [**file-management-plan.md**](file:///c:/Users/PlayOut/Desktop/Urmi/newswave-app/docs/file-management-plan.md) | **File & Storage Strategy** — 3-tier storage architecture, local NAS, and self-hosted server migration. |
+| 📜 [**RULES.md**](docs/RULES.md) | **Strict Development Rules** for any developer or AI agent (Scope bounds, safety checks). |
+| 📘 [**blueprint-en.md**](docs/blueprint-en.md) | **Master Technical & Product Blueprint (English)** — Component architecture, state flow, security models. |
+| 📕 [**blueprint-bn.md**](docs/blueprint-bn.md) | **Master Product Blueprint (Bangla)** — Complete feature roadmap, Django vision, editorial pipeline. |
+| 💼 [**business-and-operations.md**](docs/business-and-operations.md) | **Business & Operations Guide** — Multi-tenancy, IP protection, Docker distribution, NAS storage economics. |
+| 🐍 [**architecture-django-transition.md**](docs/architecture-django-transition.md) | **Python + Django Migration Blueprint** — 1:1 mapping from Next.js/Supabase to Django models, Ninja/DRF & Celery. |
+| 🎓 [**developer-guide-learning.md**](docs/developer-guide-learning.md) | **Developer & Architecture Learning Guide** — Learn professional software architecture using WaveDesk. |
+| 📋 [**open-tasks.md**](docs/open-tasks.md) | **Active Task Tracker** — Upcoming database tasks (N12, N14, N10), theme switcher, storage fixes. |
+| 📈 [**progress-log.md**](docs/progress-log.md) | **Complete Progress Log** — Chronological audit of all commits, lessons learned, and verified fixes. |
+| 🗄️ [**schema-reference.md**](docs/schema-reference.md) | **Database Schema Reference** — Tables, columns, triggers, indexes, and RLS policies. |
+| 💾 [**file-management-plan.md**](docs/file-management-plan.md) | **File & Storage Strategy** — 3-tier storage architecture, local NAS, and self-hosted server migration. |
 
 ---
 
