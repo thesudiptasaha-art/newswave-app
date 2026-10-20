@@ -53,6 +53,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | e180bc2 | N36-I (19 Oct): EmployeeReportModal now fetches its own contents for the From/To dates it shows (own query, Loading state, error message, Download Excel disabled while loading); app/page.js passes orgId | verified: eslint 0, build 0, pushed diff identical |
 | 1876cdf | N37-A (20 Oct): removed dead code: components/ui/ExportButtons.js deleted; the 3 alert placeholders removed from services/exportService.js (downloadUserReport kept); 4 unused import lines removed (app/page.js x3, Drawer.js x1) | verified: eslint 0, build 0, pushed diff identical |
 | 1d2c1cb | N37-B / N34 (20 Oct): fetchRows in app/page.js now runs 5 queries instead of 7 (removed the "all Draft/Dropped" and "past not published" queries and their merge entries) | verified: eslint 0, build 0, pushed diff identical, live test ok |
+| 931f780 | N38 (20 Oct): added 3 new files: app/error.js (friendly error page with Try again / Reload), app/not-found.js (404 page), app/icon.svg (favicon) | verified: eslint 0, build 0, pushed diff identical |
+| caccd8a | N39 (20 Oct): favicon changed to a red square (#eb3026) with a white W drawn as a line path (app/icon.svg only) | verified: build 0, pushed diff identical |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -186,6 +188,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **N37-B / N34 (1d2c1cb):** `fetchRows` এখন ৫টা কোয়েরি চালায় (আগে ৭টা)। KPI-র "Past due" সংখ্যা বদলায়নি, কারণ KPI মোডাল শুধু বাছা তারিখ-পরিধির কনটেন্ট (`visible`) পায়। মালিক লাইভে রানডাউন, Parking Zone, Bin ও Hold/Drop পরীক্ষা করেছেন, ঠিক আছে।
 - **বাকি অব্যবহৃত import:** `app/page.js`, `Drawer.js`, `Modals.js`, `NoticeModal.js`-এ আরও অনেক অব্যবহৃত import ও ভেরিয়েবল আছে (eslint `no-unused-vars` ধরে)। আলাদা পরিষ্কার-কাজ। `services/storageService.js` ও `services/fileUploadProvider.js` এখন কেউ ব্যবহার করে না (আপলোড ফিচার বন্ধ); মুছবে কিনা পরে সিদ্ধান্ত।
 - **documents বাকেটের সিদ্ধান্ত (২০ অক্টোবর):** আপলোড ফিচার বন্ধ, তাই বাকেট private ও signed link এখন দরকার নেই। ছোট কাজ বাকি (ঐচ্ছিক): Supabase Storage-এ `documents` বাকেটের পুরনো ফাইল দেখা, অকাজের হলে মুছে `nw_documents_insert_active` নীতি বাদ দেওয়া।
+- **N38 ও N39 (লঞ্চের আগের রাত):** অ্যাপে আগে কোনো error পাতা, 404 পাতা ও favicon ছিল না; তিনটাই যোগ হয়েছে (নতুন ফাইল, চলতি কোডে হাত পড়েনি)। favicon এখন লাল বর্গ (`#eb3026`) ও মাঝে সাদা W।
+- **লঞ্চ (২১ অক্টোবর, দুপুর ১২টা):** পেশাদার তবে অবাণিজ্যিক লঞ্চ (তাই Vercel Hobby চলবে)। লঞ্চের আগের রাতে কোড বন্ধ (code freeze); শেষ কোড কমিট `caccd8a`। লঞ্চের আগের তালিকা: হাতে JSON ব্যাকআপ, রাতের ব্যাকআপ workflow সবুজ কিনা, Vercel শেষ ডিপ্লয় সবুজ কিনা, নতুন সদস্যের সাইনআপ/আমন্ত্রণ ও Supabase ইমেইল সেটিং। লঞ্চের পরে রিপো Private করা হবে; তখন Claude-এর GitHub অ্যাক্সেস আবার যুক্ত করতে হবে।
 
 ## পরে করব
 - ~~মরা `components/ui/ActionButtons.js` সরানো।~~ ✅ আগেই মুছে ফেলা হয়েছে।
