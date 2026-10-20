@@ -55,6 +55,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | 1d2c1cb | N37-B / N34 (20 Oct): fetchRows in app/page.js now runs 5 queries instead of 7 (removed the "all Draft/Dropped" and "past not published" queries and their merge entries) | verified: eslint 0, build 0, pushed diff identical, live test ok |
 | 931f780 | N38 (20 Oct): added 3 new files: app/error.js (friendly error page with Try again / Reload), app/not-found.js (404 page), app/icon.svg (favicon) | verified: eslint 0, build 0, pushed diff identical |
 | caccd8a | N39 (20 Oct): favicon changed to a red square (#eb3026) with a white W drawn as a line path (app/icon.svg only) | verified: build 0, pushed diff identical |
+| 7e3837f | N41 (21 Oct): Notice Board button moved from the footer to the header, right before the notification bell; new "board" (clipboard) icon in components/ui/Icons.js so it no longer looks like the bell; label hidden on small screens (icon only); same unread badge and open logic | verified: eslint 0, build 0, pushed diff identical |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -191,8 +192,12 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **N38 ও N39 (লঞ্চের আগের রাত):** অ্যাপে আগে কোনো error পাতা, 404 পাতা ও favicon ছিল না; তিনটাই যোগ হয়েছে (নতুন ফাইল, চলতি কোডে হাত পড়েনি)। favicon এখন লাল বর্গ (`#eb3026`) ও মাঝে সাদা W।
 - **লঞ্চ (২১ অক্টোবর, দুপুর ১২টা):** পেশাদার তবে অবাণিজ্যিক লঞ্চ (তাই Vercel Hobby চলবে)। লঞ্চের আগের রাতে কোড বন্ধ (code freeze); শেষ কোড কমিট `caccd8a`। লঞ্চের আগের তালিকা: হাতে JSON ব্যাকআপ, রাতের ব্যাকআপ workflow সবুজ কিনা, Vercel শেষ ডিপ্লয় সবুজ কিনা, নতুন সদস্যের সাইনআপ/আমন্ত্রণ ও Supabase ইমেইল সেটিং। লঞ্চের পরে রিপো Private করা হবে; তখন Claude-এর GitHub অ্যাক্সেস আবার যুক্ত করতে হবে।
 - **নাম বদল (২১ অক্টোবর, লঞ্চের আগের রাত):** Vercel প্রজেক্ট `wavedesk`, ঠিকানা `https://wavedesk-manager.vercel.app`; Supabase প্রজেক্টের নাম `wavedesk` (API URL ও key অপরিবর্তিত); GitHub অ্যাকাউন্ট `thesudiptasaha` (আগে `thesudiptasaha-art`) ও রিপো `thesudiptasaha/WaveDesk` (আগে `newswave-app`; পুরনো ঠিকানা GitHub নিজে নতুনটায় পাঠিয়ে দেয়, তবে চিরকাল নয়)। উবুন্টু পিসির স্থানীয় ফোল্ডার এখনও `~/Documents/newswave-app` (ফোল্ডারের নাম বদলানো জরুরি নয়); সেখানে `git remote set-url origin https://github.com/thesudiptasaha/WaveDesk.git` দিতে হয়।
+- **N41 নোটিশ বাটন হেডারে (7e3837f):** আগে Notification-এর ঘণ্টা ছিল হেডারে আর স্টেশন নোটিশ বাটন ছিল ফুটারে (দুটোতেই ঘণ্টা আইকন, দূরে দূরে)। এখন নোটিশ বাটন হেডারে ঘণ্টার ঠিক আগে, নিজস্ব ক্লিপবোর্ড আইকনসহ; ছোট পর্দায় শুধু আইকন। দুটোর কাজ আলাদা তাই একত্র করা হয়নি: Notification ব্যক্তিগত (আমার কাজ/ঘটনা), নোটিশ বোর্ড পুরো স্টেশনের ঘোষণা। মালিক লাইভে পরীক্ষা করেছেন, ঠিক আছে।
 
 ## পরে করব
+- **ফুটার ঠিক করা (মালিকের পর্যবেক্ষণ, ২১ অক্টোবর):** ঠিক কী ভুল তা মালিক স্ক্রিনশটসহ জানাবেন; লঞ্চের পরে।
+- **Employee Report (ও অন্য রিপোর্ট) পপ-আপ হিসেবে খোলা (মালিকের পর্যবেক্ষণ):** কোন কোন রিপোর্ট ও কীভাবে তা মালিক জানাবেন; লঞ্চের পরে।
+- **নোটিশ ও Notification একত্র করার ধাপ ২ (ঐচ্ছিক):** একটাই ঘণ্টা, ভেতরে দুই ট্যাব; বড় কাজ, আগে N41 ব্যবহার করে দেখে সিদ্ধান্ত।
 - ~~মরা `components/ui/ActionButtons.js` সরানো।~~ ✅ আগেই মুছে ফেলা হয়েছে।
 - ~~`services/exportService.js`-এর stub `downloadFullSystemBackup`~~ ✅ মুছে ফেলা হয়েছে (1876cdf)।
 - Drawer টুলটিপ "Let writers edit…" বদলাবে কিনা — সিদ্ধান্ত।
