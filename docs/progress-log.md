@@ -49,6 +49,8 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 | f93a864 | N36-C (18 Oct): added Change presenter and Change channel to the live PERMISSIONS list in lib/core.js; removed the dead copy in utils/constants.js | verified: eslint 0, build 0, pushed diff identical |
 | fe93b53 | N36-D (18 Oct): removed 4 fake download buttons (Archive ZIP in drawer, KPI report in Authority menu, download_script action, My Work Download Zip), removed the broken legacy avatar upload field, "Script copied" now uses notify | verified: eslint 0, build 0, pushed diff identical |
 | 703bef2 | N36-F (18 Oct): My Work now counts all 14 credit roles from one MY_WORK_ROLES list in components/ui/Modals.js (first 5 roles always shown, the other 9 only when above zero) | verified: eslint 0, build 0, pushed diff identical |
+| e3535f7 | N36-H (19 Oct): new ConfirmDialog component in components/ui/Shared.js (z-70, Esc closes only the dialog, Cancel focused by default) replaces the two browser confirm() popups: remove team member (app/page.js) and delete notice (NoticeModal.js) | verified: eslint 0, build 0, pushed diff identical |
+| e180bc2 | N36-I (19 Oct): EmployeeReportModal now fetches its own contents for the From/To dates it shows (own query, Loading state, error message, Download Excel disabled while loading); app/page.js passes orgId | verified: eslint 0, build 0, pushed diff identical |
 
 
 ## প্লেসমেন্ট নিয়ম (N28, ব্যবহারকারীর সিদ্ধান্ত ১০ অক্টোবর)
@@ -169,6 +171,13 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **My Work (703bef2):** আগে মাত্র ৫টা ভূমিকা (Research & Script, Presenter, Video Editor, Cameraman, Publisher) গোনা হতো; এখন Idea, Producer, VFX, Colorist, Light Design, Sound Record, Audio Mixing, Video Switch, Live Audio সহ ১৪টা। নতুন ৯টা শুধু সংখ্যা ০-এর বেশি হলে "ভূমিকা অনুযায়ী মোট"-এ দেখায়।
 - **মালিকের লাইভ টেস্ট বাকি:** টিমে নতুন দুই সুইচ, ড্রয়ারের ফুটার, Authority মেনু, My Work, প্রোফাইল ছবি, Copy Script বার্তা, My Work-এ Producer/Idea-ওয়ালা কনটেন্ট।
 - **GitHub:** রিপো এখন Public (শুধু যাচাইয়ের জন্য); কাজ শেষে Private করা হবে। workflow ফাইল পুশ করতে টোকেনে `workflow` অনুমতি লাগে।
+
+## ১৯ অক্টোবর ২০২৬ (N36)
+- **ConfirmDialog (e3535f7):** ব্রাউজারের কুৎসিত `confirm()` পপআপ দুই জায়গায় বদলে সুন্দর বক্স। Cancel-এ ডিফল্ট ফোকাস (ভুলে Enter চাপলে কিছু মুছবে না); Esc চাপলে শুধু বক্স বন্ধ হয়, নিচের টিম/নোটিশ মোডাল নয়। অ্যাপের স্ক্রিনে এখন কোথাও `window.confirm` বা `alert` আসে না (শুধু `services/exportService.js`-এর মরা placeholder-এ `alert` আছে, ওগুলো কোথাও ডাকা হয় না)।
+- **কর্মী রিপোর্টের ভুল (e180bc2):** Employee Report-এ From/To বদলানো যেত, কিন্তু হিসাব হতো শুধু মূল রানডাউনের তারিখ-পরিধির জন্য লোড হওয়া ডাটা থেকে — অন্য মাস/সপ্তাহ বাছলে সংখ্যা নীরবে ভুল/অসম্পূর্ণ আসত। এখন রিপোর্ট নিজের তারিখের জন্য নিজে কনটেন্ট আনে (সর্বোচ্চ ৪০০ দিনের shorts ধরা হয়)। KPI ও My Work এখনও মূল রানডাউনের পরিধির ডাটা ব্যবহার করে (ওদের তারিখ বদলানোর আলাদা উপায় নেই, তাই ঠিক আছে)।
+- **N34 যাচাই:** `fetchRows`-এর "সব Draft/Dropped" ও "অতীতের অপ্রকাশিত" কোয়েরি দুটো রানডাউন, Parking Zone, Bin, KPI, My Work কোনোটার জন্য দরকার নেই (Parking/Bin তিনটা অন্য কোয়েরি থেকেই পূর্ণ হয়)। একমাত্র পার্শ্বপ্রভাব: পুরনো তারিখের কনটেন্টের নোটিফিকেশনে চাপলে "Change the date range" বার্তা। ডাটাবেস ছোট (~৯৪৪ kB) বলে লাভ এখন কম; পরে করা হবে।
+- **নতুন লিনাক্স পিসি (১৯ অক্টোবর):** প্রজেক্ট `~/Documents/newswave-app`; Antigravity IDE বসানো; Node 22; `git pull` করে `3100301` পর্যন্ত আনা হয়েছে, `npm run build` সফল। `.env.local` এই পিসিতে নেই (কোড বদল, বিল্ড, কমিটের জন্য লাগে না; শুধু লোকালে `npm run dev` চালাতে লাগে)। লিনাক্সে ডিফ সেভ: `git diff --output="$HOME/nXX.diff" <ফাইল>`। পুশে ইউজারনেম `thesudiptasaha-art` ও পাসওয়ার্ডের জায়গায় টোকেন; পাসওয়ার্ড লাইন কখনও চ্যাটে নয়।
+- **মালিকের পরীক্ষা (১৯ অক্টোবর):** ConfirmDialog ও Employee Report পরীক্ষা শেষ, ঠিক আছে।
 
 ## পরে করব
 - মরা `components/ui/ActionButtons.js` সরানো।
