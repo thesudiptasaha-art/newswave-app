@@ -48,12 +48,12 @@ function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
 function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch, actions, onRun, onAddPlatform }) {
   const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);
   const lockMsg = (label) => `You need the “${label}” permission`;
-  const okMeta = can(actor, 'can_edit_metadata');
-  const okSched = can(actor, 'can_reschedule');
+  const okMeta = can(actor, 'can_edit_content_details');
+  const okSched = can(actor, 'can_reschedule_content');
   const heldLock = row.status === 'On Hold' && !isManager(actor);
-  const okPres = can(actor, 'can_change_presenter');
+  const okPres = can(actor, 'can_assign_presenter');
   const okChan = can(actor, 'can_change_channel');
-  const okEditor = can(actor, 'can_assign_editor');
+  const okEditor = can(actor, 'can_assign_video_editor');
   const [showExtended, setShowExtended] = useState(false);
   const active = !!actor && actor.active !== false;
 
@@ -61,10 +61,10 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
     <div className="space-y-6">
       <section className="grid grid-cols-1 gap-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Channel" locked={!okChan} lockMessage={lockMsg('Change channel')}>
+          <Field label="Channel" locked={!okChan} lockMessage={lockMsg('Change Channel')}>
             <SelectBox value={row.channel} disabled={!okChan} options={channels} onChange={(v) => patch({ channel: v })} />
           </Field>
-          <Field label="Scheduled publish" locked={!okSched || heldLock} lockMessage={heldLock ? 'Only Managers and the Owner can reschedule held content' : lockMsg('Reschedule')}>
+          <Field label="Scheduled publish" locked={!okSched || heldLock} lockMessage={heldLock ? 'Only Managers and the Owner can reschedule held content' : lockMsg('Reschedule Content')}>
               <input
                 type="datetime-local"
                 disabled={!okSched || heldLock}
@@ -74,13 +74,13 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
               />
             </Field>
         </div>
-        <Field label="Slug name" locked={!okMeta} lockMessage={lockMsg('Edit metadata')} hint={`${(row.slug_name || '').length}/${SLUG_MAX}`}>
+        <Field label="Slug name" locked={!okMeta} lockMessage={lockMsg('Edit Content Details')} hint={`${(row.slug_name || '').length}/${SLUG_MAX}`}>
           <BlurInput value={row.slug_name} disabled={!okMeta} maxLength={SLUG_MAX} onCommit={(v) => { const s = normalizeSlugInput(v); if (s) patch({ slug_name: s }); }} placeholder="Slug name" />
         </Field>
-        <Field label="Title" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
+        <Field label="Title" locked={!okMeta} lockMessage={lockMsg('Edit Content Details')}>
           <BlurInput value={row.title} disabled={!okMeta} onCommit={(v) => patch({ title: v })} placeholder="Title" />
         </Field>
-        <Field label="Thumbnail text (Hook)" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
+        <Field label="Thumbnail text (Hook)" locked={!okMeta} lockMessage={lockMsg('Edit Content Details')}>
           <BlurInput value={row.thumbnail_text} disabled={!okMeta} onCommit={(v) => patch({ thumbnail_text: v })} placeholder="Hook on the thumbnail" />
         </Field>
       </section>
@@ -88,15 +88,15 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
       <section>
         <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Staff assignment</div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <CreditSelect label="Idea" field="idea_by" skillKey="can_write" row={row} patch={patch} team={team} disabled={!active} />
-          <CreditSelect label="Research & Script" field="writer" skillKey="can_write" row={row} patch={patch} team={team} disabled={!active} />
-          <Field label="Presenter" locked={!okPres} lockMessage={lockMsg('Change presenter')}>
+          <CreditSelect label="Concept Creator" field="concept_creator" skillKey="role_concept_creator" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Research & Script Writer" field="writer" skillKey="role_research_script_writer" row={row} patch={patch} team={team} disabled={!active} />
+          <Field label="Presenter" locked={!okPres} lockMessage={lockMsg('Assign Presenter')}>
             <SelectBox value={row.presenter_name} disabled={!okPres} options={team.filter((m) => m.active !== false).map((m) => ({ value: m.full_name, label: m.nickname || m.full_name }))} onChange={(v) => patch({ presenter_name: v })} placeholder="Unassigned" />
           </Field>
-          <CreditSelect label="Producer" field="producer" skillKey="can_produce" row={row} patch={patch} team={team} disabled={!active} />
-          <CreditSelect label="Cameraman" field="camera_person" skillKey="can_camera" row={row} patch={patch} team={team} disabled={!active} />
-          <CreditSelect label="Video Editor" field="video_editor" skillKey="can_edit_video" row={row} patch={patch} team={team} disabled={!active} />
-          <CreditSelect label="Uploader" field="uploader" skillKey="" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Producer" field="producer" skillKey="role_producer" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Camera Operator" field="camera_operator" skillKey="role_camera_operator" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Video Editor" field="video_editor" skillKey="role_video_editor" row={row} patch={patch} team={team} disabled={!active} />
+          <CreditSelect label="Publisher" field="publisher" skillKey="role_publisher" row={row} patch={patch} team={team} disabled={!active} />
         </div>
         
         <div className="mt-4">
@@ -109,23 +109,25 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
           
           {showExtended ? (
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-white/[0.06] pt-4">
-              <CreditSelect label="Visual Effects" field="vfx" skillKey="can_vfx" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Colorist" field="colorist" skillKey="can_color" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Light Design" field="light_designer" skillKey="can_light" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Sound Record" field="sound_recordist" skillKey="can_sound_record" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Audio Mixing" field="audio_mixer" skillKey="can_audio_mix" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Video Switch" field="video_switcher" skillKey="can_video_switch" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Live Audio Mixing" field="live_audio" skillKey="can_live_audio" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Light Designer" field="light_designer" skillKey="role_light_designer" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Sound Recordist" field="sound_recordist" skillKey="role_sound_recordist" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Voice Over Artist" field="voice_over_artist" skillKey="role_voice_over_artist" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Motion Graphics Designer" field="motion_graphics_designer" skillKey="role_motion_graphics_designer" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Graphic Designer" field="graphic_designer" skillKey="role_graphic_designer" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Colorist" field="colorist" skillKey="role_colorist" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Audio Mixer" field="audio_mixer" skillKey="role_audio_mixer" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Live Video Switcher" field="live_video_switcher" skillKey="role_live_video_switcher" row={row} patch={patch} team={team} disabled={!active} />
+              <CreditSelect label="Live Audio Mixer" field="live_audio_mixer" skillKey="role_live_audio_mixer" row={row} patch={patch} team={team} disabled={!active} />
             </div>
           ) : null}
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4">
-        <Field label="Archive shelf ID" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
+        <Field label="Archive shelf ID" locked={!okMeta} lockMessage={lockMsg('Edit Content Details')}>
           <BlurInput value={row.archive_shelf_id} disabled={!okMeta} onCommit={(v) => patch({ archive_shelf_id: v })} placeholder="e.g. SHELF-A12" />
         </Field>
-        <Field label="Target platforms" locked={!okMeta} lockMessage={lockMsg('Edit metadata')}>
+        <Field label="Target platforms" locked={!okMeta} lockMessage={lockMsg('Edit Content Details')}>
           <div className="flex flex-wrap items-center gap-2">
             {(platforms || PLATFORMS).map((p) => {
               const on = row.target_platforms.includes(p.id);
@@ -162,7 +164,7 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
 function ScriptTab({ row, actor, patch }) {
   const locked = row.is_script_locked === true;
   const mgr = isManager(actor);
-  const canEdit = can(actor, 'can_edit_script') && (!locked || mgr);
+  const canEdit = can(actor, 'can_write_edit_scripts') && (!locked || mgr);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(row.script || '');
   const [showPrompter, setShowPrompter] = useState(false);
@@ -477,8 +479,8 @@ function ProductionTab({ row, actor, patch }) {
 
 function PackagingTab({ row, actor, patch, platforms = PLATFORMS, onAddPlatform }) {
   const active = !!actor && actor.active !== false;
-  const ok = can(actor, 'can_edit_metadata');
-  const msg = 'You need the “Edit metadata” permission';
+  const ok = can(actor, 'can_edit_content_details');
+  const msg = 'You need the “Edit Content Details” permission';
 
   // Short Content Creation Form State
   const [shortPlatforms, setShortPlatforms] = useState(
