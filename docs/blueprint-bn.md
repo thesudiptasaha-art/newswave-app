@@ -105,7 +105,7 @@ Oct 4, 2026 · @EEA
 
 | ট্যাব | ভেতরে কী |
 | --- | --- |
-| Overview | Title, thumbnail text, channel, প্রকাশের সময়, লোক (writer, presenter, video editor, camera person), archive shelf ID, target platform; পারমিশন না থাকলে ঘর লক |
+| Overview | Title, thumbnail text, channel, প্রকাশের সময়, লোক (writer, presenter, video editor, camera operator), archive shelf ID, target platform; পারমিশন না থাকলে ঘর লক |
 | Script Desk | পড়ার ও লেখার অংশ, শব্দ গণনা, প্রচারের মিনিট (১৫০ শব্দ = ১ মিনিট), Copy Script, Lock/Unlock (Manager, Owner), PACKAGE-এর raw footage link |
 | Assets & Shorts | raw footage, project file, master export, live video লিংক; shorts-এর তালিকা (নিজস্ব ID, thumb text, platform, URL, আপলোডের সময়, Pending/Published); নতুন short যোগের ফর্ম |
 | QC & Audit | Revision note, QA remark, Audit comment; hold/drop/re-shoot-এর কারণ; পুরো audit trail (কে, রোল, কখন) |
@@ -223,7 +223,7 @@ Drawer-এর ফুটারে পরের ধাপের বাটন ও D
 | দল | কলাম |
 | --- | --- |
 | পরিচয় | id, content\_uid, organization\_id, content\_type, status, previous\_status |
-| পরিকল্পনা | slug\_name, title, thumbnail\_text, channel, scheduled\_publish\_time (খালি থাকতে পারে), published\_at, publisher, target\_platforms |
+| পরিকল্পনা | slug\_name, title, thumbnail\_text, channel, scheduled\_publish\_time (খালি থাকতে পারে), published\_at, published\_by, target\_platforms |
 | মানুষ (নাম text) | writer, presenter\_name, video\_editor, camera\_person |
 | স্ক্রিপ্ট | script, is\_script\_locked |
 | ফাইল/লিংক | raw\_footage\_link, project\_file\_url, master\_export\_url, live\_video\_url, archive\_shelf\_id |

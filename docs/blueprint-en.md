@@ -167,7 +167,7 @@ The app is one page (`app/page.js`) with a sticky header, the rundown, a second 
 
 | Tab | Contents |
 | --- | --- |
-| Overview | Title, thumbnail text, channel, scheduled publish time, staff assignment (writer, presenter, video editor, camera person), archive shelf ID, target platforms. Each field locks when you lack the permission. |
+| Overview | Title, thumbnail text, channel, scheduled publish time, staff assignment (writer, presenter, video editor, camera operator), archive shelf ID, target platforms. Each field locks when you lack the permission. |
 | Script Desk | Reading view and editor in a serif font that supports Bengali, word count and minutes on air (150 words a minute), Copy Script, Lock or Unlock Script (Managers and Owner), raw footage link for PACKAGE |
 | Assets & Shorts | Links: raw footage, project file, master export, live video URL. List of shorts and reels with their own ID, thumb text, platform, URL, upload time and a Pending or Published toggle. Form to add a short. |
 | QC & Audit | Add a Revision note, QA remark or Audit comment. Shows hold, drop and re-shoot reasons, the list of revision requests and the full audit trail with who, role and time. |
@@ -287,7 +287,7 @@ A schema `backup_20260930` holds a full copy of the data taken before the securi
 | Group | Columns |
 | --- | --- |
 | Identity | `id` (uuid), `content_uid`, `organization_id`, `content_type`, `status`, `previous_status` |
-| Planning | `slug_name`, `title`, `thumbnail_text`, `channel`, `scheduled_publish_time` (nullable), `published_at`, `publisher`, `target_platforms` (JSON array, default youtube and facebook) |
+| Planning | `slug_name`, `title`, `thumbnail_text`, `channel`, `scheduled_publish_time` (nullable), `published_at`, `published_by`, `target_platforms` (JSON array, default youtube and facebook) |
 | People (names as text) | `writer`, `presenter_name`, `video_editor`, `camera_operator` |
 | Script | `script`, `is_script_locked` |
 | Assets | `raw_footage_link`, `project_file_url`, `master_export_url`, `live_video_url`, `archive_shelf_id` |
@@ -310,7 +310,7 @@ Indexes: `(organization_id, scheduled_publish_time)` and `content_uid` on conten
 | `contents_notify_insert` | contents, after insert | Notifies assigned writer, presenter and editor |
 | `contents_notify_update` | contents, after update | Notifies on status change and on new assignment |
 | `team_members_guard` | team\_members | Blocks privilege escalation (section 9) |
-| `team_members_rename` | team\_members, after update of `full_name` | Copies the new name into writer, presenter, video editor, camera person and publisher on that organization's contents |
+| `team_members_rename` | team\_members, after update of `full_name` | Copies the new name into writer, presenter, video editor, camera operator, published_by, publisher and the other credit columns on that organization's contents |
 
 **Helper functions** (security definer, used by policies and triggers): `my_member_row()`, `my_org_id()`, `my_member_id()`, `my_role()`, `i_am_active()`, `is_manager()`, `perm_of(member, permission)`.
 
@@ -345,7 +345,7 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 3. Script edits need Edit script, and a locked script can be edited only by Managers and the Owner. Lock and unlock are manager-only.
 4. Metadata, channel, publish time, presenter and video editor each need their own permission.
 5. `audit_log` and `revisions` may only grow: the old array must be contained in the new one.
-6. `published_at` and `publisher` change only together with the Publish step, or by a manager.
+6. `published_at` and `published_by` change only together with the Publish step, or by a manager.
 7. A status change must be one of the allowed transitions in section 6, by someone with the right permission, with the extra conditions (a script must be non-empty to submit, an editor must be chosen to start editing).
 
 **What the team guard checks**
