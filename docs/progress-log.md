@@ -194,6 +194,13 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **নাম বদল (২১ অক্টোবর, লঞ্চের আগের রাত):** Vercel প্রজেক্ট `wavedesk`, ঠিকানা `https://wavedesk-manager.vercel.app`; Supabase প্রজেক্টের নাম `wavedesk` (API URL ও key অপরিবর্তিত); GitHub অ্যাকাউন্ট `thesudiptasaha` (আগে `thesudiptasaha-art`) ও রিপো `thesudiptasaha/WaveDesk` (আগে `newswave-app`; পুরনো ঠিকানা GitHub নিজে নতুনটায় পাঠিয়ে দেয়, তবে চিরকাল নয়)। উবুন্টু পিসির স্থানীয় ফোল্ডার এখনও `~/Documents/newswave-app` (ফোল্ডারের নাম বদলানো জরুরি নয়); সেখানে `git remote set-url origin https://github.com/thesudiptasaha/WaveDesk.git` দিতে হয়।
 - **N41 নোটিশ বাটন হেডারে (7e3837f):** আগে Notification-এর ঘণ্টা ছিল হেডারে আর স্টেশন নোটিশ বাটন ছিল ফুটারে (দুটোতেই ঘণ্টা আইকন, দূরে দূরে)। এখন নোটিশ বাটন হেডারে ঘণ্টার ঠিক আগে, নিজস্ব ক্লিপবোর্ড আইকনসহ; ছোট পর্দায় শুধু আইকন। দুটোর কাজ আলাদা তাই একত্র করা হয়নি: Notification ব্যক্তিগত (আমার কাজ/ঘটনা), নোটিশ বোর্ড পুরো স্টেশনের ঘোষণা। মালিক লাইভে পরীক্ষা করেছেন, ঠিক আছে।
 
+## পদ ও অ্যাক্সেস পরিকল্পনা (২১ অক্টোবর ২০২৬, সিদ্ধান্ত)
+- **সমস্যা:** টিম পর্দায় একই গ্রিডে ২০টা টগল মেশানো — ৮টা আসল অ্যাক্সেস আর ১২টা আসলে পদ। নামের ধরন মেলে না ("Can be Cameraman", "Visual Effects", "Edit script"), একই পদ জায়গাভেদে আলাদা নামে (Uploader/Publisher, Research & Script/Can Write & Submit)। Idea ও Publisher-এর নিজস্ব টিক নেই।
+- **সিদ্ধান্ত:** চার স্তর — Authority, Designation, Roles, Access (বিস্তারিত ও নামের তালিকা `docs/open-tasks.md`-এর "পদ ও অ্যাক্সেস পুনর্গঠন" লাইনে)। সব পদ ব্যক্তির নামে (Writer, Camera Operator, VFX Artist...), Access ক্রিয়া+বিষয় (Write & Edit Scripts, Review Videos...)।
+- **ধাপ:** (ক) SQL — `team_members`-এ `can_idea`, `can_publish` যোগ ও ভরা; (খ) রিপোতে SQL-এর রেকর্ড-ফাইল; (গ) কেন্দ্রীয় পদ-তালিকা, নাম এক করা; (ঘ) টিম পর্দা Roles/Access দুই ভাগে; (ঙ) ড্রয়ারে Idea ও Publisher নতুন টিক ব্যবহার করবে; (চ) প্রোফাইলে নিজের Roles/Access শুধু দেখা; (ছ) ডক। প্রতিটা ধাপ আলাদা কমিট। পরে (লঞ্চের পরে): মালিকের "Add role", নতুন পদ (Graphic Designer, Sound Designer, Motion Graphics Artist, Voice-over Artist, Reporter), Designation টেমপ্লেট। Copy Editor আপাতত দরকার নেই (মালিকের সিদ্ধান্ত)।
+- **নিরাপত্তা:** টিম টেবিলের অনুমতি বদল শুধু ওনার ও ম্যানেজার (ডাটাবেস গার্ড আগে থেকেই); সাধারণ সদস্য নিজের শুধু নাম, ছবি ও designation বদলাতে পারেন।
+- **ভবিষ্যৎ কাঠামো (Django-র সময়):** সব পদ একটা JSON তালিকায় রাখলে নতুন পদে আর SQL লাগবে না।
+
 ## পরে করব
 - **ফুটার ঠিক করা (মালিকের পর্যবেক্ষণ, ২১ অক্টোবর):** ঠিক কী ভুল তা মালিক স্ক্রিনশটসহ জানাবেন; লঞ্চের পরে।
 - **Employee Report (ও অন্য রিপোর্ট) পপ-আপ হিসেবে খোলা (মালিকের পর্যবেক্ষণ):** কোন কোন রিপোর্ট ও কীভাবে তা মালিক জানাবেন; লঞ্চের পরে।
