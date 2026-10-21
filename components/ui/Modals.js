@@ -285,6 +285,7 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
   const [employeeId, setEmployeeId] = useState('');
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [nickname, setNickname] = useState('');
   const [role, setRole] = useState('general');
   const [open, setOpen] = useState(null);
   const actorIsOwner = isOwner(actor);
@@ -309,7 +310,7 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
               className={btnPrimary}
               disabled={!name.trim()}
               onClick={async () => {
-                if (await onAdd({ full_name: name.trim(), email: email.trim(), role: actorIsOwner ? role : 'general', designation: designation.trim(), avatar_url: avatarUrl.trim(), employee_id: employeeId.trim(), phone: phone.trim(), whatsapp: whatsapp.trim() })) {
+                if (await onAdd({ full_name: name.trim(), email: email.trim(), role: actorIsOwner ? role : 'general', designation: designation.trim(), avatar_url: avatarUrl.trim(), employee_id: employeeId.trim(), phone: phone.trim(), whatsapp: whatsapp.trim(), nickname: nickname.trim() })) {
                   setName('');
                   setEmail('');
                   setRole('general');
@@ -318,6 +319,7 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
                   setEmployeeId('');
                   setPhone('');
                   setWhatsapp('');
+                  setNickname('');
                 }
               }}
             >
@@ -328,7 +330,8 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
             <input className={inputBase} placeholder="Designation / job title (optional)" value={designation} onChange={(e) => setDesignation(e.target.value)} />
             <input className={inputBase} placeholder="Avatar image link (optional)" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
           </div>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <input className={inputBase} placeholder="Nickname (one word, optional)" value={nickname} onChange={(e) => setNickname(e.target.value.replace(/[^A-Za-z]/g, '').slice(0, 20))} />
             <input className={inputBase} placeholder="Employee ID (optional)" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
             <input className={inputBase} placeholder="Official phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
             <input className={inputBase} placeholder="WhatsApp number (optional)" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
@@ -376,7 +379,10 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
                     </div>
                   ) : null}
                   {manageable ? (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                      <Field label="Nickname">
+                        <BlurInput value={t.nickname} onCommit={(v) => onUpdate(t.id, { nickname: v.replace(/[^A-Za-z]/g, '').slice(0, 20) || null })} placeholder="e.g. Rafi" />
+                      </Field>
                       <Field label="Employee ID">
                         <BlurInput value={t.employee_id} onCommit={(v) => onUpdate(t.id, { employee_id: v.trim() || null })} placeholder="e.g. EMP-0123" />
                       </Field>
@@ -671,6 +677,7 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
   const [avatar, setAvatar] = useState(member.avatar_url || '');
   const [phone, setPhone] = useState(member.phone || '');
   const [whatsapp, setWhatsapp] = useState(member.whatsapp || '');
+  const [nickname, setNickname] = useState(member.nickname || '');
   const [employeeId, setEmployeeId] = useState(member.employee_id || '');
   const isOwnerSelf = member.role === 'owner';
   const [password, setPassword] = useState('');
@@ -723,7 +730,7 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
       return;
     }
     setBusy(true);
-    const ok = await onSave({ full_name: name.trim(), designation: designation.trim(), avatar_url: avatar.trim(), phone: phone.trim(), whatsapp: whatsapp.trim(), ...(isOwnerSelf ? { employee_id: employeeId.trim() } : {}) });
+    const ok = await onSave({ full_name: name.trim(), designation: designation.trim(), avatar_url: avatar.trim(), phone: phone.trim(), whatsapp: whatsapp.trim(), nickname: nickname.trim(), ...(isOwnerSelf ? { employee_id: employeeId.trim() } : {}) });
     if (ok && password && supabase) {
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) {
@@ -778,6 +785,9 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
         </div>
         <Field label="Full name">
           <input className={inputBase} value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+        <Field label="Nickname" hint="one English word, shown across the app">
+          <input className={inputBase} value={nickname} onChange={(e) => setNickname(e.target.value.replace(/[^A-Za-z]/g, '').slice(0, 20))} placeholder="e.g. Rafi" />
         </Field>
         <Field label="Job designation" hint="optional">
           <input className={inputBase} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Producer" />
@@ -1242,6 +1252,7 @@ function DirectoryModal({ team, onClose }) {
               <div className="flex flex-wrap items-center gap-2">
                 <Avatar member={m} size="h-10 w-10" text="text-[14px]" />
                 <span className="text-[14px] font-medium text-white">{m.full_name}</span>
+                {m.nickname ? <span className="text-[12px] text-zinc-500">({m.nickname})</span> : null}
                 <RoleBadge role={m.role} />
                 <DesignationPill designation={m.designation} />
               </div>

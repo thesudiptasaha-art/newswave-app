@@ -489,7 +489,12 @@ function describeValue(field, v) {
   return clip(v);
 }
 
-const errText = (e) => (e && e.message ? e.message : 'Something went wrong');
+const errText = (e) => {
+  const msg = e && e.message ? e.message : '';
+  if (msg.includes('team_members_nickname_unique')) return 'This nickname is already taken';
+  if (msg.includes('team_members_nickname_one_word')) return 'Nickname must be one English word (letters only, up to 20)';
+  return msg || 'Something went wrong';
+};
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
@@ -1094,7 +1099,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   /* ---------------- team writes ---------------- */
   const canManageMember = (t) => !!actor && t.role !== 'owner' && (isOwner(actor) || (actor.role === 'manager' && actor.active !== false && t.role === 'general'));
 
-  const addMember = async ({ full_name, email, role, designation, avatar_url, employee_id, phone, whatsapp }) => {
+  const addMember = async ({ full_name, email, role, designation, avatar_url, employee_id, phone, whatsapp, nickname }) => {
     if (!isManager(actor)) {
       notify('Only the Owner and Managers can add members', 'error');
       return false;
@@ -1104,7 +1109,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     PERMISSIONS.forEach((p) => {
       perms[p.key] = false;
     });
-    const payload = { organization_id: org.id, full_name, email: email || null, role: finalRole, active: true, designation: designation || null, avatar_url: avatar_url || null, employee_id: employee_id || null, phone: phone || null, whatsapp: whatsapp || null, ...perms };
+    const payload = { organization_id: org.id, full_name, email: email || null, role: finalRole, active: true, designation: designation || null, avatar_url: avatar_url || null, employee_id: employee_id || null, phone: phone || null, whatsapp: whatsapp || null, nickname: nickname || null, ...perms };
     let created = { id: uid(), user_id: uid(), ...payload };
     if (supabase) {
       const { data, error } = await supabase.from('team_members').insert(payload).select().single();
@@ -1300,10 +1305,10 @@ function NewsroomApp({ authUser, onSignOut }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showDirectory, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
-  const saveProfile = async ({ full_name, designation, avatar_url, phone, whatsapp, employee_id }) => {
+  const saveProfile = async ({ full_name, designation, avatar_url, phone, whatsapp, employee_id, nickname }) => {
     if (!me) return false;
     const oldName = me.full_name;
-    const patch = { full_name, designation: designation || null, avatar_url: avatar_url || null, phone: phone || null, whatsapp: whatsapp || null };
+    const patch = { full_name, designation: designation || null, avatar_url: avatar_url || null, phone: phone || null, whatsapp: whatsapp || null, nickname: nickname || null };
     if (employee_id !== undefined) patch.employee_id = employee_id || null;
     if (supabase) {
       const { error } = await supabase.from('team_members').update(patch).eq('id', me.id);
