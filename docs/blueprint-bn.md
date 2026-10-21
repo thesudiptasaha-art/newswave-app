@@ -137,13 +137,13 @@ Drawer-এর ফুটারে পরের ধাপের বাটন ও D
 
 | স্ট্যাটাস | মানে | বাটন (কোথায় যায়) | কে চাপতে পারে |
 | --- | --- | --- | --- |
-| Draft | লেখা হচ্ছে | Submit Script (Script Submitted)। স্ক্রিপ্ট ফাঁকা থাকলে হবে না | Edit script পারমিশন |
-| Script Submitted | অনুমোদনের অপেক্ষা | Approve Script (ধরন অনুযায়ী পরের ধাপ); Send Back (Draft, কারণ লাগে) | Approve script পারমিশন |
+| Draft | লেখা হচ্ছে | Submit Script (Script Submitted)। স্ক্রিপ্ট ফাঁকা থাকলে হবে না | Write & Edit Scripts পারমিশন |
+| Script Submitted | অনুমোদনের অপেক্ষা | Approve Script (ধরন অনুযায়ী পরের ধাপ); Send Back (Draft, কারণ লাগে) | Approve Scripts পারমিশন |
 | Ready for Shoot | অনুমোদিত, শুটের অপেক্ষা | Start Shoot (Shooting) | যেকোনো সক্রিয় সদস্য |
 | Shooting | শুট চলছে | Finish Shoot (Assign Editor) | যেকোনো সক্রিয় সদস্য |
-| Assign Editor | এডিটরের অপেক্ষা | Send to Editing (Editing)। এডিটর বাছা লাগবে | Assign editor পারমিশন |
+| Assign Editor | এডিটরের অপেক্ষা | Send to Editing (Editing)। এডিটর বাছা লাগবে | Assign Video Editor পারমিশন |
 | Editing | এডিটর কাজ করছেন | Submit Video (Video Review) | নির্ধারিত এডিটর, Manager, Owner |
-| Video Review | রিভিউয়ের অপেক্ষা | Approve Video (Ready to Publish); Request Revision (Editing, কারণ লাগে) | Review video পারমিশন |
+| Video Review | রিভিউয়ের অপেক্ষা | Approve Video (Ready to Publish); Request Revision (Editing, কারণ লাগে) | Review Videos পারমিশন |
 | Ready to Publish | চূড়ান্ত অনুমোদিত | Publish (Published) | Manager, Owner |
 | Published | শেষ | নেই | নেই |
 | On Hold | কারণসহ রাখা | Resume (আগের ধাপে, না থাকলে Draft) | Manager, Owner |
@@ -224,7 +224,7 @@ Drawer-এর ফুটারে পরের ধাপের বাটন ও D
 | --- | --- |
 | পরিচয় | id, content\_uid, organization\_id, content\_type, status, previous\_status |
 | পরিকল্পনা | slug\_name, title, thumbnail\_text, channel, scheduled\_publish\_time (খালি থাকতে পারে), published\_at, published\_by, target\_platforms |
-| মানুষ (নাম text) | writer, presenter\_name, video\_editor, camera\_person |
+| মানুষ (নাম text) | writer, presenter\_name, video\_editor, camera\_operator |
 | স্ক্রিপ্ট | script, is\_script\_locked |
 | ফাইল/লিংক | raw\_footage\_link, project\_file\_url, master\_export\_url, live\_video\_url, archive\_shelf\_id |
 | সোশ্যাল কপি | post\_caption, seo\_keywords, hashtags |

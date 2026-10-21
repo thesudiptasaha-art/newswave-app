@@ -205,13 +205,13 @@ The top two rows are the full pipeline. The cards underneath list the moves that
 
 | Status | Meaning | Button (goes to) | Who can press it |
 | --- | --- | --- | --- |
-| Draft | Being written | Submit Script (Script Submitted). Needs a non-empty script. | Edit script permission |
-| Script Submitted | Waiting for script approval | Approve Script (next step by content type, see above); Send Back (Draft, reason required) | Approve script permission |
+| Draft | Being written | Submit Script (Script Submitted). Needs a non-empty script. | Write & Edit Scripts permission |
+| Script Submitted | Waiting for script approval | Approve Script (next step by content type, see above); Send Back (Draft, reason required) | Approve Scripts permission |
 | Ready for Shoot | Approved, waiting to be shot | Start Shoot (Shooting) | Any active member |
 | Shooting | On shoot | Finish Shoot (Assign Editor) | Any active member |
-| Assign Editor | Waiting for an editor | Send to Editing (Editing). Needs a video editor selected. | Assign editor permission |
+| Assign Editor | Waiting for an editor | Send to Editing (Editing). Needs a video editor selected. | Assign Video Editor permission |
 | Editing | Editor is working | Submit Video (Video Review) | The assigned editor, Managers, Owner |
-| Video Review | Waiting for review | Approve Video (Ready to Publish); Request Revision (Editing, reason required) | Review video permission |
+| Video Review | Waiting for review | Approve Video (Ready to Publish); Request Revision (Editing, reason required) | Review Videos permission |
 | Ready to Publish | Final approved | Publish (Published) | Managers and Owner |
 | Published | Done | none | none |
 | On Hold | Parked with a reason | Resume (back to the status it was on hold from, or Draft) | Managers and Owner |
@@ -342,7 +342,7 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 
 1. The caller must be an active member of the same organization as the row.
 2. A content cannot move to another organization, and a `CON-` content ID cannot change.
-3. Script edits need Edit script, and a locked script can be edited only by Managers and the Owner. Lock and unlock are manager-only.
+3. Script edits need Write & Edit Scripts, and a locked script can be edited only by Managers and the Owner. Lock and unlock are manager-only.
 4. Metadata, channel, publish time, presenter and video editor each need their own permission.
 5. `audit_log` and `revisions` may only grow: the old array must be contained in the new one.
 6. `published_at` and `published_by` change only together with the Publish step, or by a manager.
