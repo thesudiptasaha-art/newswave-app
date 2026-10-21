@@ -13,7 +13,7 @@ import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Person
 import { fetchAllPages } from '../utils/fetchAll';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
 import { StaffCell } from '../components/ui/StaffAssignSelect';
-import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal } from '../components/ui/Modals';
+import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal, DirectoryModal } from '../components/ui/Modals';
 import { NoticeModal } from '../components/ui/NoticeModal';
 import { fetchNotices, createNotice, deleteNotice } from '../services/noticeService';
 
@@ -545,6 +545,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     const [showEmpReport, setShowEmpReport] = useState(false);
     const [showBackup, setShowBackup] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
+  const [showDirectory, setShowDirectory] = useState(false);
     const [theme, setTheme] = useState('dark');
   useEffect(() => {
     try {
@@ -1289,6 +1290,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       else if (showAddChannel) setShowAddChannel(false);
       else if (showAddPlatform) setShowAddPlatform(false);
       else if (showTeam) setShowTeam(false);
+      else if (showDirectory) setShowDirectory(false);
       else if (showKpi) setShowKpi(false);
       else if (showBin) setShowBin(false);
       else if (showNotices) setShowNotices(false);
@@ -1296,7 +1298,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showKpi, showBin, showNotices, selectedId]);
+  }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showDirectory, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
   const saveProfile = async ({ full_name, designation, avatar_url, phone, whatsapp, employee_id }) => {
     if (!me) return false;
@@ -1792,6 +1794,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             )}
             {theme === 'light' ? 'Dark' : 'Light'}
           </button>
+          <button className={btnGhost} onClick={() => setShowDirectory(true)}>Directory</button>
           
           {(isManager(actor) || isOwner(actor)) ? (
             <button className={btnGhost} onClick={() => setShowAuthority(true)}>
@@ -1916,6 +1919,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       {showAddChannel ? <AddChannelModal existing={channels} onClose={() => setShowAddChannel(false)} onAdd={addChannel} /> : null}
       {showAddPlatform ? <AddPlatformModal existing={platforms} onClose={() => setShowAddPlatform(false)} onAdd={addPlatform} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
+      {showDirectory ? <DirectoryModal team={team} onClose={() => setShowDirectory(false)} /> : null}
       {confirmReq ? (
         <ConfirmDialog
           title={confirmReq.title}

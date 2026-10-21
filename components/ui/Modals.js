@@ -1205,7 +1205,84 @@ function EmployeeReportModal({ rows, range, team, orgId, onClose, onOpenContent 
   );
 }
 
-export { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal };
+function DirectoryModal({ team, onClose }) {
+  const [search, setSearch] = useState('');
+  const q = search.trim().toLowerCase();
+
+  const list = (team || [])
+    .filter((m) => m && m.active !== false)
+    .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''))
+    .filter((m) => {
+      if (!q) return true;
+      const haystack = [
+        m.full_name,
+        m.designation,
+        m.employee_id,
+        m.phone,
+        m.whatsapp,
+        m.email,
+      ];
+      return haystack.some((val) => val && String(val).toLowerCase().includes(q));
+    });
+
+  return (
+    <ModalShell title="Team directory" subtitle={`${list.length} members`} onClose={onClose} wide>
+      <input
+        className={inputBase}
+        placeholder="Search name, designation, ID or number"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      {list.length === 0 ? (
+        <p className="mt-4 text-[13px] text-zinc-500">No member found</p>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {list.map((m) => (
+            <div key={m.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Avatar member={m} size="h-10 w-10" text="text-[14px]" />
+                <span className="text-[14px] font-medium text-white">{m.full_name}</span>
+                <RoleBadge role={m.role} />
+                <DesignationPill designation={m.designation} />
+              </div>
+              <div className="mt-3 space-y-1">
+                {m.employee_id ? <div className="text-[12px] text-zinc-400">ID: {m.employee_id}</div> : null}
+                {m.email ? (
+                  <div className="text-[12px] text-zinc-400">
+                    <a href={`mailto:${m.email}`} className="text-sky-400 hover:underline">
+                      {m.email}
+                    </a>
+                  </div>
+                ) : null}
+                {m.phone ? (
+                  <div className="text-[12px] text-zinc-400">
+                    <a href={`tel:${m.phone}`} className="text-sky-400 hover:underline">
+                      {m.phone}
+                    </a>
+                  </div>
+                ) : null}
+                {m.whatsapp ? (
+                  <div className="text-[12px] text-zinc-400">
+                    <a
+                      href={`https://wa.me/${m.whatsapp.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sky-400 hover:underline"
+                    >
+                      {"WhatsApp: " + m.whatsapp}
+                    </a>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </ModalShell>
+  );
+}
+
+export { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, DirectoryModal };
 
 
 export function BackupModal({ onClose }) {
