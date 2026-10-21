@@ -669,6 +669,8 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
   const [name, setName] = useState(member.full_name || '');
   const [designation, setDesignation] = useState(member.designation || '');
   const [avatar, setAvatar] = useState(member.avatar_url || '');
+  const [phone, setPhone] = useState(member.phone || '');
+  const [whatsapp, setWhatsapp] = useState(member.whatsapp || '');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -719,7 +721,7 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
       return;
     }
     setBusy(true);
-    const ok = await onSave({ full_name: name.trim(), designation: designation.trim(), avatar_url: avatar.trim() });
+    const ok = await onSave({ full_name: name.trim(), designation: designation.trim(), avatar_url: avatar.trim(), phone: phone.trim(), whatsapp: whatsapp.trim() });
     if (ok && password && supabase) {
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) {
@@ -777,6 +779,15 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
         </Field>
         <Field label="Job designation" hint="optional">
           <input className={inputBase} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Producer" />
+        </Field>
+        <Field label="Employee ID" locked={true} lockMessage="Only the Owner and Managers can change this">
+          <input className={inputBase} value={member.employee_id || ''} readOnly disabled placeholder="Not set" />
+        </Field>
+        <Field label="Official phone" hint="optional">
+          <input className={inputBase} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 01XXXXXXXXX" />
+        </Field>
+        <Field label="WhatsApp" hint="optional">
+          <input className={inputBase} value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="e.g. 01XXXXXXXXX" />
         </Field>
         <Field label="New password" hint="leave empty to keep the current one">
           <input type="password" autoComplete="new-password" className={inputBase} value={password} onChange={(e) => setPassword(e.target.value)} />

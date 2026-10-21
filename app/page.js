@@ -1298,10 +1298,10 @@ function NewsroomApp({ authUser, onSignOut }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
-  const saveProfile = async ({ full_name, designation, avatar_url }) => {
+  const saveProfile = async ({ full_name, designation, avatar_url, phone, whatsapp }) => {
     if (!me) return false;
     const oldName = me.full_name;
-    const patch = { full_name, designation: designation || null, avatar_url: avatar_url || null };
+    const patch = { full_name, designation: designation || null, avatar_url: avatar_url || null, phone: phone || null, whatsapp: whatsapp || null };
     if (supabase) {
       const { error } = await supabase.from('team_members').update(patch).eq('id', me.id);
       if (error) {
