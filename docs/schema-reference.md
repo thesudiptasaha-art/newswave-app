@@ -44,6 +44,9 @@ Staff members belonging to an organization.
   * `can_change_channel` — Change assigned channel.
   * **Role/Talent skills:** `can_write`, `can_edit_video`, `can_produce`, `can_camera`, `can_present`, `can_light`, `can_vfx`, `can_color`, `can_sound_record`, `can_audio_mix`, etc.
 * `created_at` (`timestamptz`)
+* `employee_id`, `phone`, `whatsapp` (`text`, nullable) - Optional contact details shown in the Team Directory. `employee_id` can be changed only by the Owner and Managers (the guard trigger blocks a member from changing their own); `phone` and `whatsapp` the member can change themselves. Record: `sql/2026-10-21_team_contact_fields.sql`.
+* `nickname` (`text`, nullable) - One English word (letters only, 1 to 20 characters), unique per organization ignoring case (unique index `team_members_nickname_unique`, check `team_members_nickname_one_word`). Shown in chips, dropdown labels and the header; stored values elsewhere stay the full name. Record: `sql/2026-10-22_team_nickname.sql`.
+* `can_idea`, `can_publish` (`boolean`, not null, default false) - Own role ticks for "Idea / Concept" and "Publisher". In the database already; the app starts using them in the roles reorganization. Record: `sql/2026-10-21_team_idea_publish_roles.sql`.
 
 ---
 
