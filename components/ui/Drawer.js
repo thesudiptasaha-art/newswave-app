@@ -36,9 +36,9 @@ function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
         className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[13px] text-white transition focus:border-white/[0.15] focus:bg-white/[0.04] focus:outline-none focus:ring-4 focus:ring-white/[0.04] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <option value="">— Unassigned —</option>
-        {needsExtra ? <option value={row[field]}>{row[field]}</option> : null}
+        {needsExtra ? <option value={row[field]}>{(team.find((m) => m.full_name === row[field]) || {}).nickname || row[field]}</option> : null}
         {options.map(m => (
-          <option key={m.id} value={m.full_name}>{m.full_name}</option>
+          <option key={m.id} value={m.full_name}>{m.nickname || m.full_name}</option>
         ))}
       </select>
     </div>
@@ -91,7 +91,7 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
           <CreditSelect label="Idea" field="idea_by" skillKey="can_write" row={row} patch={patch} team={team} disabled={!active} />
           <CreditSelect label="Research & Script" field="writer" skillKey="can_write" row={row} patch={patch} team={team} disabled={!active} />
           <Field label="Presenter" locked={!okPres} lockMessage={lockMsg('Change presenter')}>
-            <SelectBox value={row.presenter_name} disabled={!okPres} options={activeNames} onChange={(v) => patch({ presenter_name: v })} placeholder="Unassigned" />
+            <SelectBox value={row.presenter_name} disabled={!okPres} options={team.filter((m) => m.active !== false).map((m) => ({ value: m.full_name, label: m.nickname || m.full_name }))} onChange={(v) => patch({ presenter_name: v })} placeholder="Unassigned" />
           </Field>
           <CreditSelect label="Producer" field="producer" skillKey="can_produce" row={row} patch={patch} team={team} disabled={!active} />
           <CreditSelect label="Cameraman" field="camera_person" skillKey="can_camera" row={row} patch={patch} team={team} disabled={!active} />

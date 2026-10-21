@@ -1441,7 +1441,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             {authUser && me ? (
               <button className={`${btnGhost} !py-1.5 !pl-2`} onClick={() => setShowProfile(true)} title="My profile">
                 <Avatar member={me} size="h-6 w-6" />
-                <span className="hidden max-w-[120px] truncate sm:inline">{me.full_name}</span>
+                <span className="hidden max-w-[120px] truncate sm:inline">{me.nickname || me.full_name}</span>
               </button>
             ) : null}
           </div>

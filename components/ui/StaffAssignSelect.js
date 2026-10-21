@@ -1,13 +1,15 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { can, FIELD_PERM } from '../../lib/core';
 import { PersonName } from './Shared';
 
-export function StaffAssignSelect({ value, names, placeholder, onChange }) {
+export function StaffAssignSelect({ value, names, placeholder, onChange, team }) {
   const needsExtra = value && !names.includes(value);
 
   const stop = (e) => e.stopPropagation();
+
+  const labelOf = (n) => { const m = (team || []).find((x) => x.full_name === n); return (m && m.nickname) || n; };
 
   return (
     <select
@@ -19,10 +21,10 @@ export function StaffAssignSelect({ value, names, placeholder, onChange }) {
       className="text-[11px] rounded-md border border-white/10 bg-transparent px-1.5 py-0.5 text-zinc-300 outline-none w-full max-w-[150px] truncate transition focus:border-white/20 focus:bg-white/[0.03]"
     >
       <option value="" className="bg-[#121215]">{value ? '— Unassigned —' : placeholder}</option>
-      {needsExtra ? <option value={value} className="bg-[#121215]">{value}</option> : null}
+      {needsExtra ? <option value={value} className="bg-[#121215]">{labelOf(value)}</option> : null}
       {names.map((n) => (
         <option key={n} value={n} className="bg-[#121215]">
-          {n}
+          {labelOf(n)}
         </option>
       ))}
     </select>
@@ -49,6 +51,7 @@ export function StaffCell({ r, team, actor, patchRow, notify }) {
             names={names}
             placeholder="+ Assign"
             onChange={async (v) => { const ok = await patchRow(r.id, { [field]: v }); if (ok && notify) notify(v ? `${label.replace(/:$/, '')} → ${v}` : `${label.replace(/:$/, '')} cleared`, 'success'); }}
+            team={team}
           />
         </div>
       );
