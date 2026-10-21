@@ -206,7 +206,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **নতুন তথ্য (N44–N48):** `team_members`-এ `employee_id`, `phone`, `whatsapp` (সবই ঐচ্ছিক)। Employee ID শুধু ওনার ও ম্যানেজার বদলাতে পারেন (ম্যানেজারের নিজেরটা ওনার); ফোন ও WhatsApp সদস্য নিজেও বদলাতে পারেন। ডাটাবেস গার্ড `guard_team_members` সেই অনুযায়ী বদলানো (`sql/2026-10-21_team_contact_fields.sql`)। সদস্য যোগের ফর্ম, টিম প্যানেল ও প্রোফাইলে ঘর যোগ হয়েছে। ফুটারে "Directory" বাটন: সব সদস্য দেখতে পান (শুধু দেখা), খোঁজা যায়, ফোনে চাপলে কল ও WhatsApp লিংক খোলে।
 - **ডাকনাম (N49–N52):** `nickname` — ইংরেজি অক্ষরে এক শব্দ, ১–২০ অক্ষর, সংগঠনে ইউনিক (বড়-ছোট হাতের অক্ষর এক ধরা হয়) (`sql/2026-10-22_team_nickname.sql`)। নিজের প্রোফাইল ও টিম প্যানেলে লেখা যায়। রানডাউনের চিপ, ড্রপডাউন, ড্রয়ারের ক্রেডিট তালিকা ও হেডারে ডাকনাম দেখায়; না থাকলে পুরো নাম (আগের "নামের প্রথম শব্দ" নিয়ম বাদ)। সংরক্ষিত মান সবসময় পুরো নাম, তাই পুরনো কনটেন্ট ও হিস্ট্রি অক্ষত। টিম প্যানেল, ডিরেক্টরি, রিপোর্ট, হিস্ট্রি ও নোটিশে পুরো নাম থাকে। ডাটাবেসের ত্রুটি এখন "This nickname is already taken" ধরনের সহজ বার্তা হয়ে আসে।
 - **একই সময়ের SQL:** `can_idea`, `can_publish` (`sql/2026-10-21_team_idea_publish_roles.sql`) ডাটাবেসে আছে, অ্যাপ এখনো ব্যবহার করে না (পদ পুনর্গঠনের ধাপ গ-তে ব্যবহার হবে)।
-- **জানা ফাঁক:** `guard_team_members`-এ সাধারণ সদস্য নিজের পদের টিকগুলো (`can_write` ইত্যাদি) প্রযুক্তিগতভাবে বদলাতে পারেন; স্ক্রিনে সুযোগ নেই। আলাদা ছোট SQL-এ বন্ধ করা হবে।
+- **ফাঁক বন্ধ (N54, ২২ অক্টোবর):** `guard_team_members`-এ সাধারণ সদস্য এখন নিজের পদের ১৪টা টিকও (`can_write` থেকে `can_live_audio`, সাথে `can_idea`, `can_publish`) বদলাতে পারেন না; লাইভে পরীক্ষিত (`sql/2026-10-22_guard_role_ticks.sql`)।
 
 ## পরে করব
 - **ফুটার ঠিক করা (মালিকের পর্যবেক্ষণ, ২১ অক্টোবর):** ঠিক কী ভুল তা মালিক স্ক্রিনশটসহ জানাবেন; লঞ্চের পরে।
@@ -216,7 +216,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - ~~`services/exportService.js`-এর stub `downloadFullSystemBackup`~~ ✅ মুছে ফেলা হয়েছে (1876cdf)।
 - Drawer টুলটিপ "Let writers edit…" বদলাবে কিনা — সিদ্ধান্ত।
 - `StaffCell` প্রতি সারিতে নামের তালিকা নতুন করে বানায় (ছোট কাজ)।
-- DB পরিষ্কার: পুরনো ডুপ্লিকেট কলাম (writer_name, editor_name, script_body, raw_footage_url, presenter, publisher, script_locked) ও `team_members_legacy`; `channels.name` গ্লোবাল ইউনিক (N14-এর সময়); guard-এ skill-flag/নতুন কলামের নিয়ম।
+- DB পরিষ্কার: পুরনো ডুপ্লিকেট কলাম (writer_name, editor_name, script_body, raw_footage_url, presenter, publisher, script_locked) ও `team_members_legacy`; `channels.name` গ্লোবাল ইউনিক (N14-এর সময়); (guard-এ skill-flag/নতুন কলামের নিয়ম ✅ N54-এ হয়েছে)।
 - **স্ক্রিপ্ট ড্রাফটের গোপনীয়তা:** শেয়ার করা কম্পিউটারে লগআউটের পর আগের জনের ড্রাফট দেখা যেতে পারে — সিদ্ধান্ত।
 - `purgeOldDrafts`-এ নষ্ট ড্রাফট লুপের মাঝে মোছা (বিরল); কিছু ফাইলের শুরুতে অদৃশ্য BOM (ক্ষতিহীন)।
 - টেলিপ্রম্পটারে বোল্ড/হাইলাইট দেখানো; টেলিপ্রম্পটারে ক্লিকার (প্রেজেন্টেশন রিমোট) সমর্থন (open-tasks ঙ); রিচ এডিটর নতুন কনটেন্ট ফর্মে/লিস্ট/ইটালিক; Tiptap আপগ্রেড আলাদা কাজ।
