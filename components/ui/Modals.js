@@ -5,7 +5,7 @@ import { Icon, LockIcon } from './Icons';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Field, SelectBox, ModalShell, Toggle, FullScreenCard, BlurInput } from './Shared';
 import { RoleBadge, DesignationPill } from './Badges';
 import {
-  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LABEL,
+  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LIST, ROLE_LABEL,
   isManager, isOwner, can, toLocalInput, fromLocalInput, formatDay, formatTime, 
   SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays, sameDay, shortsInRange,
   normalizeRow
@@ -138,7 +138,7 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
         </Field>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="7 · Research & Script">
+          <Field label="7 · Research & Script Writer">
             <SelectBox value={f.writer} onChange={(v) => set('writer', v)} options={activeNames} placeholder="Select research & script" />
           </Field>
           <Field label="8 · Presenter">
@@ -575,9 +575,9 @@ function BulkScheduleModal({ onClose, team, channels, onAdd }) {
     }
   };
 
-  const activeWriters = team.filter(t => t.active !== false && (t.can_write || t.role === 'owner')).map(t => t.full_name);
-  const activePresenters = team.filter(t => t.active !== false && (t.can_present || t.role === 'owner' || t.can_camera)).map(t => t.full_name); // App uses activeNames typically
-  const activeEditors = team.filter(t => t.active !== false && (t.can_edit_video || t.role === 'owner')).map(t => t.full_name);
+  const activeWriters = team.filter(t => t.active !== false && (t.role_research_script_writer || t.role === 'owner')).map(t => t.full_name);
+  const activePresenters = team.filter(t => t.active !== false && (t.role_presenter || t.role === 'owner' || t.role_camera_operator)).map(t => t.full_name); // App uses activeNames typically
+  const activeEditors = team.filter(t => t.active !== false && (t.role_video_editor || t.role === 'owner')).map(t => t.full_name);
   
   // Actually, standard activeNames for everyone
   const activeNames = team.filter(t => t.active !== false).map(t => t.full_name);
@@ -608,7 +608,7 @@ function BulkScheduleModal({ onClose, team, channels, onAdd }) {
                 <th className="px-3 py-2 w-[120px]">Channel *</th>
                 <th className="px-3 py-2 w-[130px]">Type *</th>
                 <th className="px-3 py-2">Slug Name *</th>
-                <th className="px-3 py-2 w-[140px]">Research & Script</th>
+                <th className="px-3 py-2 w-[140px]">Research & Script Writer</th>
                 <th className="px-3 py-2 w-[140px]">Presenter</th>
                 <th className="px-3 py-2 w-[140px]">Video Editor</th>
                 <th className="px-3 py-2 w-[80px]">Actions</th>
@@ -827,22 +827,7 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
   );
 }
 
-const MY_WORK_ROLES = [
-  ['writer', 'Research & Script'],
-  ['presenter_name', 'Presenter'],
-  ['video_editor', 'Video Editor'],
-  ['camera_person', 'Cameraman'],
-  ['uploader', 'Publisher'],
-  ['idea_by', 'Idea'],
-  ['producer', 'Producer'],
-  ['vfx', 'Visual Effects'],
-  ['colorist', 'Colorist'],
-  ['light_designer', 'Light Design'],
-  ['sound_recordist', 'Sound Record'],
-  ['audio_mixer', 'Audio Mixing'],
-  ['video_switcher', 'Video Switch'],
-  ['live_audio', 'Live Audio Mixing'],
-];
+const MY_WORK_ROLES = ROLE_LIST.map((r) => [r.field, r.label]);
 
 function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
   const endExclusive = addDays(range.end, 1);
@@ -862,7 +847,7 @@ function MyWorkModal({ rows, rangeLabel, range, actor, onClose }) {
     return MY_WORK_ROLES.some(([field]) => r[field] === name);
   });
 
-  const roleTotals = { 'Research & Script': 0, Presenter: 0, 'Video Editor': 0, 'Cameraman': 0, Publisher: 0 };
+  const roleTotals = { 'Research & Script Writer': 0, Presenter: 0, 'Video Editor': 0, 'Camera Operator': 0, Publisher: 0 };
   const statusTotals = {};
   
   const getMyRoles = (r) => {
@@ -1048,22 +1033,7 @@ function EmployeeReportModal({ rows, range, team, orgId, onClose, onOpenContent 
       };
     });
 
-    const ALL_ROLES = [
-      { key: 'writer', label: 'Research & Script' },
-      { key: 'presenter_name', label: 'Presenter' },
-      { key: 'video_editor', label: 'Video Editor' },
-      { key: 'camera_person', label: 'Cameraman' },
-      { key: 'uploader', label: 'Publisher' },
-      { key: 'idea_by', label: 'Idea' },
-      { key: 'producer', label: 'Producer' },
-      { key: 'vfx', label: 'Visual Effects' },
-      { key: 'colorist', label: 'Colorist' },
-      { key: 'light_designer', label: 'Light Design' },
-      { key: 'sound_recordist', label: 'Sound Record' },
-      { key: 'audio_mixer', label: 'Audio Mixing' },
-      { key: 'video_switcher', label: 'Video Switch' },
-      { key: 'live_audio', label: 'Live Audio' }
-    ];
+    const ALL_ROLES = ROLE_LIST.map((r) => ({ key: r.field, label: r.label }));
 
     validRows.forEach(r => {
       ALL_ROLES.forEach(roleDef => {

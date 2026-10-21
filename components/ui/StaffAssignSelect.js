@@ -34,9 +34,9 @@ export function StaffAssignSelect({ value, names, placeholder, onChange, team })
 export function StaffCell({ r, team, actor, patchRow, notify }) {
   const actorCan = actor && actor.active !== false;
 
-  const writers = team.filter((t) => t.can_write || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
+  const writers = team.filter((t) => t.role_research_script_writer || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
   const presenters = team.filter((m) => m.active !== false).map((m) => m.full_name);
-  const editors = team.filter((t) => t.can_edit_video || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
+  const editors = team.filter((t) => t.role_video_editor || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
 
   const renderLine = (field, label, names) => {
     const isEditable = actorCan && can(actor, FIELD_PERM[field]);
@@ -66,9 +66,9 @@ export function StaffCell({ r, team, actor, patchRow, notify }) {
     }
   };
 
-  const lineWriter = renderLine('writer', 'Research & Script:', writers);
+  const lineWriter = renderLine('writer', 'Script Writer:', writers);
   const linePresenter = renderLine('presenter_name', 'Presenter:', presenters);
-  const lineEditor = renderLine('video_editor', 'Video Edit:', editors);
+  const lineEditor = renderLine('video_editor', 'Video Editor:', editors);
 
   if (!lineWriter && !linePresenter && !lineEditor) {
     return <span className="text-zinc-600 italic">Unassigned</span>;
