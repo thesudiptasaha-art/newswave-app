@@ -208,6 +208,15 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - **একই সময়ের SQL:** `can_idea`, `can_publish` (`sql/2026-10-21_team_idea_publish_roles.sql`) ডাটাবেসে আছে, অ্যাপ এখনো ব্যবহার করে না (পদ পুনর্গঠনের ধাপ গ-তে ব্যবহার হবে)।
 - **ফাঁক বন্ধ (N54, ২২ অক্টোবর):** `guard_team_members`-এ সাধারণ সদস্য এখন নিজের পদের ১৪টা টিকও (`can_write` থেকে `can_live_audio`, সাথে `can_idea`, `can_publish`) বদলাতে পারেন না; লাইভে পরীক্ষিত (`sql/2026-10-22_guard_role_ticks.sql`)।
 
+## ২২ অক্টোবর ২০২৬ (পদ ও অ্যাক্সেস পুনর্গঠন সম্পন্ন)
+- **কী হলো:** টিম প্যানেলের ২০টা মেশানো টগল এখন দুই ভাগ — ১৬টা Roles (কে কোন কাজ করেন; ক্রেডিট তালিকায় নাম আসে) ও ৮টা Access (কে কী করতে পারেন)। সব নাম ব্যক্তির পদ বা ক্রিয়া+বিষয়। ডাটাবেসের কলামও একই নামে (`role_…` ও `can_…`)।
+- **অ্যাপের কোড (শাখা `roles-rename`, মেইনে ফাস্ট-ফরওয়ার্ড মার্জ, শেষ কোড কমিট b8be752):** R1 কেন্দ্রীয় তালিকা (`lib/core.js`), R2 ড্রয়ারের ক্রেডিট, R3 মডাল ও StaffAssignSelect, R4 `app/page.js` ও এক্সপোর্ট, R5 টিম প্যানেল দুই ভাগে, R6 প্রোফাইলে নিজের Roles/Access (শুধু দেখা)।
+- **ডাটাবেস (এক রাতে, এক লেনদেনে; `sql/2026-10-22_roles_access_rename.sql`):** `team_members`-এর ২১টা কলামের নাম বদল ও নতুন `role_graphic_designer`, `role_voice_over_artist`; `contents`-এ `publisher`→`published_by`, `uploader`→`publisher`, `idea_by`→`concept_creator`, `camera_person`→`camera_operator`, `vfx`→`motion_graphics_designer`, `video_switcher`→`live_video_switcher`, `live_audio`→`live_audio_mixer`, নতুন `graphic_designer`, `voice_over_artist`; চার ফাংশন (guard_team_members, guard_contents_update, cascade_member_rename, notify_content_update) নতুন নামে। আগাম যাচাই ও পরের যাচাই-কোয়েরি পাস; আর কোনো ফাংশন, policy বা view-তে পুরনো নাম নেই।
+- **নোটিফিকেশনের লেখা (`sql/2026-10-22_notify_status_message.sql`):** স্ট্যাটাস বদলের বার্তা এখন "<নাম> moved <কনটেন্ট> from <পুরনো ধাপ> to <নতুন ধাপ>"। আগের "(by …)" দেখে মনে হতো ওই ব্যক্তি এডিটর অ্যাসাইন করেছেন।
+- **লাইভ পরীক্ষা:** টিম প্যানেল, Role সেভ, ড্রয়ারের ক্রেডিট, প্রোফাইল ও নোটিফিকেশন ঠিক কাজ করেছে।
+- **ডক্স:** `schema-reference.md` ও `schema-snapshot.md` নতুন নামে (N58, N59)।
+- **বাকি:** সদস্যদের Roles টিক ঠিক করা (Publisher আগের uploader থেকে, Concept Creator আগের Idea-র ভিত্তিতে ভরা হয়েছিল); "সহজ করার তালিকা" (`docs/open-tasks.md`)।
+
 ## পরে করব
 - **ফুটার ঠিক করা (মালিকের পর্যবেক্ষণ, ২১ অক্টোবর):** ঠিক কী ভুল তা মালিক স্ক্রিনশটসহ জানাবেন; লঞ্চের পরে।
 - **Employee Report (ও অন্য রিপোর্ট) পপ-আপ হিসেবে খোলা (মালিকের পর্যবেক্ষণ):** কোন কোন রিপোর্ট ও কীভাবে তা মালিক জানাবেন; লঞ্চের পরে।
@@ -216,7 +225,7 @@ Master documents live in docs/ in this repo. The Claude Project holds only a poi
 - ~~`services/exportService.js`-এর stub `downloadFullSystemBackup`~~ ✅ মুছে ফেলা হয়েছে (1876cdf)।
 - Drawer টুলটিপ "Let writers edit…" বদলাবে কিনা — সিদ্ধান্ত।
 - `StaffCell` প্রতি সারিতে নামের তালিকা নতুন করে বানায় (ছোট কাজ)।
-- DB পরিষ্কার: পুরনো ডুপ্লিকেট কলাম (writer_name, editor_name, script_body, raw_footage_url, presenter, publisher, script_locked) ও `team_members_legacy`; `channels.name` গ্লোবাল ইউনিক (N14-এর সময়); (guard-এ skill-flag/নতুন কলামের নিয়ম ✅ N54-এ হয়েছে)।
+- DB পরিষ্কার: পুরনো ডুপ্লিকেট কলাম (writer_name, editor_name, script_body, raw_footage_url, presenter, script_locked) ও `team_members_legacy`; `channels.name` গ্লোবাল ইউনিক (N14-এর সময়); (guard-এ skill-flag/নতুন কলামের নিয়ম ✅ N54-এ হয়েছে)।
 - **স্ক্রিপ্ট ড্রাফটের গোপনীয়তা:** শেয়ার করা কম্পিউটারে লগআউটের পর আগের জনের ড্রাফট দেখা যেতে পারে — সিদ্ধান্ত।
 - `purgeOldDrafts`-এ নষ্ট ড্রাফট লুপের মাঝে মোছা (বিরল); কিছু ফাইলের শুরুতে অদৃশ্য BOM (ক্ষতিহীন)।
 - টেলিপ্রম্পটারে বোল্ড/হাইলাইট দেখানো; টেলিপ্রম্পটারে ক্লিকার (প্রেজেন্টেশন রিমোট) সমর্থন (open-tasks ঙ); রিচ এডিটর নতুন কনটেন্ট ফর্মে/লিস্ট/ইটালিক; Tiptap আপগ্রেড আলাদা কাজ।
