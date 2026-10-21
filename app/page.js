@@ -37,14 +37,14 @@ function buildDemo() {
   const orgId = 'demo-org';
   const mk = (full_name, email, role, perms, gender = 'male') => {
     const nick = full_name.split(' ')[0];
-    return normalizeMember({ id: uid(), user_id: uid(), custom_uid: generateUserUID(), organization_id: orgId, full_name, nickname: nick, gender, email, role, active: true, can_write: true, can_edit_video: true, can_produce: true, can_camera: true, can_present: true, ...perms });
+    return normalizeMember({ id: uid(), user_id: uid(), custom_uid: generateUserUID(), organization_id: orgId, full_name, nickname: nick, gender, email, role, active: true, role_research_script_writer: true, role_video_editor: true, role_producer: true, role_camera_operator: true, role_presenter: true, ...perms });
   };
   const team = [
     mk('Rahim Uddin', 'owner@demo.com', 'owner', { designation: 'Editor-in-Chief' }),
     mk('Nusrat Jahan', 'nusrat@demo.com', 'manager', { designation: 'Head of Production' }, 'female'),
-    mk('Tanvir Ahmed', 'tanvir@demo.com', 'general', { can_edit_script: true, can_edit_metadata: true, designation: 'Senior Writer' }),
+    mk('Tanvir Ahmed', 'tanvir@demo.com', 'general', { can_write_edit_scripts: true, can_edit_content_details: true, designation: 'Senior Writer' }),
     mk('Sadia Islam', 'sadia@demo.com', 'general', { designation: 'Presenter' }, 'female'),
-    mk('Imran Hossain', 'imran@demo.com', 'general', { can_assign_editor: true, can_reschedule: true, can_change_presenter: true, can_change_channel: true, designation: 'Video Editor' }),
+    mk('Imran Hossain', 'imran@demo.com', 'general', { can_assign_video_editor: true, can_reschedule_content: true, can_assign_presenter: true, can_change_channel: true, designation: 'Video Editor' }),
   ];
   const today = startOfDay(new Date());
   const at = (h, m) => new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m).toISOString();
@@ -52,7 +52,7 @@ function buildDemo() {
     const base = (o) => normalizeRow({ id: uid(), organization_id: orgId, content_uid: makeContentUid(undefined, ++demoSeq), target_platforms: ['youtube', 'facebook'], ...o });
   const rows = [
     base({ content_type: 'EXPLAINER', channel: 'The Wave Money', slug_name: 'BUDGET BREAKDOWN FISCAL YEAR', title: 'Budget Breakdown: What Changes This Fiscal Year', thumbnail_text: 'WHAT CHANGES?', writer: 'Tanvir Ahmed', presenter_name: 'Nusrat Jahan', scheduled_publish_time: at(10, 0), status: 'Script Submitted', script: 'Opening line.\n\nThis year’s budget reshapes how households plan spending.\n\nThree things matter: taxes, subsidies, and interest rates.' }),
-    base({ content_type: 'PACKAGE', channel: 'The Wave 24', slug_name: 'CITY FLOOD RELIEF', title: 'City Flood Relief Operations', thumbnail_text: 'RELIEF ON THE GROUND', writer: 'Tanvir Ahmed', presenter_name: 'Rahim Uddin', camera_person: 'Karim', scheduled_publish_time: at(13, 30), status: 'Ready for Shoot', script: 'Relief teams are moving through the worst-hit districts.' }),
+    base({ content_type: 'PACKAGE', channel: 'The Wave 24', slug_name: 'CITY FLOOD RELIEF', title: 'City Flood Relief Operations', thumbnail_text: 'RELIEF ON THE GROUND', writer: 'Tanvir Ahmed', presenter_name: 'Rahim Uddin', camera_operator: 'Karim', scheduled_publish_time: at(13, 30), status: 'Ready for Shoot', script: 'Relief teams are moving through the worst-hit districts.' }),
     base({ content_type: 'SOT', channel: 'The Wave Sports', slug_name: 'CAPTAIN POST MATCH', title: 'Captain’s Post-Match Reaction', thumbnail_text: 'HE SAID WHAT?', writer: 'Sadia Islam', presenter_name: 'Imran Hossain', scheduled_publish_time: at(16, 0), status: 'Shooting', script: '' }),
     base({ content_type: 'PACKAGE', channel: 'The Wave Life', slug_name: 'STREET FOOD TOUR', title: 'Old Dhaka Street Food Tour', thumbnail_text: 'MUST TRY', writer: 'Sadia Islam', presenter_name: 'Sadia Islam', video_editor: 'Imran Hossain', scheduled_publish_time: at(18, 0), status: 'Editing', script: 'Welcome to the lanes of Old Dhaka.', master_export_url: '' }),
     base({ content_type: 'LIVE', channel: 'The Wave Faith', slug_name: 'FRIDAY SERMON LIVE', title: 'Friday Sermon — Live', thumbnail_text: 'LIVE NOW', writer: 'Tanvir Ahmed', presenter_name: 'Rahim Uddin', scheduled_publish_time: at(12, 30), status: 'Published', published_at: at(12, 40), script: '' }),
@@ -504,7 +504,7 @@ function ScheduleCell({ row, actor, onSchedule }) {
   const [when, setWhen] = useState('');
   const [busy, setBusy] = useState(false);
   const held = row.status === 'On Hold';
-  const allowed = held ? isManager(actor) : can(actor, 'can_reschedule');
+  const allowed = held ? isManager(actor) : can(actor, 'can_reschedule_content');
   return (
     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
       <input
@@ -949,7 +949,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       if (current.id === 'revise') patch.revisions = [...fresh.revisions, { note: reason, actor: actor.full_name, role: actor.role, time: now }];
       if (current.to === 'Published') {
         patch.published_at = now;
-        patch.publisher = actor.full_name;
+        patch.published_by = actor.full_name;
       }
       const ok = await patchRow(fresh.id, patch, true);
       if (ok) notify(`${fresh.slug_name || fresh.title || 'Content'} → ${current.to}`, 'success');
@@ -1265,12 +1265,12 @@ function NewsroomApp({ authUser, onSignOut }) {
         Slug: r.slug_name || '',
         Title: r.title || '',
         'Thumbnail Text': r.thumbnail_text || '',
-        Writer: r.writer || '',
+        'Research & Script Writer': r.writer || '',
         Presenter: r.presenter_name || '',
         'Video Editor': r.video_editor || '',
-        'Cameraman': r.camera_person || '',
+        'Camera Operator': r.camera_operator || '',
         Status: r.status,
-        Publisher: r.publisher || '',
+        'Published By': r.published_by || '',
         'Published At': r.published_at ? new Date(r.published_at).toLocaleString() : '',
         'Shelf ID': r.archive_shelf_id || '',
         Shorts: r.shorts.length,
@@ -1318,7 +1318,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       }
       if (full_name !== oldName) {
         /* Assignments are stored by name, so keep them pointing at this person. */
-        for (const col of ['writer', 'presenter_name', 'video_editor', 'camera_person']) {
+        for (const col of ['writer', 'presenter_name', 'video_editor', 'camera_operator']) {
           await supabase.from('contents').update({ [col]: full_name }).eq(col, oldName);
         }
       }
