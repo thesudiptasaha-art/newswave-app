@@ -282,6 +282,9 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
   const [email, setEmail] = useState('');
   const [designation, setDesignation] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
+  const [phone, setPhone] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [role, setRole] = useState('general');
   const [open, setOpen] = useState(null);
   const actorIsOwner = isOwner(actor);
@@ -306,12 +309,15 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
               className={btnPrimary}
               disabled={!name.trim()}
               onClick={async () => {
-                if (await onAdd({ full_name: name.trim(), email: email.trim(), role: actorIsOwner ? role : 'general', designation: designation.trim(), avatar_url: avatarUrl.trim() })) {
+                if (await onAdd({ full_name: name.trim(), email: email.trim(), role: actorIsOwner ? role : 'general', designation: designation.trim(), avatar_url: avatarUrl.trim(), employee_id: employeeId.trim(), phone: phone.trim(), whatsapp: whatsapp.trim() })) {
                   setName('');
                   setEmail('');
                   setRole('general');
                   setDesignation('');
                   setAvatarUrl('');
+                  setEmployeeId('');
+                  setPhone('');
+                  setWhatsapp('');
                 }
               }}
             >
@@ -321,6 +327,11 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input className={inputBase} placeholder="Designation / job title (optional)" value={designation} onChange={(e) => setDesignation(e.target.value)} />
             <input className={inputBase} placeholder="Avatar image link (optional)" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <input className={inputBase} placeholder="Employee ID (optional)" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
+            <input className={inputBase} placeholder="Official phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <input className={inputBase} placeholder="WhatsApp number (optional)" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
           </div>
           {!actorIsOwner ? <p className="mt-2 text-[12px] text-zinc-500">Only the Owner can assign the Manager role.</p> : null}
         </div>
@@ -361,6 +372,19 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
                       </Field>
                       <Field label="Avatar image link">
                         <BlurInput value={t.avatar_url} onCommit={(v) => onUpdate(t.id, { avatar_url: v.trim() || null })} placeholder="https://…" />
+                      </Field>
+                    </div>
+                  ) : null}
+                  {manageable ? (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <Field label="Employee ID">
+                        <BlurInput value={t.employee_id} onCommit={(v) => onUpdate(t.id, { employee_id: v.trim() || null })} placeholder="e.g. EMP-0123" />
+                      </Field>
+                      <Field label="Official phone">
+                        <BlurInput value={t.phone} onCommit={(v) => onUpdate(t.id, { phone: v.trim() || null })} placeholder="e.g. 01XXXXXXXXX" />
+                      </Field>
+                      <Field label="WhatsApp">
+                        <BlurInput value={t.whatsapp} onCommit={(v) => onUpdate(t.id, { whatsapp: v.trim() || null })} placeholder="e.g. 01XXXXXXXXX" />
                       </Field>
                     </div>
                   ) : null}

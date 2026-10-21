@@ -1093,7 +1093,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   /* ---------------- team writes ---------------- */
   const canManageMember = (t) => !!actor && t.role !== 'owner' && (isOwner(actor) || (actor.role === 'manager' && actor.active !== false && t.role === 'general'));
 
-  const addMember = async ({ full_name, email, role, designation, avatar_url }) => {
+  const addMember = async ({ full_name, email, role, designation, avatar_url, employee_id, phone, whatsapp }) => {
     if (!isManager(actor)) {
       notify('Only the Owner and Managers can add members', 'error');
       return false;
@@ -1103,7 +1103,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     PERMISSIONS.forEach((p) => {
       perms[p.key] = false;
     });
-    const payload = { organization_id: org.id, full_name, email: email || null, role: finalRole, active: true, designation: designation || null, avatar_url: avatar_url || null, ...perms };
+    const payload = { organization_id: org.id, full_name, email: email || null, role: finalRole, active: true, designation: designation || null, avatar_url: avatar_url || null, employee_id: employee_id || null, phone: phone || null, whatsapp: whatsapp || null, ...perms };
     let created = { id: uid(), user_id: uid(), ...payload };
     if (supabase) {
       const { data, error } = await supabase.from('team_members').insert(payload).select().single();
