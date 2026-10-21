@@ -839,21 +839,48 @@ function ProfileModal({ member, authEmail, onClose, onSave, onSignOut, onOpenMyW
         <Field label="New password" hint="leave empty to keep the current one">
           <input type="password" autoComplete="new-password" className={inputBase} value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
-        <div>
-          <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">Your access (set by your Manager)</div>
+        <div className="space-y-4">
           {full ? (
-            <p className="flex items-center gap-2 text-[13px] text-zinc-400">
-              <Icon name="shield" className="h-4 w-4 text-sky-400" /> {ROLE_LABEL[member.role]}s have full access.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {PERMISSIONS.map((p) => (
-                <div key={p.key} className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2 text-[13px]">
-                  {member[p.key] ? <Icon name="check" className="h-4 w-4 text-emerald-400" /> : <LockIcon message="Ask your Manager for this permission" className="h-4 w-4" />}
-                  <span className={member[p.key] ? 'text-zinc-200' : 'text-zinc-500'}>{p.label}</span>
-                </div>
-              ))}
+            <div>
+              <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">Your roles and access</div>
+              <p className="flex items-center gap-2 text-[13px] text-zinc-400">
+                <Icon name="shield" className="h-4 w-4 text-sky-400" /> {ROLE_LABEL[member.role]}s have full access and appear in every role list.
+              </p>
             </div>
+          ) : (
+            <>
+              <div>
+                <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">Your roles</div>
+                {ROLE_LIST.some((r) => member[r.key]) ? (
+                  <div className="flex flex-wrap gap-2">
+                    {ROLE_LIST.filter((r) => member[r.key]).map((r) => (
+                      <span key={r.key} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-[12px] text-emerald-200">
+                        <Icon name="check" className="h-3.5 w-3.5" /> {r.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-zinc-500">No roles assigned yet.</p>
+                )}
+              </div>
+              <div>
+                <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">Your access</div>
+                {[...new Set(ACCESS_LIST.map((a) => a.group))].map((g) => (
+                  <div key={g} className="mb-3">
+                    <div className="mb-1.5 text-[11px] text-zinc-500">{g}</div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {ACCESS_LIST.filter((a) => a.group === g).map((p) => (
+                        <div key={p.key} className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2 text-[13px]">
+                          {member[p.key] ? <Icon name="check" className="h-4 w-4 text-emerald-400" /> : <LockIcon message="Only the Owner and Managers can change this" className="h-4 w-4" />}
+                          <span className={member[p.key] ? 'text-zinc-200' : 'text-zinc-500'}>{p.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[12px] text-zinc-500">Only the Owner and Managers can change these.</p>
+            </>
           )}
         </div>
         {error ? <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p> : null}
