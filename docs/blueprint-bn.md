@@ -177,14 +177,16 @@ Drawer-এর ফুটারে পরের ধাপের বাটন ও D
 
 | পারমিশন | UI-তে নাম | কী খোলে |
 | --- | --- | --- |
-| `can_edit_script` | Edit script | স্ক্রিপ্ট লেখা, সেভ করা, Submit |
-| `can_edit_metadata` | Edit metadata | title, thumbnail text, writer, camera person, shelf ID, platform, caption, SEO keywords, hashtags |
-| `can_assign_editor` | Assign editor | video editor বাছা; Assign Editor থেকে Editing-এ নেওয়া |
-| `can_reschedule` | Reschedule | তারিখ ও সময় বদলানো; সময়হীন কনটেন্টে সময় বসানো |
-| `can_change_presenter` | Change presenter | presenter বদলানো |
-| `can_change_channel` | Change channel | চ্যানেল বদলানো |
-| `can_approve_script` | Approve script | জমা দেওয়া স্ক্রিপ্ট অনুমোদন বা ফেরত পাঠানো |
-| `can_review_video` | Review video | এডিট করা ভিডিও অনুমোদন বা Revision চাওয়া |
+| `can_write_edit_scripts` | Write & Edit Scripts | স্ক্রিপ্ট লেখা, সেভ করা, Submit |
+| `can_edit_content_details` | Edit Content Details | title, thumbnail text, writer, camera operator, shelf ID, platform, caption, SEO keywords, hashtags |
+| `can_assign_video_editor` | Assign Video Editor | video editor বাছা; Assign Editor থেকে Editing-এ নেওয়া |
+| `can_reschedule_content` | Reschedule Content | তারিখ ও সময় বদলানো; সময়হীন কনটেন্টে সময় বসানো |
+| `can_assign_presenter` | Assign Presenter | presenter বদলানো |
+| `can_change_channel` | Change Channel | চ্যানেল বদলানো |
+| `can_approve_scripts` | Approve Scripts | জমা দেওয়া স্ক্রিপ্ট অনুমোদন বা ফেরত পাঠানো |
+| `can_review_videos` | Review Videos | এডিট করা ভিডিও অনুমোদন বা Revision চাওয়া |
+
+**১৬টা রোল** (`team_members`-এ `role_...` নামের boolean কলাম): রোল পারমিশন নয়। রোল শুধু ঠিক করে কোন ব্যক্তি কোন ক্রেডিট তালিকায় (যেমন Presenter, Video Editor, Camera Operator) আসবেন। Owner ও Manager সব তালিকায় আপনাআপনি থাকেন। রোলগুলো: Research & Script Writer, Concept Creator, Producer, Presenter, Camera Operator, Light Designer, Sound Recordist, Voice Over Artist, Video Editor, Motion Graphics Designer, Graphic Designer, Colorist, Audio Mixer, Live Video Switcher, Live Audio Mixer, Publisher। রোল ও পারমিশন বদলাতে পারেন শুধু Owner ও Manager। পূর্ণ কলাম তালিকা `docs/schema-reference.md`-এ।
 
 **অন্যান্য নিয়ম:**
 

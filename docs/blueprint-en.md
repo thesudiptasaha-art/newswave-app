@@ -64,20 +64,22 @@ There are three roles, and eight switchable permissions that matter only for the
 
 | Permission | Label in the UI | What it unlocks | Fields it guards |
 | --- | --- | --- | --- |
-| `can_edit_script` | Edit script | Write and save the script; submit it | `script` |
-| `can_edit_metadata` | Edit metadata | Title, thumbnail text, writer, camera person, shelf ID, platforms, caption, SEO keywords, hashtags | those fields |
-| `can_assign_editor` | Assign editor | Choose the video editor; move Assign Editor to Editing | `video_editor` |
-| `can_reschedule` | Reschedule | Change scheduled date and publish time; schedule an unscheduled item | `scheduled_publish_time` |
-| `can_change_presenter` | Change presenter | Update the presenter | `presenter_name` |
-| `can_change_channel` | Change channel | Switch channel | `channel` |
-| `can_approve_script` | Approve script | Approve a submitted script or send it back | status step |
-| `can_review_video` | Review video | Approve an edited video or request a revision | status step |
+| `can_write_edit_scripts` | Write & Edit Scripts | Write and save the script; submit it | `script` |
+| `can_edit_content_details` | Edit Content Details | Title, thumbnail text, writer, camera operator, shelf ID, platforms, caption, SEO keywords, hashtags | those fields |
+| `can_assign_video_editor` | Assign Video Editor | Choose the video editor; move Assign Editor to Editing | `video_editor` |
+| `can_reschedule_content` | Reschedule Content | Change scheduled date and publish time; schedule an unscheduled item | `scheduled_publish_time` |
+| `can_assign_presenter` | Assign Presenter | Update the presenter | `presenter_name` |
+| `can_change_channel` | Change Channel | Switch channel | `channel` |
+| `can_approve_scripts` | Approve Scripts | Approve a submitted script or send it back | status step |
+| `can_review_videos` | Review Videos | Approve an edited video or request a revision | status step |
+
+**The 16 roles** (also boolean columns on `team_members`, named `role_...`): roles are not permissions. A role only decides in which credit list a person appears (for example Presenter, Video Editor, Camera Operator). Owners and Managers appear in every list. The roles are: Research & Script Writer, Concept Creator, Producer, Presenter, Camera Operator, Light Designer, Sound Recordist, Voice Over Artist, Video Editor, Motion Graphics Designer, Graphic Designer, Colorist, Audio Mixer, Live Video Switcher, Live Audio Mixer, Publisher. Only the Owner and Managers can change a member's roles and permissions. The full column list is in `docs/schema-reference.md`.
 
 Other rules that apply to people:
 
 - A script can be locked. Only a Manager or the Owner can lock or unlock it, and only they can edit a locked script.
 - Inactive members (the `active` flag off) cannot sign in to the app and every database check refuses them.
-- Every member has a name, designation (job title), photo and email. Changing a member's name updates their name inside existing contents (writer, presenter, editor, camera person) automatically.
+- Every member has a name, designation (job title), photo and email. Changing a member's name updates their name inside existing contents (all credit columns, such as writer, presenter, video editor and camera operator) automatically.
 - Members get in-app notifications when they are assigned a role on a content, when a content they work on changes status, and (Owner and Managers) when a script is submitted, a video needs review, or a content is ready to publish.
 
 **Acting as.** The Owner can pick another member in a selector and the interface behaves exactly as that member would see it (buttons and locked fields). This is a preview only: the database still sees the real signed-in Owner, so it never gives the Owner fewer rights and it is not a way to impersonate someone for real. Audit entries made while acting as another member currently carry that member's name, not the Owner's. A "(via Owner)" tag was proposed and is not built.
@@ -286,7 +288,7 @@ A schema `backup_20260930` holds a full copy of the data taken before the securi
 | --- | --- |
 | Identity | `id` (uuid), `content_uid`, `organization_id`, `content_type`, `status`, `previous_status` |
 | Planning | `slug_name`, `title`, `thumbnail_text`, `channel`, `scheduled_publish_time` (nullable), `published_at`, `publisher`, `target_platforms` (JSON array, default youtube and facebook) |
-| People (names as text) | `writer`, `presenter_name`, `video_editor`, `camera_person` |
+| People (names as text) | `writer`, `presenter_name`, `video_editor`, `camera_operator` |
 | Script | `script`, `is_script_locked` |
 | Assets | `raw_footage_link`, `project_file_url`, `master_export_url`, `live_video_url`, `archive_shelf_id` |
 | Social copy | `post_caption`, `seo_keywords`, `hashtags` |

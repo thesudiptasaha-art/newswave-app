@@ -22,7 +22,7 @@ It manages the entire lifecycle of broadcast and digital video content across a 
 
 - **12-Stage Editorial Pipeline:** `Idea Pitch` ➔ `Assigned` ➔ `Research & Scripting` ➔ `Script Review` ➔ `Script Approved` ➔ `Ready for Shoot` ➔ `Shooting` ➔ `Shoot Done` ➔ `Video Editing` ➔ `Ready for Review` ➔ `Approved & Ready` ➔ `Broadcast / Published`.
 - **Dynamic Content Types:** Explainer, Live, Recorded Live, SOT (Sound on Tape), Package, and Show.
-- **Granular Role-Based Access Control (RBAC):** Owner, Manager, and General roles with fine-grained capability ticks (`can_write`, `can_camera`, `can_edit_video`, `can_approve`, `can_edit_metadata`, `can_reschedule`, etc.).
+- **Granular Role-Based Access Control (RBAC):** Owner, Manager, and General roles with fine-grained capability ticks (8 access permissions such as `can_write_edit_scripts`, `can_approve_scripts` and `can_review_videos`, plus 16 `role_...` ticks that decide who appears in each credit list).
 - **Live Rundown & Parking Zone:**
   - **Rundown:** Shows all complete stories (Channel + Slug + Scheduled Time) sorted by broadcast schedule.
   - **Parking Zone:** Organizes unscheduled, incomplete, or on-hold content with smart missing-field indicators.
