@@ -25,13 +25,13 @@ export function Avatar({ member, name, size = 'h-6 w-6', text = 'text-[10px]' })
 export function PersonName({ name, team, hideDesignation }) {
   if (!name) return <span className="text-zinc-600">—</span>;
   const m = (team || []).find((x) => x.full_name === name);
-  
+  const shown = (m && m.nickname) || name;
+
   if (hideDesignation) {
-    const nick = m?.nickname || name.split(' ')[0];
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5" title={name}>
         <Avatar member={m} name={name} size="h-5 w-5" />
-        <span className="text-[11px] font-medium text-zinc-200">{nick}</span>
+        <span className="text-[11px] font-medium text-zinc-200">{shown}</span>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export function PersonName({ name, team, hideDesignation }) {
     <span className="flex items-center gap-2">
       <Avatar member={m} name={name} />
       <span className="flex min-w-0 flex-col items-start gap-0.5">
-        <span className="truncate text-zinc-200">{name}</span>
+        <span className="truncate text-zinc-200" title={name}>{shown}</span>
         {m && m.designation && !hideDesignation ? <DesignationPill designation={m.designation} /> : null}
       </span>
     </span>
