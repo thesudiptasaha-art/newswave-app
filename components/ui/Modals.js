@@ -5,7 +5,7 @@ import { Icon, LockIcon } from './Icons';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Field, SelectBox, ModalShell, Toggle, FullScreenCard, BlurInput } from './Shared';
 import { RoleBadge, DesignationPill } from './Badges';
 import {
-  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LIST, ROLE_LABEL,
+  DEFAULT_CHANNELS, CONTENT_TYPES, CONTENT_TYPE_HINT, PLATFORMS, PERMISSIONS, ROLE_LIST, ACCESS_LIST, ROLE_LABEL,
   isManager, isOwner, can, toLocalInput, fromLocalInput, formatDay, formatTime, 
   SLUG_MAX, normalizeSlugInput, pad, formatStamp, startOfDay, addDays, sameDay, shortsInRange,
   normalizeRow
@@ -399,19 +399,54 @@ function TeamModal({ team, actor, orgName, onClose, onAdd, onUpdate, onRemove, r
                       <Icon name="shield" className="h-4 w-4 text-sky-400" /> {t.role === 'owner' ? 'Owner' : 'Managers'} always have full access to every permission.
                     </p>
                   ) : (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {PERMISSIONS.map((p) => (
-                        <div key={p.key} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 text-[13px] text-zinc-200">
-                              {p.label}
-                              {!manageable ? <LockIcon message="You cannot change this person’s permissions" /> : null}
+                    <div className="space-y-5">
+                      {!manageable ? (
+                        <p className="flex items-center gap-2 text-[12px] text-zinc-500"><LockIcon message="You cannot change this person's roles or access" /> You cannot change this person's roles or access.</p>
+                      ) : null}
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Roles</div>
+                        <p className="mb-3 mt-1 text-[12px] text-zinc-500">The work this person does. They appear in the matching list on a content.</p>
+                        {[...new Set(ROLE_LIST.map((r) => r.group))].map((g) => (
+                          <div key={g} className="mb-3">
+                            <div className="mb-1.5 text-[11px] text-zinc-500">{g}</div>
+                            <div className="flex flex-wrap gap-2">
+                              {ROLE_LIST.filter((r) => r.group === g).map((r) => (
+                                <button
+                                  type="button"
+                                  key={r.key}
+                                  disabled={!manageable}
+                                  title={r.hint}
+                                  onClick={() => onUpdate(t.id, { [r.key]: !t[r.key] })}
+                                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] transition ${t[r.key] ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border-white/[0.1] bg-white/[0.03] text-zinc-400 hover:bg-white/[0.06]'} ${!manageable ? 'cursor-not-allowed opacity-60' : ''}`}
+                                >
+                                  {t[r.key] ? <Icon name="check" className="h-3.5 w-3.5" /> : null}
+                                  {r.label}
+                                </button>
+                              ))}
                             </div>
-                            <div className="text-[11px] text-zinc-500">{p.hint}</div>
                           </div>
-                          <Toggle on={t[p.key]} disabled={!manageable} onChange={(v) => onUpdate(t.id, { [p.key]: v })} />
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Access</div>
+                        <p className="mb-3 mt-1 text-[12px] text-zinc-500">What this person is allowed to do.</p>
+                        {[...new Set(ACCESS_LIST.map((a) => a.group))].map((g) => (
+                          <div key={g} className="mb-3">
+                            <div className="mb-1.5 text-[11px] text-zinc-500">{g}</div>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              {ACCESS_LIST.filter((a) => a.group === g).map((p) => (
+                                <div key={p.key} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5">
+                                  <div className="min-w-0">
+                                    <div className="text-[13px] text-zinc-200">{p.label}</div>
+                                    <div className="text-[11px] text-zinc-500">{p.hint}</div>
+                                  </div>
+                                  <Toggle on={t[p.key]} disabled={!manageable} onChange={(v) => onUpdate(t.id, { [p.key]: v })} />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {manageable ? (
