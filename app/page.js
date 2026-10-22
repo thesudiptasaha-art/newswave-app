@@ -3,7 +3,7 @@ import { purgeOldDrafts } from '../utils/scriptDraft';
 import { scriptToPlainText } from '../utils/scriptRich';
 import { isFeatureEnabled } from '../utils/features';
 import { playChime, unlockAudio } from '../utils/notifySound';
-import { APP_NAME, APP_CREDIT } from '../utils/constants';
+import { APP_NAME, APP_CREDIT, APP_COPYRIGHT, APP_CONTACT_EMAIL } from '../utils/constants';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, LockIcon } from '../components/ui/Icons';
@@ -1596,7 +1596,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1500px] px-5 py-6">
+      <main className="mx-auto max-w-[1500px] px-5 py-6 pb-28 sm:pb-24">
         <div className="mb-4 relative flex flex-col items-center">
           <h1 className="text-[22px] font-semibold tracking-tight text-white text-center">RUNDOWN</h1>
           <div className="w-full flex justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2">
@@ -1887,8 +1887,16 @@ function NewsroomApp({ authUser, onSignOut }) {
 
       </main>
 
-      <footer className="mx-auto max-w-[1500px] px-5 pb-10 pt-2">
-        <div className="border-t border-white/[0.06] pt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-white/[0.08] bg-black/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1500px] flex-col items-center justify-center gap-0.5 px-4 py-1.5 text-center text-[10px] leading-snug text-zinc-500 sm:flex-row sm:gap-3 sm:text-[11px]">
+          <span>{APP_CREDIT}</span>
+          <span className="hidden sm:inline" aria-hidden="true">|</span>
+          <span>
+            {APP_COPYRIGHT}
+            {' \u00B7 '}
+            <a href={`mailto:${APP_CONTACT_EMAIL}`} className="underline-offset-2 hover:underline">{APP_CONTACT_EMAIL}</a>
+          </span>
+        </div>
       </footer>
       {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} platforms={platforms} onAddPlatform={() => setShowAddPlatform(true)} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
       
@@ -1908,7 +1916,7 @@ function NewsroomApp({ authUser, onSignOut }) {
 
         {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
       <button
-        className={`${btnPrimary} fixed bottom-5 right-5 z-40 !h-14 !w-14 !rounded-full !p-0 shadow-2xl shadow-black/50 sm:!w-auto sm:!px-5`}
+        className={`${btnPrimary} fixed bottom-16 sm:bottom-14 right-5 z-40 !h-14 !w-14 !rounded-full !p-0 shadow-2xl shadow-black/50 sm:!w-auto sm:!px-5`}
         onClick={() => setShowNew(true)}
         title="New Content"
         aria-label="New Content"

@@ -50,4 +50,6 @@ export const ALL_STATUSES = Object.keys(STATUS_META);
 
 export const APP_NAME = 'WaveDesk';
 export const APP_CREDIT = 'Programmer, Developer, Architect, Product Manager — Sudipta Shaha';
+export const APP_COPYRIGHT = '\u00A9 2026 Sudipta Shaha';
+export const APP_CONTACT_EMAIL = 'sudipto.pro.i@gmail.com';
 export const SCRIPT_WORDS_PER_MINUTE = 130;
