@@ -27,7 +27,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim() || !body.trim()) {
-      setError('শিরোনাম এবং বিবরণ উভয়ই আবশ্যক');
+      setError('Title and details are both required');
       return;
     }
     setError('');
@@ -44,10 +44,10 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
         setPriority('normal');
         setShowForm(false);
       } else {
-        setError('নোটিশ পোস্ট করতে ব্যর্থ হয়েছে।');
+        setError('Could not post the notice.');
       }
     } catch (err) {
-      setError(err?.message || 'নোটিশ পোস্ট করতে ব্যর্থ হয়েছে।');
+      setError(err?.message || 'Could not post the notice.');
     } finally {
       setPosting(false);
     }
@@ -125,8 +125,8 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
   return (
     <>
       <ModalShell
-      title="নোটিশ বোর্ড (Notice Board)"
-      subtitle="স্টেশনের সম্পাদকীয় ও অফিশিয়াল নির্দেশনাবলী"
+      title="Notice Board"
+      subtitle="Editorial and official instructions for the station"
       wide
       onClose={onClose}
     >
@@ -136,7 +136,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                কর্তৃপক্ষ প্যানেল
+                Workspace Management
               </span>
               <button
                 type="button"
@@ -147,7 +147,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                 }}
               >
                 <Icon name={showForm ? 'x' : 'plus'} className="h-3.5 w-3.5" />
-                {showForm ? 'বাতিল করুন' : '+ নতুন নোটিশ দিন'}
+                {showForm ? 'Cancel' : '+ New notice'}
               </button>
             </div>
 
@@ -157,7 +157,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                   <input
                     type="text"
                     className={inputBase + ' flex-1 text-[13px]'}
-                    placeholder="নোটিশের শিরোনাম..."
+                    placeholder="Notice title..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     maxLength={100}
@@ -168,15 +168,15 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
                   >
-                    <option value="normal">সাধারণ (Normal)</option>
-                    <option value="urgent">জরুরি (Urgent)</option>
-                    <option value="info">তথ্য (Info)</option>
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="info">Info</option>
                   </select>
                 </div>
 
                 <textarea
                   className={inputBase + ' text-[13px] min-h-[90px] leading-relaxed'}
-                  placeholder="নোটিশের বিস্তারিত বিবরণ লিখুন..."
+                  placeholder="Write the notice details..."
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   rows={4}
@@ -191,14 +191,14 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                     onClick={() => setShowForm(false)}
                     disabled={posting}
                   >
-                    বাতিল
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     className={btnPrimary + ' text-[12px]'}
                     disabled={posting}
                   >
-                    {posting ? 'পোস্ট হচ্ছে...' : 'প্রচার করুন (Post)'}
+                    {posting ? 'Posting...' : 'Post'}
                   </button>
                 </div>
               </form>
@@ -214,7 +214,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="নোটিশ খুঁজুন (আইডি যেমন NOTICE-20261012_001, শিরোনাম বা বিবরণ)..."
+              placeholder="Search notices (ID such as NOTICE-20261012_001, title or details)..."
               className={`${inputBase} !py-2 pl-9 pr-9 text-[13px]`}
             />
             {searchQuery && (
@@ -222,8 +222,8 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 transition p-1"
-                title="সার্চ মুছুন"
-                aria-label="সার্চ মুছুন"
+                title="Clear search"
+                aria-label="Clear search"
               >
                 <Icon name="x" className="h-3.5 w-3.5" />
               </button>
@@ -233,14 +233,14 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
           {searchQuery && (
             <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
               <span>
-                &ldquo;<span className="text-zinc-200 font-medium">{searchQuery}</span>&rdquo; সার্চে {filteredNotices.length}টি নোটিশ পাওয়া গেছে
+                {filteredNotices.length} {filteredNotices.length === 1 ? 'notice' : 'notices'} found for &ldquo;<span className="text-zinc-200 font-medium">{searchQuery}</span>&rdquo;
               </span>
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="text-sky-400 hover:underline cursor-pointer"
               >
-                সব নোটিশ দেখুন
+                Show all notices
               </button>
             </div>
           )}
@@ -253,17 +253,17 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
               {searchQuery ? (
                 <div className="flex flex-col items-center gap-2">
                   <Icon name="search" className="h-6 w-6 text-zinc-600 mb-0.5" />
-                  <span>&ldquo;{searchQuery}&rdquo; দিয়ে কোনো নোটিশ পাওয়া যায়নি।</span>
+                  <span>No notice found for &ldquo;{searchQuery}&rdquo;.</span>
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="text-[12px] text-sky-400 hover:underline cursor-pointer mt-1"
                   >
-                    সার্চ রিসেট করুন
+                    Reset search
                   </button>
                 </div>
               ) : (
-                'বর্তমানে কোনো নোটিশ নেই।'
+                'There are no notices right now.'
               )}
             </div>
           ) : (
@@ -289,7 +289,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                             type="button"
                             onClick={() => handleCopyUid(n.notice_uid)}
                             className="group inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-emerald-400 border border-emerald-500/25 transition cursor-pointer"
-                            title="আইডি কপি করতে ক্লিক করুন"
+                            title="Click to copy the ID"
                           >
                             <span>{n.notice_uid}</span>
                             <Icon
@@ -297,7 +297,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
                               className="h-3 w-3 opacity-60 group-hover:opacity-100 transition"
                             />
                             {copiedUid === n.notice_uid && (
-                              <span className="text-[10px] text-emerald-300 font-sans font-normal">কপি হয়েছে!</span>
+                              <span className="text-[10px] text-emerald-300 font-sans font-normal">Copied!</span>
                             )}
                           </button>
                         )}
@@ -346,10 +346,10 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
     </ModalShell>
     {confirmId ? (
       <ConfirmDialog
-        title="নোটিশ মুছুন"
-        message="আপনি কি নিশ্চিত যে এই নোটিশটি মুছে ফেলতে চান?"
-        confirmLabel="মুছুন"
-        cancelLabel="বাতিল"
+        title="Delete notice"
+        message="Are you sure you want to delete this notice?"
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
         onCancel={() => setConfirmId(null)}
         onConfirm={() => { const id = confirmId; setConfirmId(null); runDelete(id); }}
       />

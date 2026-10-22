@@ -517,7 +517,7 @@ const errText = (e) => {
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
-/* Header menu: the small list that holds theme, Directory, Authority and KPI. */
+/* Header menu: the small list that holds theme, Directory, Workspace Management and KPI. */
 function HeaderMenu({ theme, onToggleTheme, onDirectory, onAuthority, onKpi }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
@@ -559,7 +559,7 @@ function HeaderMenu({ theme, onToggleTheme, onDirectory, onAuthority, onKpi }) {
           </button>
           {onAuthority ? (
             <button className={itemCls} onClick={run(onAuthority)}>
-              <Icon name="shield" /> কর্তৃপক্ষ
+              <Icon name="shield" /> Workspace Management
             </button>
           ) : null}
           {onKpi ? (
@@ -876,7 +876,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notices', filter: `organization_id=eq.${org.id}` }, (payload) => {
         if (payload.eventType === 'INSERT' && isFeatureEnabled('notif_sound') && payload.new?.author_id !== actorIdRef.current) {
           playChime();
-          notify(`নতুন নোটিশ: ${payload.new?.title || ''}`, 'info');
+          notify(`New notice: ${payload.new?.title || ''}`, 'info');
         }
         loadNotices();
       })
@@ -893,14 +893,14 @@ function NewsroomApp({ authUser, onSignOut }) {
       title,
       body,
       authorId: actor.id,
-      authorName: actor.full_name || 'Authority',
+      authorName: actor.full_name || 'Workspace Management',
       priority,
     });
     if (error) {
-      notify('নোটিশ পোস্ট করতে ব্যর্থ: ' + errText(error), 'error');
+      notify('Could not post the notice: ' + errText(error), 'error');
       return false;
     }
-    notify('নতুন নোটিশ সফলভাবে প্রচার করা হয়েছে!', 'success');
+    notify('The notice has been posted.', 'success');
     loadNotices();
     return true;
   };
@@ -908,10 +908,10 @@ function NewsroomApp({ authUser, onSignOut }) {
   const handleDeleteNotice = async (noticeId) => {
     const { error } = await deleteNotice(noticeId);
     if (error) {
-      notify('নোটিশ মুছতে ব্যর্থ: ' + errText(error), 'error');
+      notify('Could not delete the notice: ' + errText(error), 'error');
       return;
     }
-    notify('নোটিশ মুছে ফেলা হয়েছে', 'info');
+    notify('The notice was deleted', 'info');
     loadNotices();
   };
 
@@ -1490,11 +1490,11 @@ function NewsroomApp({ authUser, onSignOut }) {
                     setUnreadNoticesCount(0);
                   } catch (e) {}
                 }}
-                title="স্টেশন নোটিশ বোর্ড"
-                aria-label="স্টেশন নোটিশ বোর্ড"
+                title="Station notice board"
+                aria-label="Station notice board"
               >
                 <Icon name="board" />
-                <span className="hidden sm:inline">নোটিশ</span>
+                <span className="hidden sm:inline">Notices</span>
                 {unreadNoticesCount > 0 ? (
                   <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-black">
                     {unreadNoticesCount}
@@ -1904,7 +1904,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         />
       ) : null}
             {showAuthority ? (
-        <ModalShell onClose={() => setShowAuthority(false)} title="কর্তৃপক্ষ">
+        <ModalShell onClose={() => setShowAuthority(false)} title="Workspace Management">
           <div className="flex flex-col gap-5 p-4 max-h-[75vh] overflow-y-auto">
               
               <div className="flex flex-col gap-2">
