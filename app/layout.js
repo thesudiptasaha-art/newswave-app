@@ -146,6 +146,7 @@ const lightCss = `
   html.light [class~="border-white/[0.06]"] { border-color: rgba(105, 85, 60, 0.10); }
   html.light [class~="border-white/[0.08]"] { border-color: rgba(105, 85, 60, 0.13); }
   html.light [class~="border-white/[0.1]"], html.light [class~="border-white/10"] { border-color: rgba(105, 85, 60, 0.16); }
+  html.light [class~="border-white/[0.14]"] { border-color: rgba(105, 85, 60, 0.24); }
   html.light [class~="border-white/[0.15]"] { border-color: rgba(105, 85, 60, 0.22); }
   html.light [class~="ring-white/10"] { --tw-ring-color: rgba(105, 85, 60, 0.16); }
   html.light [class~="to-white/[0.16]"] { --tw-gradient-to: rgb(90 75 55 / 0.16) var(--tw-gradient-to-position); }

@@ -1639,7 +1639,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                     key={item.key}
                     onClick={() => setSelectedId(r.id)}
                     style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
-                    className="row-in cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]"
+                    className="row-in cursor-pointer border-b border-white/[0.14] transition last:border-0 hover:bg-white/[0.04]"
                   >
                     <td className="whitespace-nowrap px-3 py-2 border-r border-white/5 tabular-nums text-zinc-300 align-top">
                       <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
@@ -1736,7 +1736,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                   }
                   const r = item.row;
                   return (
-                     <tr key={item.key} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] hover:bg-white/[0.04]">
+                     <tr key={item.key} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.14] hover:bg-white/[0.04]">
                         <td className="px-3 py-3 align-top border-r border-white/5 relative w-[40%]">
                            <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                            <div className="flex flex-col gap-2 pl-1">
@@ -1794,7 +1794,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               </thead>
               <tbody>
                 {parked.map((r) => (
-                  <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.04]">
+                  <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.14] transition last:border-0 hover:bg-white/[0.04]">
                     <td className="max-w-[220px] px-4 py-2">
                       {r.status === 'On Hold' ? (
                           <>
@@ -1846,7 +1846,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               </thead>
               <tbody>
                  {parked.map((r) => (
-                       <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.04] hover:bg-white/[0.04]">
+                       <tr key={r.id} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.14] hover:bg-white/[0.04]">
                           <td className="px-3 py-3 align-top border-r border-white/5 relative w-[40%]">
                              <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                              <div className="flex flex-col gap-2 pl-1">
