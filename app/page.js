@@ -15,6 +15,7 @@ import { Drawer, DeleteModal } from '../components/ui/Drawer';
 import { StaffCell } from '../components/ui/StaffAssignSelect';
 import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal, DirectoryModal } from '../components/ui/Modals';
 import { NoticeModal } from '../components/ui/NoticeModal';
+import { HowItWorksModal } from '../components/ui/HowItWorksModal';
 import { fetchNotices, createNotice, deleteNotice } from '../services/noticeService';
 
 import {
@@ -518,7 +519,7 @@ const errText = (e) => {
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 /* Header menu: the small list that holds theme, Directory, Workspace Management and KPI. */
-function HeaderMenu({ theme, onToggleTheme, onDirectory, onAuthority, onKpi }) {
+function HeaderMenu({ theme, onToggleTheme, onDirectory, onAuthority, onKpi, onHelp }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -557,6 +558,11 @@ function HeaderMenu({ theme, onToggleTheme, onDirectory, onAuthority, onKpi }) {
           <button className={itemCls} onClick={run(onDirectory)}>
             <Icon name="users" /> Directory
           </button>
+          {onHelp ? (
+            <button className={itemCls} onClick={run(onHelp)}>
+              <Icon name="info" /> How it works
+            </button>
+          ) : null}
           {onAuthority ? (
             <button className={itemCls} onClick={run(onAuthority)}>
               <Icon name="shield" /> Workspace Management
@@ -625,6 +631,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     const [showBackup, setShowBackup] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
   const [showDirectory, setShowDirectory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
     const [theme, setTheme] = useState('dark');
   useEffect(() => {
     try {
@@ -671,6 +678,21 @@ function NewsroomApp({ authUser, onSignOut }) {
   const switcherOn = !authId || isOwner(me);
   const actor = useMemo(() => (authId && !isOwner(me) ? me : team.find((m) => m.id === actorId) || null), [team, actorId, authId, me]);
   actorIdRef.current = actor?.id ?? null;
+
+  const closeHelp = () => {
+    setShowHelp(false);
+    try {
+      window.localStorage.setItem('wd-help-seen', '1');
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    try {
+      if (me && window.localStorage.getItem('wd-help-seen') !== '1') {
+        setShowHelp(true);
+      }
+    } catch (e) {}
+  }, [me && me.id]);
 
   const notify = useCallback((msg, tone = 'info') => {
     setToast({ msg, tone });
@@ -1370,6 +1392,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       else if (showAddPlatform) setShowAddPlatform(false);
       else if (showTeam) setShowTeam(false);
       else if (showDirectory) setShowDirectory(false);
+      else if (showHelp) closeHelp();
       else if (showKpi) setShowKpi(false);
       else if (showBin) setShowBin(false);
       else if (showNotices) setShowNotices(false);
@@ -1377,7 +1400,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showDirectory, showKpi, showBin, showNotices, selectedId]);
+  }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showDirectory, showHelp, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
   const saveProfile = async ({ full_name, designation, avatar_url, phone, whatsapp, employee_id, nickname }) => {
     if (!me) return false;
@@ -1516,6 +1539,7 @@ function NewsroomApp({ authUser, onSignOut }) {
               theme={theme}
               onToggleTheme={toggleTheme}
               onDirectory={() => setShowDirectory(true)}
+              onHelp={() => setShowHelp(true)}
               onAuthority={isManager(actor) || isOwner(actor) ? () => setShowAuthority(true) : null}
               onKpi={isManager(actor) ? () => setShowKpi(true) : null}
             />
@@ -1987,6 +2011,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       {showAddPlatform ? <AddPlatformModal existing={platforms} onClose={() => setShowAddPlatform(false)} onAdd={addPlatform} /> : null}
       {showTeam ? <TeamModal team={team} actor={actor} orgName={org ? org.name : ''} onClose={() => setShowTeam(false)} onAdd={addMember} onUpdate={updateMember} onRemove={removeMember} /> : null}
       {showDirectory ? <DirectoryModal team={team} onClose={() => setShowDirectory(false)} /> : null}
+      {showHelp ? <HowItWorksModal onClose={closeHelp} /> : null}
       {confirmReq ? (
         <ConfirmDialog
           title={confirmReq.title}
