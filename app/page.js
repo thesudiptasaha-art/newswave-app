@@ -1755,7 +1755,7 @@ function NewsroomApp({ authUser, onSignOut }) {
             <h2 className="text-[22px] font-semibold tracking-tight text-white text-center">PARKING ZONE</h2>
             <div className="w-full flex justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2">
             <div className="flex items-center gap-3">
-              <button className={`${btnGhost} !py-1 !px-3 !text-[12px] ${bin.length === 0 ? 'opacity-60' : ''}`} onClick={() => setShowBin(true)}>
+              <button className={`${btnGhost} !py-1 !px-3 !text-[12px] ${bin.length === 0 ? 'opacity-60' : ''}`} onClick={() => setShowBin(true)} title="Dropped content that is missing a channel, slug, or date and time. Managers and the Owner can restore it.">
                 Bin ({bin.length})
               </button>
               <span className="text-[13px] text-zinc-500">
@@ -1764,6 +1764,9 @@ function NewsroomApp({ authUser, onSignOut }) {
             </div>
           </div>
           </div>
+          <p className="mb-3 text-center text-[12px] leading-snug text-zinc-500">
+            Content that cannot be on the rundown yet - it is On Hold, or still missing a channel, slug, or publish date and time. Set a new publish time to move it back to the rundown.
+          </p>
           <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
             <table className="w-full min-w-[1080px] text-left text-[13px]">
               <thead>
@@ -1781,13 +1784,13 @@ function NewsroomApp({ authUser, onSignOut }) {
                     <td className="max-w-[220px] px-4 py-2">
                       {r.status === 'On Hold' ? (
                           <>
-                            <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 ring-1 ring-inset ring-yellow-400/25">On hold</span>
+                            <span className="inline-flex items-center rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-medium text-yellow-300 ring-1 ring-inset ring-yellow-400/25" title="Paused on purpose. Managers and the Owner can resume it with a new publish time.">On hold</span>
                             {r.hold_reason ? <div className="mt-1 truncate text-[12px] text-zinc-500">{r.hold_reason}</div> : null}
                             {!isComplete(r) && <div className="mt-1 truncate text-[12px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>}
                           </>
                         ) : (
                           <>
-                            <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25">Incomplete</span>
+                            <span className="inline-flex items-center rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-medium text-zinc-300 ring-1 ring-inset ring-zinc-400/25" title="Missing a channel, slug, or publish date and time, so it is not on the rundown yet.">Incomplete</span>
                             <div className="mt-1 truncate text-[12px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>
                           </>
                         )}
@@ -1835,12 +1838,12 @@ function NewsroomApp({ authUser, onSignOut }) {
                              <div className="flex flex-col gap-2 pl-1">
                                 {r.status === 'On Hold' ? (
                                     <>
-                                      <span className="inline-flex items-center rounded-sm bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300 w-fit">On hold</span>
+                                      <span className="inline-flex items-center rounded-sm bg-yellow-500/15 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300 w-fit" title="Paused on purpose. Managers and the Owner can resume it with a new publish time.">On hold</span>
                                       {!isComplete(r) && <div className="text-[10px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>}
                                     </>
                                   ) : (
                                     <>
-                                      <span className="inline-flex items-center rounded-sm bg-zinc-500/15 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 w-fit">Incomplete</span>
+                                      <span className="inline-flex items-center rounded-sm bg-zinc-500/15 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 w-fit" title="Missing a channel, slug, or publish date and time, so it is not on the rundown yet.">Incomplete</span>
                                       <div className="text-[10px] text-zinc-500">Missing: {missingFields(r).join(', ')}</div>
                                     </>
                                   )}
