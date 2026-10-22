@@ -62,7 +62,7 @@ const globalCss = `
 const lightCss = `
   html.light { color-scheme: light; }
   html.light, html.light body { background: #f7f4ed; color: #28231d; }
-  html.light ::selection { background: rgba(85, 107, 47, 0.24); }
+  html.light ::selection { background: rgba(70, 90, 34, 0.26); }
   html.light ::-webkit-scrollbar-thumb { background: rgba(105, 85, 60, 0.22); background-clip: content-box; border: 2px solid transparent; }
   html.light ::-webkit-scrollbar-thumb:hover { background: rgba(105, 85, 60, 0.35); background-clip: content-box; border: 2px solid transparent; }
   html.light [class*="color-scheme:dark"] { color-scheme: light; }
@@ -101,25 +101,25 @@ const lightCss = `
   /* buttons: earthy olive green primary, earthy maroon red destructive */
   html.light [class~="bg-white"][class~="font-semibold"],
   html.light [class~="bg-white"][class~="font-bold"] {
-    background-color: #556b2f;
+    background-color: #465a22;
     color: #fdfdfa;
   }
   html.light [class~="bg-white"][class~="font-semibold"]:hover,
   html.light [class~="bg-white"][class~="font-semibold"][class~="hover:bg-zinc-200"]:hover,
   html.light [class~="bg-white"][class~="font-bold"]:hover {
-    background-color: #455a24;
+    background-color: #384a1b;
     color: #ffffff;
   }
   html.light [class~="bg-white"][class~="font-semibold"]:active,
   html.light [class~="bg-white"][class~="font-bold"]:active {
-    background-color: #384a1d;
+    background-color: #2d3b15;
   }
   html.light [class~="bg-sky-500"][class~="text-white"] {
-    background-color: #556b2f;
+    background-color: #465a22;
     color: #ffffff;
   }
   html.light [class~="bg-sky-500"][class~="text-white"]:hover {
-    background-color: #455a24;
+    background-color: #384a1b;
   }
   html.light [class~="bg-red-500"][class~="text-white"],
   html.light [class~="bg-red-600"][class~="text-white"] {
@@ -164,14 +164,14 @@ const lightCss = `
   html.light [class~="placeholder:text-zinc-600"]::placeholder { color: #a3988b; }
   html.light [class~="hover:text-white"]:hover { color: #1a1612; }
   html.light [class~="hover:text-zinc-300"]:hover { color: #28231d; }
-  html.light [class~="hover:text-sky-300"]:hover { color: #556b2f; }
+  html.light [class~="hover:text-sky-300"]:hover { color: #465a22; }
   html.light [class~="hover:text-red-400"]:hover { color: #802c2c; }
 
   /* colored text & chips: muted earthy tones */
-  html.light .text-sky-200, html.light .text-sky-300, html.light [class~="text-sky-300/80"] { color: #2d5a6a; }
-  html.light .text-sky-400 { color: #436d7d; }
-  html.light .text-emerald-200, html.light .text-emerald-300 { color: #3d5926; }
-  html.light .text-emerald-400 { color: #486a2e; }
+  html.light .text-sky-200, html.light .text-sky-300, html.light [class~="text-sky-300/80"] { color: #285a80; }
+  html.light .text-sky-400 { color: #3a6a92; }
+  html.light .text-emerald-200, html.light .text-emerald-300 { color: #3f5120; }
+  html.light .text-emerald-400 { color: #465a22; }
   html.light .text-amber-300, html.light [class~="text-amber-300/80"], html.light [class~="text-amber-400/80"] { color: #8c581c; }
   html.light .text-yellow-300, html.light .text-yellow-400 { color: #855212; }
   html.light .text-red-200, html.light .text-red-300, html.light .text-red-400 { color: #872b2b; }
@@ -180,6 +180,20 @@ const lightCss = `
   html.light .text-pink-300 { color: #8f3555; }
   html.light .text-orange-300 { color: #964718; }
   html.light .text-indigo-300 { color: #4a457a; }
+
+  /* status chips: muted earth tones */
+  html.light [class~="bg-zinc-500/15"] { background-color: #ece6da; }
+  html.light [class~="bg-red-500/15"] { background-color: #f0dcd9; }
+  html.light [class~="bg-amber-500/15"] { background-color: #f2dfb5; }
+  html.light .text-amber-500 { color: #8a5410; }
+  html.light [class~="bg-yellow-400/10"] { background-color: #f5efb5; }
+  html.light .text-yellow-200 { color: #6b5f00; }
+  html.light [class~="bg-emerald-500/15"] { background-color: #e1e7cc; }
+  html.light [class~="bg-sky-500/15"] { background-color: #dce8f3; }
+  html.light [class~="bg-zinc-950"] { background-color: #1c1814; }
+  html.light [class~="bg-zinc-950"][class~="text-zinc-300"] { color: #e9e2d6; }
+  html.light [class~="ring-zinc-400/25"], html.light [class~="ring-red-400/25"], html.light [class~="ring-amber-400/25"], html.light [class~="ring-yellow-300/25"], html.light [class~="ring-emerald-400/25"], html.light [class~="ring-sky-400/25"] { --tw-ring-color: rgba(105, 85, 60, 0.16); }
+  html.light [class~="ring-zinc-500/50"] { --tw-ring-color: #1c1814; }
   
   /* modal / form panels, drawer and inputs */
   html.light [class~="bg-[#121215]/90"] { background-color: rgba(251, 248, 242, 0.97) !important; }
@@ -190,7 +204,7 @@ const lightCss = `
   }
   html.light input:focus, html.light textarea:focus, html.light select:focus {
     background-color: #ffffff;
-    border-color: rgba(85, 107, 47, 0.6);
+    border-color: rgba(70, 90, 34, 0.6);
   }
 
   /* teleprompter: always black background and white text in both themes */
