@@ -1596,7 +1596,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1500px] px-5 py-6 pb-28 sm:pb-24">
+      <main className="mx-auto max-w-[1500px] px-5 py-6 pb-24 sm:pb-24">
         <div className="mb-4 relative flex flex-col items-center">
           <h1 className="text-[22px] font-semibold tracking-tight text-white text-center">RUNDOWN</h1>
           <div className="w-full flex justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2">
@@ -1888,9 +1888,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-white/[0.08] bg-black/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] flex-col items-center justify-center gap-0.5 px-4 py-1.5 text-center text-[10px] leading-snug text-zinc-500 sm:flex-row sm:gap-3 sm:text-[11px]">
-          <span>{APP_CREDIT}</span>
-          <span className="hidden sm:inline" aria-hidden="true">|</span>
+        <div className="mx-auto flex max-w-[1500px] items-center justify-center px-4 py-1.5 text-center text-[10px] leading-snug text-zinc-500 sm:text-[11px]">
           <span>
             {APP_COPYRIGHT}
             {' \u00B7 '}
@@ -1916,7 +1914,7 @@ function NewsroomApp({ authUser, onSignOut }) {
 
         {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
       <button
-        className={`${btnPrimary} fixed bottom-16 sm:bottom-14 right-5 z-40 !h-14 !w-14 !rounded-full !p-0 shadow-2xl shadow-black/50 sm:!w-auto sm:!px-5`}
+        className={`${btnPrimary} fixed bottom-12 sm:bottom-12 right-5 z-40 !h-14 !w-14 !rounded-full !p-0 shadow-2xl shadow-black/50 sm:!w-auto sm:!px-5`}
         onClick={() => setShowNew(true)}
         title="New Content"
         aria-label="New Content"
@@ -2227,7 +2225,7 @@ function NotificationBell({ memberId, onOpenContent }) {
 
   if (!memberId) return null;
   return (
-    <div ref={wrapRef} className="relative flex items-center gap-1">
+    <div ref={wrapRef} className="flex items-center gap-1 sm:relative">
       <button onClick={() => setOpen((o) => !o)} className={`${btnGhost} relative !px-3`} aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
           <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7zM10 20a2 2 0 0 0 4 0" />
@@ -2237,7 +2235,7 @@ function NotificationBell({ memberId, onOpenContent }) {
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-white/[0.1] bg-[#121215]/95 shadow-2xl shadow-black/70 backdrop-blur-2xl">
+        <div className="absolute inset-x-3 top-full z-50 mt-1 overflow-hidden sm:inset-x-auto sm:right-0 sm:mt-2 sm:w-[380px] rounded-2xl border border-white/[0.1] bg-[#121215]/95 shadow-2xl shadow-black/70 backdrop-blur-2xl">
           <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2">
             <span className="text-[14px] font-semibold text-white">Notifications</span>
             <button disabled={unread === 0} onClick={markAll} className="text-[12px] text-sky-400 hover:text-sky-300 disabled:text-zinc-600">
