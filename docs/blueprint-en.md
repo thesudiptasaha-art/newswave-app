@@ -369,8 +369,8 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 
 | Feature | How it works |
 | --- | --- |
-| Channels | Seven defaults are in code (The Wave 24, World, Money, Sports, Faith, Life, Glam). Owner and Managers can add more with + Channel; they are saved in the `channels` table per organization. |
-| Slug name | Required, forced to uppercase, up to 100 characters. It is the row's headline in the rundown. |
+| Channels | Seven defaults are in code (The Wave 24, World, Money, Sports, Faith, Life, Glam). Owner and Managers can add more from Menu > Workspace Management > Add channel; they are saved in the `channels` table per organization. |
+| Slug name | Required, English only (A-Z, 0-9, spaces and hyphens; other scripts such as Bengali are removed), forced to uppercase, up to 24 characters. It is the row's headline in the rundown. |
 | Notifications | Created by database triggers (section 6). The bell shows an unread count and updates live through Realtime. Clicking a notification opens that content. |
 | Live updates | Realtime on `contents`, `team_members` and `notifications`. |
 | KPI report | Modal for the current range: Total, Published, In progress (not Published, Dropped, On Hold or Draft), Past due (not Published or Dropped, publish time already passed), then counts by status, channel, type, presenter, writer and video editor. Parked items are not included. |
