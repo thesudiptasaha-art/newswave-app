@@ -490,10 +490,28 @@ function describeValue(field, v) {
 }
 
 const errText = (e) => {
-  const msg = e && e.message ? e.message : '';
+  const raw = e && e.message ? String(e.message) : '';
+  if (!raw) return 'Something went wrong. Please try again.';
+  const msg = raw.toLowerCase();
+  const has = (...parts) => parts.some((p) => msg.includes(p));
   if (msg.includes('team_members_nickname_unique')) return 'This nickname is already taken';
   if (msg.includes('team_members_nickname_one_word')) return 'Nickname must be one English word (letters only, up to 20)';
-  return msg || 'Something went wrong';
+  if (raw === 'Not allowed') return 'You are not allowed to do this.';
+  if (has('failed to fetch', 'networkerror', 'load failed', 'network request failed')) return 'No internet connection. Check your network and try again.';
+  if (has('jwt expired', 'invalid jwt', 'invalid refresh token', 'refresh token not found')) return 'Your session has expired. Please sign in again.';
+  if (has('invalid login credentials')) return 'Wrong email or password.';
+  if (has('email not confirmed')) return 'Please confirm your email first, then sign in.';
+  if (has('user already registered')) return 'This email already has an account. Try signing in.';
+  if (has('password should be at least')) return 'The password is too short.';
+  if (has('rate limit', 'too many requests')) return 'Too many attempts. Please wait a minute and try again.';
+  if (has('row-level security', 'permission denied')) return 'You do not have permission to do this.';
+  if (has('statement timeout', 'timed out')) return 'The server took too long. Please try again.';
+  if (has('duplicate key')) return has('email') ? 'A member with this email already exists.' : 'This already exists. Use a different name.';
+  if (has('foreign key')) return 'This item is linked to other data, so the change is not allowed.';
+  if (has('null value in column', 'violates not-null')) return 'A required field is empty.';
+  if (has('violates check constraint')) return 'One of the values is not allowed.';
+  if (has('value too long')) return 'A text is too long. Please shorten it.';
+  return raw;
 };
 
 /* ------------------------------------------------------------------ */
@@ -823,7 +841,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       priority,
     });
     if (error) {
-      notify('নোটিশ পোস্ট করতে ব্যর্থ: ' + error.message, 'error');
+      notify('নোটিশ পোস্ট করতে ব্যর্থ: ' + errText(error), 'error');
       return false;
     }
     notify('নতুন নোটিশ সফলভাবে প্রচার করা হয়েছে!', 'success');
@@ -834,7 +852,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const handleDeleteNotice = async (noticeId) => {
     const { error } = await deleteNotice(noticeId);
     if (error) {
-      notify('নোটিশ মুছতে ব্যর্থ: ' + error.message, 'error');
+      notify('নোটিশ মুছতে ব্যর্থ: ' + errText(error), 'error');
       return;
     }
     notify('নোটিশ মুছে ফেলা হয়েছে', 'info');
