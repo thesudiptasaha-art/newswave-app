@@ -1463,19 +1463,19 @@ function NewsroomApp({ authUser, onSignOut }) {
   return (
     <div className="min-h-screen bg-black text-zinc-100">
       <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-black/60 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-5 py-3">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[13px] font-bold text-black">N</div>
-            <div className="leading-tight">
-              <div className="text-[15px] font-semibold tracking-tight text-white">{APP_NAME}</div>
-              <div className="text-[11px] text-zinc-500">
+            <div className="min-w-0 leading-tight">
+              <div className="truncate text-[15px] font-semibold tracking-tight text-white">{APP_NAME}</div>
+              <div className="hidden text-[11px] text-zinc-500 sm:block">
                 {org ? org.name : ''} {supabase ? '' : '· demo mode'}
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className={`items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] py-1 pl-3 pr-1 ${switcherOn ? 'flex' : 'hidden'}`} title="Role simulation — switch who you are acting as to test permissions">
+          <div className="flex flex-1 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            <div className={`order-last basis-full sm:order-none sm:basis-auto items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] py-1 pl-3 pr-1 ${switcherOn ? 'flex' : 'hidden'}`} title="Role simulation — switch who you are acting as to test permissions">
               {actor ? <Avatar member={actor} size="h-6 w-6" /> : null}
               <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Acting as</span>
               <select
@@ -1498,10 +1498,6 @@ function NewsroomApp({ authUser, onSignOut }) {
                 </span>
               ) : null}
             </div>
-            
-            <button className={btnPrimary} onClick={() => setShowNew(true)}>
-              <Icon name="plus" /> New Content
-            </button>
             
             {isFeatureEnabled('notices') ? (
               <button
@@ -1573,12 +1569,6 @@ function NewsroomApp({ authUser, onSignOut }) {
               </select>
               <Icon name="chevronDown" className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
             </div>
-            <button
-              onClick={() => (isManager(actor) ? setShowAddChannel(true) : notify('Only the Owner and Managers can add channels', 'error'))}
-              className="flex items-center gap-1 whitespace-nowrap rounded-full border border-dashed border-white/[0.15] px-3 py-1.5 text-[12px] text-zinc-400 transition hover:text-white"
-            >
-              <Icon name={isManager(actor) ? 'plus' : 'lock'} className="h-3 w-3" /> Channel
-            </button>
           </div>
           <div className="flex items-center gap-2">
             <select
@@ -1917,6 +1907,15 @@ function NewsroomApp({ authUser, onSignOut }) {
         {showBackup ? <BackupModal onClose={() => setShowBackup(false)} /> : null}
 
         {bulkOpen ? <BulkScheduleModal onClose={() => setBulkOpen(false)} team={team} channels={channels} onAdd={createContent} /> : null}
+      <button
+        className={`${btnPrimary} fixed bottom-5 right-5 z-40 !h-14 !w-14 !rounded-full !p-0 shadow-2xl shadow-black/50 sm:!w-auto sm:!px-5`}
+        onClick={() => setShowNew(true)}
+        title="New Content"
+        aria-label="New Content"
+      >
+        <Icon name="plus" className="h-6 w-6 sm:h-4 sm:w-4" />
+        <span className="hidden sm:inline">New Content</span>
+      </button>
       {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
       {showNotices ? (
         <NoticeModal
@@ -2166,31 +2165,11 @@ function NotificationBell({ memberId, onOpenContent }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const soundEnabledRef = useRef(true);
 
   useEffect(() => {
     if (isFeatureEnabled('notif_sound')) unlockAudio();
-    try {
-      if (typeof window !== 'undefined') {
-        const val = window.localStorage.getItem('wd-sound');
-        if (val !== null) {
-          const b = val === 'true';
-          setSoundEnabled(b);
-          soundEnabledRef.current = b;
-        }
-      }
-    } catch(e) {}
   }, []);
-
-  const toggleSound = () => {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    soundEnabledRef.current = next;
-    try {
-      window.localStorage.setItem('wd-sound', String(next));
-    } catch(e) {}
-  };
 
   const load = useCallback(async () => {
     if (!supabase || !memberId) return;
@@ -2241,21 +2220,6 @@ function NotificationBell({ memberId, onOpenContent }) {
   if (!memberId) return null;
   return (
     <div ref={wrapRef} className="relative flex items-center gap-1">
-      {isFeatureEnabled('notif_sound') ? (
-        <button
-          onClick={toggleSound}
-          className={`${btnGhost} relative !px-2`}
-          title="Notification sound on/off"
-          aria-label="Notification sound on/off"
-          aria-pressed={soundEnabled}
-        >
-          {soundEnabled ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-zinc-400"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-zinc-400"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-          )}
-        </button>
-      ) : null}
       <button onClick={() => setOpen((o) => !o)} className={`${btnGhost} relative !px-3`} aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
           <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7zM10 20a2 2 0 0 0 4 0" />
