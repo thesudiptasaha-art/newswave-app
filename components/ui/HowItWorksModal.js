@@ -21,7 +21,7 @@ export function HowItWorksModal({ onClose }) {
             Where things are
           </h3>
           <p>
-            Rundown: all content for the selected dates. Click any row to open its details. Parking Zone: content that has no publish date, or is On Hold. Bin: dropped content. Bell: your own notifications. Menu (the three-line button): theme, Directory, Workspace Management and KPI.
+            Rundown: all content for the selected dates. Click any row to open its details. Parking Zone: content that has no publish date, or is On Hold. Bin: dropped content. Bell: your own notifications. Menu (the three-line button): theme, Directory, this guide and, for Managers and the Owner, management tools, reports and the database backup.
           </p>
         </div>
         <div>

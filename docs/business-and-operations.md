@@ -118,7 +118,7 @@ WaveDesk uses a modular feature-flagging pattern in [`utils/features.js`](utils/
    - Automatically scheduled cron job running `pg_dump` from the office PC/NAS to pull full schema and data snapshots.
    - Rotated with 30-day retention.
 2. **On-Demand JSON Backup:**
-   - Available directly inside the app for Station Managers via `Menu ➔ Workspace Management ➔ Data ➔ Backup`.
+   - Available directly inside the app for Station Managers via `Menu ➔ Database Backup`.
    - Generates deterministic, ID-ordered JSON export across all 5 tables (`organizations`, `team_members`, `channels`, `contents`, `notifications`).
 3. **Rollback Strategy:**
    - Any database schema migration is written in `sql/YYYY-MM-DD_<name>.sql` accompanied by a verified rollback block.

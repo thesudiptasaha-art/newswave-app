@@ -369,7 +369,7 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 
 | Feature | How it works |
 | --- | --- |
-| Channels | Seven defaults are in code (The Wave 24, World, Money, Sports, Faith, Life, Glam). Owner and Managers can add more from Menu > Workspace Management > Add channel; they are saved in the `channels` table per organization. |
+| Channels | Seven defaults are in code (The Wave 24, World, Money, Sports, Faith, Life, Glam). Owner and Managers can add more from Menu > Add channel; they are saved in the `channels` table per organization. |
 | Slug name | Required, English only (A-Z, 0-9, spaces and hyphens; other scripts such as Bengali are removed), forced to uppercase, up to 24 characters. It is the row's headline in the rundown. |
 | Status chip colours | The chip colour shows the phase. Grey: Draft and Script Submitted. Red: Ready for Shoot, Shooting and Re-Shoot. Golden yellow: Assign Editor, Editing and Video Review. Green: Ready to Publish. Blue: Published. Pale yellow: On Hold. Black: Dropped. The colours are defined once in `STATUS_META` (`lib/core.js` and `utils/constants.js`); the light theme tones are in `app/layout.js`. |
 | Notifications | Created by database triggers (section 6). The bell shows an unread count and updates live through Realtime. Clicking a notification opens that content. |

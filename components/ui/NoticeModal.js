@@ -136,7 +136,7 @@ export function NoticeModal({ notices = [], actor, onClose, onPostNotice, onDele
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                Workspace Management
+                Manage notices
               </span>
               <button
                 type="button"

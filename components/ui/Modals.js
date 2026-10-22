@@ -1449,7 +1449,7 @@ export function BackupModal({ onClose }) {
   };
 
   return (
-    <ModalShell title="Data Backup" subtitle="Export your workspace data" onClose={onClose}>
+    <ModalShell title="Database Backup" subtitle="Export your workspace data" onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="text-zinc-400 text-sm">
           <Icon name="info" className="inline-block mr-1.5 h-4 w-4 text-sky-400" />
