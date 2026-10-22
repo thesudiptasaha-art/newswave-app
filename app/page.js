@@ -517,6 +517,62 @@ const errText = (e) => {
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
+/* Header menu: the small list that holds theme, Directory, Authority and KPI. */
+function HeaderMenu({ theme, onToggleTheme, onDirectory, onAuthority, onKpi }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const run = (fn) => () => {
+    setOpen(false);
+    fn();
+  };
+  const itemCls = 'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-zinc-200 transition hover:bg-white/[0.06]';
+
+  return (
+    <div className="relative" ref={wrapRef}>
+      <button className={`${btnGhost} !px-2.5`} onClick={() => setOpen((v) => !v)} title="Menu" aria-label="Menu" aria-expanded={open}>
+        <Icon name="menu" />
+      </button>
+      {open ? (
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/[0.1] bg-[#121215]/95 p-1.5 shadow-2xl shadow-black/70 backdrop-blur-2xl">
+          <button className={itemCls} onClick={run(onToggleTheme)}>
+            <Icon name={theme === 'light' ? 'moon' : 'sun'} /> {theme === 'light' ? 'Dark theme' : 'Light theme'}
+          </button>
+          <button className={itemCls} onClick={run(onDirectory)}>
+            <Icon name="users" /> Directory
+          </button>
+          {onAuthority ? (
+            <button className={itemCls} onClick={run(onAuthority)}>
+              <Icon name="shield" /> কর্তৃপক্ষ
+            </button>
+          ) : null}
+          {onKpi ? (
+            <button className={itemCls} onClick={run(onKpi)}>
+              <Icon name="chart" /> KPI
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /* Date picker + button in the parked table: puts a content back on the rundown. */
 function ScheduleCell({ row, actor, onSchedule }) {
   const [when, setWhen] = useState('');
@@ -1456,6 +1512,13 @@ function NewsroomApp({ authUser, onSignOut }) {
                 }}
               />
             ) : null}
+            <HeaderMenu
+              theme={theme}
+              onToggleTheme={toggleTheme}
+              onDirectory={() => setShowDirectory(true)}
+              onAuthority={isManager(actor) || isOwner(actor) ? () => setShowAuthority(true) : null}
+              onKpi={isManager(actor) ? () => setShowKpi(true) : null}
+            />
             {authUser && me ? (
               <button className={`${btnGhost} !py-1.5 !pl-2`} onClick={() => setShowProfile(true)} title="My profile">
                 <Avatar member={me} size="h-6 w-6" />
@@ -1808,30 +1871,8 @@ function NewsroomApp({ authUser, onSignOut }) {
       </main>
 
       <footer className="mx-auto max-w-[1500px] px-5 pb-10 pt-2">
-        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-white/[0.06] pt-6">
-          <button className={btnGhost} onClick={toggleTheme} title="Switch light / dark theme" aria-label="Switch light / dark theme">
-            {theme === 'light' ? (
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
-            ) : (
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
-            )}
-            {theme === 'light' ? 'Dark' : 'Light'}
-          </button>
-          <button className={btnGhost} onClick={() => setShowDirectory(true)}>Directory</button>
-          
-          {(isManager(actor) || isOwner(actor)) ? (
-            <button className={btnGhost} onClick={() => setShowAuthority(true)}>
-              কর্তৃপক্ষ
-            </button>
-          ) : null}
-          {isManager(actor) ? (
-            <button className={btnGhost} onClick={() => setShowKpi(true)}>
-              <Icon name="chart" /> KPI
-            </button>
-          ) : null}
-          </div>
-          <div className="mt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
-        </footer>
+        <div className="border-t border-white/[0.06] pt-5 text-center text-[10px] text-zinc-500/40">{APP_CREDIT}</div>
+      </footer>
       {selected ? <Drawer row={selected} actor={actor} team={team} channels={channels} platforms={platforms} onAddPlatform={() => setShowAddPlatform(true)} onClose={() => setSelectedId(null)} onPatch={patchRow} onRun={runAction} onDelete={(r) => setDeleteFor(r.id)} /> : null}
       
         {showEmpReport ? (
