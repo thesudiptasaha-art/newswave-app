@@ -46,7 +46,6 @@ function CreditSelect({ label, field, skillKey, row, patch, team, disabled }) {
 }
 
 function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch, actions, onRun, onAddPlatform }) {
-  const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);
   const lockMsg = (label) => `You need the “${label}” permission`;
   const okMeta = can(actor, 'can_edit_content_details');
   const okSched = can(actor, 'can_reschedule_content');
