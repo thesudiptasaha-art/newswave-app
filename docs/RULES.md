@@ -16,3 +16,6 @@
 ## Finish
 12. At the end: list every changed or created file; run `npm run build`; run the undefined-name check below; report both results honestly. If something fails, fix only what you broke.
 Undefined-name check: npm i --no-save eslint@8 eslint-plugin-react@7 eslint-plugin-react-hooks@4 && npx eslint --no-eslintrc -c docs/check-undefined.eslintrc.json app components lib services utils --ext .js   (must report 0 errors)
+
+## Language
+13. All visible app text (labels, buttons, messages, help text, notifications) must be English. Never put Bengali text in UI code. Documents in docs/ may stay Bengali.

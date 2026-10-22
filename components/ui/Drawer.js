@@ -56,6 +56,8 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
   const okEditor = can(actor, 'can_assign_video_editor');
   const [showExtended, setShowExtended] = useState(false);
   const active = !!actor && actor.active !== false;
+  const HIDE_BY_TYPE = { PACKAGE: ['camera_operator', 'light_designer', 'sound_recordist'], LIVE: ['video_editor'] };
+  const showCredit = (field) => !((HIDE_BY_TYPE[row.content_type] || []).includes(field) && !row[field]);
 
   return (
     <div className="space-y-6">
@@ -94,8 +96,8 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
             <SelectBox value={row.presenter_name} disabled={!okPres} options={team.filter((m) => m.active !== false).map((m) => ({ value: m.full_name, label: m.nickname || m.full_name }))} onChange={(v) => patch({ presenter_name: v })} placeholder="Unassigned" />
           </Field>
           <CreditSelect label="Producer" field="producer" skillKey="role_producer" row={row} patch={patch} team={team} disabled={!active} />
-          <CreditSelect label="Camera Operator" field="camera_operator" skillKey="role_camera_operator" row={row} patch={patch} team={team} disabled={!active} />
-          <CreditSelect label="Video Editor" field="video_editor" skillKey="role_video_editor" row={row} patch={patch} team={team} disabled={!active} />
+          {showCredit('camera_operator') ? (<CreditSelect label="Camera Operator" field="camera_operator" skillKey="role_camera_operator" row={row} patch={patch} team={team} disabled={!active} />) : null}
+          {showCredit('video_editor') ? (<CreditSelect label="Video Editor" field="video_editor" skillKey="role_video_editor" row={row} patch={patch} team={team} disabled={!active} />) : null}
           <CreditSelect label="Publisher" field="publisher" skillKey="role_publisher" row={row} patch={patch} team={team} disabled={!active} />
         </div>
         
@@ -109,8 +111,8 @@ function EditorialTab({ row, actor, team, channels, platforms = PLATFORMS, patch
           
           {showExtended ? (
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-white/[0.06] pt-4">
-              <CreditSelect label="Light Designer" field="light_designer" skillKey="role_light_designer" row={row} patch={patch} team={team} disabled={!active} />
-              <CreditSelect label="Sound Recordist" field="sound_recordist" skillKey="role_sound_recordist" row={row} patch={patch} team={team} disabled={!active} />
+              {showCredit('light_designer') ? (<CreditSelect label="Light Designer" field="light_designer" skillKey="role_light_designer" row={row} patch={patch} team={team} disabled={!active} />) : null}
+              {showCredit('sound_recordist') ? (<CreditSelect label="Sound Recordist" field="sound_recordist" skillKey="role_sound_recordist" row={row} patch={patch} team={team} disabled={!active} />) : null}
               <CreditSelect label="Voice Over Artist" field="voice_over_artist" skillKey="role_voice_over_artist" row={row} patch={patch} team={team} disabled={!active} />
               <CreditSelect label="Motion Graphics Designer" field="motion_graphics_designer" skillKey="role_motion_graphics_designer" row={row} patch={patch} team={team} disabled={!active} />
               <CreditSelect label="Graphic Designer" field="graphic_designer" skillKey="role_graphic_designer" row={row} patch={patch} team={team} disabled={!active} />
