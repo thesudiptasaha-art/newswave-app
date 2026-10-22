@@ -1,0 +1,11 @@
+-- 2026-10-23: notify_content_update: notify the assigned Publisher at Ready to Publish.
+-- STATUS: already run live in Supabase. This file is the record only.
+-- Change: one extra condition in the status-change recipients:
+--   (new.status = 'Ready to Publish' and tm.full_name = new.publisher)
+-- Everything else (message text, other recipients, assignment messages) is unchanged.
+-- The person who made the change is never notified (tm.full_name is distinct from actor_name).
+-- ROLLBACK: re-run the function from sql/2026-10-22_notify_nickname.sql.
+-- The full function body is the live function: select pg_get_functiondef('public.notify_content_update'::regproc);
+-- The only changed lines, inside the recipients "and ( ... )" block of the status-change insert:
+--        or (tm.can_review_videos and new.status = 'Video Review')
+--        or (new.status = 'Ready to Publish' and tm.full_name = new.publisher)

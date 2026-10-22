@@ -80,7 +80,7 @@ Other rules that apply to people:
 - A script can be locked. Only a Manager or the Owner can lock or unlock it, and only they can edit a locked script.
 - Inactive members (the `active` flag off) cannot sign in to the app and every database check refuses them.
 - Every member has a name, designation (job title), photo and email. Changing a member's name updates their name inside existing contents (all credit columns, such as writer, presenter, video editor and camera operator) automatically.
-- Members get in-app notifications when they are assigned a role on a content, when a content they work on changes status, and (Owner and Managers) when a script is submitted, a video needs review, or a content is ready to publish.
+- Members get in-app notifications when they are assigned a role on a content, when a content they work on changes status, and (Owner and Managers) when a script is submitted, a video needs review, or a content is ready to publish. When content reaches Ready to Publish, the assigned Publisher (contents.publisher) is notified too (not the person who made the change).
 
 **Acting as.** The Owner can pick another member in a selector and the interface behaves exactly as that member would see it (buttons and locked fields). This is a preview only: the database still sees the real signed-in Owner, so it never gives the Owner fewer rights and it is not a way to impersonate someone for real. Audit entries made while acting as another member currently carry that member's name, not the Owner's. A "(via Owner)" tag was proposed and is not built.
 
@@ -309,7 +309,7 @@ Indexes: `(organization_id, scheduled_publish_time)` and `content_uid` on conten
 | `contents_guard_insert` | contents, before insert | New content must start as Draft with no `published_at` |
 | `contents_guard_update` | contents, before update | Field permissions, script lock, append-only history, workflow whitelist, immutable content ID (details in section 9) |
 | `contents_notify_insert` | contents, after insert | Notifies assigned writer, presenter and editor |
-| `contents_notify_update` | contents, after update | Notifies on status change and on new assignment |
+| `contents_notify_update` | contents, after update | Notifies on status change (including the assigned Publisher at Ready to Publish) and on new assignment |
 | `team_members_guard` | team\_members | Blocks privilege escalation (section 9) |
 | `team_members_rename` | team\_members, after update of `full_name` | Copies the new name into writer, presenter, video editor, camera operator, published_by, publisher and the other credit columns on that organization's contents |
 
