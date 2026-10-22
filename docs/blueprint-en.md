@@ -180,14 +180,14 @@ The drawer footer shows the **Next step** workflow buttons and a **Delete perman
 - **New Content**: six content type buttons, channel, optional publish date and time, slug name (uppercase, length limited), title, thumbnail text, writer, presenter, script. A content type shows its workflow hint, for example "Script approved → done (published)" for LIVE.
 - **Reason / note**: asks for a reason before Hold, Drop or Re-Shoot.
 - **Team & permissions**: add a member, expand a member to set designation, photo link, the 8 permission toggles, role (Owner only), Deactivate or Reactivate, and Remove.
-- **KPI report**: tiles Total, Published, In progress, Past due, then counts by status, channel, content type, presenter, writer and video editor.
+- **KPI report**: tiles Total, Published, Scheduled, In progress, Past due, then counts by status, channel, content type, presenter, writer and video editor.
 - **Toast**: green, red or neutral messages at the bottom for every save or refusal.
 
 **Other screens:** Sign in, Set up your newsroom (first run), No access yet, and Can't reach your database.
 
 ## 6. Content pipeline and workflow
 
-Every content is a state machine with 12 statuses. A content can only move by pressing a button that is allowed for its current status, content type and the person's permissions. The same rules are checked again by a database trigger, so a hand-edited request cannot skip a step.
+Every content is a state machine with 13 statuses. A content can only move by pressing a button that is allowed for its current status, content type and the person's permissions. The same rules are checked again by a database trigger, so a hand-edited request cannot skip a step.
 
 &#91;embedded content: status flow · 9 steps on the main path, 3 groups of exceptions\]
 
@@ -197,11 +197,11 @@ The top two rows are the full pipeline. The cards underneath list the moves that
 
 | Content type | Path | Why |
 | --- | --- | --- |
-| EXPLAINER, RECORDED LIVE, SOT, SHOW | Full pipeline: Draft, Script Submitted, Ready for Shoot, Shooting, Assign Editor, Editing, Video Review, Ready to Publish, Published | Needs a shoot and an edit |
-| LIVE | Draft, Script Submitted, then straight to Published when the script is approved | Goes out live, no shoot and no edit |
+| EXPLAINER, RECORDED LIVE, SOT, SHOW | Full pipeline: Draft, Script Submitted, Ready for Shoot, Shooting, Assign Editor, Editing, Video Review, Ready to Publish, Scheduled (optional), Published | Needs a shoot and an edit |
+| LIVE | Draft, Script Submitted, then straight to Published when the script is approved (went_live_at = click time) | Goes out live, no shoot and no edit |
 | PACKAGE | Draft, Script Submitted, then straight to Assign Editor | No shoot. Script plus raw footage link go to the editor. |
 
-**The 12 statuses and every allowed move**
+**The 13 statuses and every allowed move**
 
 | Status | Meaning | Button (goes to) | Who can press it |
 | --- | --- | --- | --- |
@@ -212,8 +212,9 @@ The top two rows are the full pipeline. The cards underneath list the moves that
 | Assign Editor | Waiting for an editor | Send to Editing (Editing). Needs a video editor selected. | Assign Video Editor permission |
 | Editing | Editor is working | Submit Video (Video Review) | The assigned editor, Managers, Owner |
 | Video Review | Waiting for review | Approve Video (Ready to Publish); Request Revision (Editing, reason required) | Review Videos permission |
-| Ready to Publish | Final approved | Publish (Published) | Managers and Owner |
-| Published | Done | none | none |
+| Ready to Publish | Final approved | Mark as Scheduled (Scheduled); Publish (Published). Needs a publisher selected. | Assigned Publisher or managers |
+| Scheduled | Scheduled on the platform | Confirm Published (Published; asks "When did it go live?" and stores went_live_at); Cancel Schedule (Ready to Publish) | Assigned Publisher or managers |
+| Published | Done | none (Confirming publish or publishing LIVE stores went_live_at; for LIVE content went_live_at = click time) | none |
 | On Hold | Parked with a reason | Resume (back to the status it was on hold from, or Draft) | Managers and Owner |
 | Dropped | Cancelled with a reason | Restore (Draft) | Managers and Owner |
 | Re-Shoot | Needs another shoot | Back to Shoot Queue (Ready for Shoot) | Any active member |
@@ -371,11 +372,11 @@ The browser holds the public Supabase key, so nothing in the browser can be trus
 | --- | --- |
 | Channels | Seven defaults are in code (The Wave 24, World, Money, Sports, Faith, Life, Glam). Owner and Managers can add more from Menu > Add channel; they are saved in the `channels` table per organization. |
 | Slug name | Required, English only (A-Z, 0-9, spaces and hyphens; other scripts such as Bengali are removed), forced to uppercase, up to 24 characters. It is the row's headline in the rundown. |
-| Status chip colours | The chip colour shows the phase. Grey: Draft and Script Submitted. Red: Ready for Shoot, Shooting and Re-Shoot. Golden yellow: Assign Editor, Editing and Video Review. Green: Ready to Publish. Blue: Published. Pale yellow: On Hold. Black: Dropped. The colours are defined once in `STATUS_META` (`lib/core.js` and `utils/constants.js`); the light theme tones are in `app/layout.js`. |
+| Status chip colours | The chip colour shows the phase. Grey: Draft and Script Submitted. Red: Ready for Shoot, Shooting and Re-Shoot. Golden yellow: Assign Editor, Editing and Video Review. Green: Ready to Publish. Teal: Scheduled. Blue: Published. Pale yellow: On Hold. Black: Dropped. The colours are defined once in `STATUS_META` (`lib/core.js` and `utils/constants.js`); the light theme tones are in `app/layout.js`. |
 | Notifications | Created by database triggers (section 6). The bell shows an unread count and updates live through Realtime. Clicking a notification opens that content. |
 | Live updates | Realtime on `contents`, `team_members` and `notifications`. |
-| KPI report | Modal for the current range: Total, Published, In progress (not Published, Dropped, On Hold or Draft), Past due (not Published or Dropped, publish time already passed), then counts by status, channel, type, presenter, writer and video editor. Parked items are not included. |
-| Excel export | The `xlsx-js-style` library, loaded on demand. Exports the rundown rows of the current range to `newsroom-rundown-<timestamp>.xlsx`, sheet "Rundown". Parked items are not included. |
+| KPI report | Modal for the current range: Total, Published, Scheduled, In progress (not Published, Dropped, On Hold or Draft), Past due (not Published, Dropped or Scheduled, publish time already passed; does not count Scheduled), then counts by status, channel, type, presenter, writer and video editor. Parked items are not included. |
+| Excel export | The `xlsx-js-style` library, loaded on demand. Exports the rundown rows of the current range to `newsroom-rundown-<timestamp>.xlsx`, sheet "Rundown". Reports and Rundown Export "Published At" use went_live_at (falling back to published_at), while the new export column "Marked Published At" is the button click time. Parked items are not included. |
 | Dark and light theme | Footer button. Choice kept in the browser (`nw-theme` in local storage) and applied before first paint to avoid a flash. Light mode is a CSS override layer in `app/layout.js`. |
 | Fonts | Inter for Latin text, Noto Serif Bengali for Bengali glyphs everywhere, and a serif reading font for scripts. Loaded from Google Fonts. |
 | Profile photos | Picked in My profile, resized in the browser to a 384 px JPEG, uploaded to the `avatars` bucket. A pasted image link also works. |

@@ -32,7 +32,7 @@ export const PLATFORMS = [
 
 export const ROLE_LABEL = { owner: 'Owner', manager: 'Manager', general: 'General' };
 
-/* Chip colours follow the phase: grey = script, red = production, golden yellow = video edit, green = ready to publish, blue = published, pale yellow = on hold, black = dropped. */
+/* Chip colours follow the phase: grey = script, red = production, golden yellow = video edit, green = ready to publish, blue = published, pale yellow = on hold, black = dropped, teal = scheduled on the platform. */
 export const STATUS_META = {
   Draft: { tone: 'text-zinc-300 bg-zinc-500/15 ring-zinc-400/25', dot: 'bg-zinc-400' },
   'Script Submitted': { tone: 'text-zinc-300 bg-zinc-500/15 ring-zinc-400/25', dot: 'bg-zinc-400' },
@@ -42,6 +42,7 @@ export const STATUS_META = {
   Editing: { tone: 'text-amber-500 bg-amber-500/15 ring-amber-400/25', dot: 'bg-amber-500', live: true },
   'Video Review': { tone: 'text-amber-500 bg-amber-500/15 ring-amber-400/25', dot: 'bg-amber-500' },
   'Ready to Publish': { tone: 'text-emerald-300 bg-emerald-500/15 ring-emerald-400/25', dot: 'bg-emerald-400' },
+  Scheduled: { tone: 'text-teal-300 bg-teal-500/15 ring-teal-400/25', dot: 'bg-teal-400' },
   Published: { tone: 'text-sky-300 bg-sky-500/15 ring-sky-400/25', dot: 'bg-sky-400' },
   'On Hold': { tone: 'text-yellow-200 bg-yellow-400/10 ring-yellow-300/25', dot: 'bg-yellow-300' },
   Dropped: { tone: 'text-zinc-300 bg-zinc-950 ring-zinc-500/50', dot: 'bg-zinc-500' },

@@ -13,7 +13,7 @@ import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, Person
 import { fetchAllPages } from '../utils/fetchAll';
 import { Drawer, DeleteModal } from '../components/ui/Drawer';
 import { StaffCell } from '../components/ui/StaffAssignSelect';
-import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal, DirectoryModal } from '../components/ui/Modals';
+import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal, DirectoryModal, PublishTimeModal } from '../components/ui/Modals';
 import { NoticeModal } from '../components/ui/NoticeModal';
 import { HowItWorksModal } from '../components/ui/HowItWorksModal';
 import { fetchNotices, createNotice, deleteNotice } from '../services/noticeService';
@@ -24,7 +24,7 @@ import {
   startOfDay, addDays, sameDay, MONTHS, pad, formatRangeLabel, toLocalInput, fromLocalInput,
   formatTime, formatDay, formatStamp, SLUG_MAX, normalizeSlugInput, uid, generateUserUID,
   makeContentUid, asArray, shortsInRange, rowTimeIn, isParked, isComplete, isBin, missingFields, normalizeRow, normalizeMember,
-  FIELD_PERM, TRACKED_FIELDS
+  FIELD_PERM, TRACKED_FIELDS, wentLiveDefault
 } from '../lib/core';
 
 /* ------------------------------------------------------------------ */
@@ -653,6 +653,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   const [showAddChannel, setShowAddChannel] = useState(false);
   const [showAddPlatform, setShowAddPlatform] = useState(false);
   const [reasonFor, setReasonFor] = useState(null);
+  const [publishFor, setPublishFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -1023,7 +1024,7 @@ function NewsroomApp({ authUser, onSignOut }) {
   );
 
   const transition = useCallback(
-    async (row, action, reason = '') => {
+    async (row, action, reason = '', extra = null) => {
       const fresh = rowsRef.current.find((r) => r.id === row.id) || row;
       const current = getActions(fresh, actor).find((a) => a.id === action.id);
       if (!current || !current.allowed || current.blocked) {
@@ -1033,7 +1034,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       const now = new Date().toISOString();
       const patch = {
         status: current.to,
-        audit_log: [...fresh.audit_log, { kind: 'status', actor: actor.full_name, role: actor.role, from: fresh.status, to: current.to, time: now, note: reason }],
+        audit_log: [...fresh.audit_log, { kind: 'status', actor: actor.full_name, role: actor.role, from: fresh.status, to: current.to, time: now, note: extra && extra.wentLiveAt ? `Went live at ${formatStamp(extra.wentLiveAt)}` : reason }],
       };
       if (current.id === 'hold') {
         patch.previous_status = fresh.status;
@@ -1047,6 +1048,7 @@ function NewsroomApp({ authUser, onSignOut }) {
       if (current.to === 'Published') {
         patch.published_at = now;
         patch.published_by = actor.full_name;
+        patch.went_live_at = (extra && extra.wentLiveAt) || now;
       }
       const ok = await patchRow(fresh.id, patch, true);
       if (ok) notify(`${fresh.slug_name || fresh.title || 'Content'} → ${current.to}`, 'success');
@@ -1056,6 +1058,7 @@ function NewsroomApp({ authUser, onSignOut }) {
 
   const runAction = (row, action) => {
     if (action.id === 'copy_script') { navigator.clipboard.writeText(scriptToPlainText(row.script) || 'No script'); notify('Script copied', 'success'); return; }
+    if (action.id === 'publish') { setPublishFor({ rowId: row.id, action }); return; }
     if (action.needsReason) setReasonFor({ rowId: row.id, action });
     else transition(row, action);
   };
@@ -1348,6 +1351,7 @@ function NewsroomApp({ authUser, onSignOut }) {
 
   const selected = rows.find((r) => r.id === selectedId) || null;
   const reasonRow = reasonFor ? rows.find((r) => r.id === reasonFor.rowId) : null;
+  const publishRow = publishFor ? rows.find((r) => r.id === publishFor.rowId) : null;
 
   /* ---------------- export ---------------- */
   const exportXlsx = async () => {
@@ -1368,7 +1372,8 @@ function NewsroomApp({ authUser, onSignOut }) {
         'Camera Operator': r.camera_operator || '',
         Status: r.status,
         'Published By': r.published_by || '',
-        'Published At': r.published_at ? new Date(r.published_at).toLocaleString() : '',
+        'Published At': (r.went_live_at || r.published_at) ? new Date(r.went_live_at || r.published_at).toLocaleString() : '',
+        'Marked Published At': r.published_at ? new Date(r.published_at).toLocaleString() : '',
         'Shelf ID': r.archive_shelf_id || '',
         Shorts: r.shorts.length,
       }));
@@ -1387,7 +1392,8 @@ function NewsroomApp({ authUser, onSignOut }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
-      if (reasonFor) setReasonFor(null);
+      if (publishFor) setPublishFor(null);
+      else if (reasonFor) setReasonFor(null);
       else if (showNew) setShowNew(false);
       else if (showAddChannel) setShowAddChannel(false);
       else if (showAddPlatform) setShowAddPlatform(false);
@@ -1401,7 +1407,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showDirectory, showHelp, showKpi, showBin, showNotices, selectedId]);
+  }, [publishFor, reasonFor, showNew, showAddChannel, showAddPlatform, showTeam, showDirectory, showHelp, showKpi, showBin, showNotices, selectedId]);
   /* ---------------- my profile ---------------- */
   const saveProfile = async ({ full_name, designation, avatar_url, phone, whatsapp, employee_id, nickname }) => {
     if (!me) return false;
@@ -2044,6 +2050,18 @@ function NewsroomApp({ authUser, onSignOut }) {
             const { action } = reasonFor;
             setReasonFor(null);
             transition(reasonRow, action, reason);
+          }}
+        />
+      ) : null}
+      {publishFor && publishRow ? (
+        <PublishTimeModal
+          row={publishRow}
+          defaultIso={wentLiveDefault(publishRow, new Date().toISOString())}
+          onClose={() => setPublishFor(null)}
+          onConfirm={(iso) => {
+            const { action } = publishFor;
+            setPublishFor(null);
+            transition(publishRow, action, '', { wentLiveAt: iso });
           }}
         />
       ) : null}

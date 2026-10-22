@@ -113,7 +113,7 @@ Oct 4, 2026 · @EEA
 
 Drawer-এর ফুটারে পরের ধাপের বাটন ও Delete permanently (শুধু Manager, Owner; নিশ্চিতকরণসহ)।
 
-**Modal:** New Content (ছয় ধরনের বাটন, চ্যানেল, ঐচ্ছিক সময়, slug name, title, thumbnail text, writer, presenter, script); Reason (Hold/Drop/Re-Shoot-এর আগে কারণ চায়); Team & permissions; KPI (Total, Published, In progress, Past due ও স্ট্যাটাস/চ্যানেল/ধরন/প্রেজেন্টার/লেখক/এডিটর অনুযায়ী গণনা); Toast (সবুজ/লাল বার্তা)। অন্য স্ক্রিন: Sign in, Set up your newsroom (প্রথম বার), No access yet, Can't reach your database।
+**Modal:** New Content (ছয় ধরনের বাটন, চ্যানেল, ঐচ্ছিক সময়, slug name, title, thumbnail text, writer, presenter, script); Reason (Hold/Drop/Re-Shoot-এর আগে কারণ চায়); Team & permissions; KPI (Total, Published, Scheduled, In progress, Past due ও স্ট্যাটাস/চ্যানেল/ধরন/প্রেজেন্টার/লেখক/এডিটর অনুযায়ী গণনা); Toast (সবুজ/লাল বার্তা)। অন্য স্ক্রিন: Sign in, Set up your newsroom (প্রথম বার), No access yet, Can't reach your database।
 
 **আপনার বদল/মন্তব্য:** এখানে লিখুন বা কমেন্ট করুন।
 
@@ -129,11 +129,11 @@ Drawer-এর ফুটারে পরের ধাপের বাটন ও D
 
 | কনটেন্ট টাইপ | পথ | কারণ |
 | --- | --- | --- |
-| EXPLAINER, RECORDED LIVE, SOT, SHOW | Draft, Script Submitted, Ready for Shoot, Shooting, Assign Editor, Editing, Video Review, Ready to Publish, Published | শুট ও এডিট দুটোই লাগে |
+| EXPLAINER, RECORDED LIVE, SOT, SHOW | Draft, Script Submitted, Ready for Shoot, Shooting, Assign Editor, Editing, Video Review, Ready to Publish, Scheduled (ঐচ্ছিক), Published | শুট ও এডিট দুটোই লাগে |
 | LIVE | Draft, Script Submitted, তারপর স্ক্রিপ্ট অনুমোদনেই Published | সরাসরি প্রচার, শুট বা এডিট নেই |
 | PACKAGE | Draft, Script Submitted, তারপর সরাসরি Assign Editor | শুট নেই। স্ক্রিপ্ট ও raw footage লিংক এডিটরের কাছে যায় |
 
-**১২টা স্ট্যাটাস, বাটন ও কে চাপতে পারে**
+**১৩টা স্ট্যাটাস, বাটন ও কে চাপতে পারে**
 
 | স্ট্যাটাস | মানে | বাটন (কোথায় যায়) | কে চাপতে পারে |
 | --- | --- | --- | --- |
@@ -144,8 +144,9 @@ Drawer-এর ফুটারে পরের ধাপের বাটন ও D
 | Assign Editor | এডিটরের অপেক্ষা | Send to Editing (Editing)। এডিটর বাছা লাগবে | Assign Video Editor পারমিশন |
 | Editing | এডিটর কাজ করছেন | Submit Video (Video Review) | নির্ধারিত এডিটর, Manager, Owner |
 | Video Review | রিভিউয়ের অপেক্ষা | Approve Video (Ready to Publish); Request Revision (Editing, কারণ লাগে) | Review Videos পারমিশন |
-| Ready to Publish | চূড়ান্ত অনুমোদিত | Publish (Published) | Manager, Owner |
-| Published | শেষ | নেই | নেই |
+| Ready to Publish | চূড়ান্ত অনুমোদিত | Mark as Scheduled (Scheduled); Publish (Published)। প্রকাশক বাছা থাকতে হবে | নির্ধারিত Publisher, Manager, Owner |
+| Scheduled | প্ল্যাটফর্মে শিডিউল করা | Confirm Published (Published; কখন লাইভ হয়েছে সেই সময় চায় ও went_live_at রাখে); Cancel Schedule (Ready to Publish) | নির্ধারিত Publisher, Manager, Owner |
+| Published | শেষ | নেই (পাবলিশ নিশ্চিত করলে বা LIVE কনটেন্ট পাবলিশে went_live_at জমা হয়) | নেই |
 | On Hold | কারণসহ রাখা | Resume (আগের ধাপে, না থাকলে Draft) | Manager, Owner |
 | Dropped | কারণসহ বাতিল | Restore (Draft) | Manager, Owner |
 | Re-Shoot | আবার শুট দরকার | Back to Shoot Queue (Ready for Shoot) | যেকোনো সক্রিয় সদস্য |

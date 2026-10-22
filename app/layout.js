@@ -190,9 +190,10 @@ const lightCss = `
   html.light .text-yellow-200 { color: #6b5f00; }
   html.light [class~="bg-emerald-500/15"] { background-color: #e1e7cc; }
   html.light [class~="bg-sky-500/15"] { background-color: #dce8f3; }
+  html.light [class~="bg-teal-500/15"] { background-color: #dcebe6; }
   html.light [class~="bg-zinc-950"] { background-color: #1c1814; }
   html.light [class~="bg-zinc-950"][class~="text-zinc-300"] { color: #e9e2d6; }
-  html.light [class~="ring-zinc-400/25"], html.light [class~="ring-red-400/25"], html.light [class~="ring-amber-400/25"], html.light [class~="ring-yellow-300/25"], html.light [class~="ring-emerald-400/25"], html.light [class~="ring-sky-400/25"] { --tw-ring-color: rgba(105, 85, 60, 0.16); }
+  html.light [class~="ring-zinc-400/25"], html.light [class~="ring-red-400/25"], html.light [class~="ring-amber-400/25"], html.light [class~="ring-yellow-300/25"], html.light [class~="ring-emerald-400/25"], html.light [class~="ring-sky-400/25"], html.light [class~="ring-teal-400/25"] { --tw-ring-color: rgba(105, 85, 60, 0.16); }
   html.light [class~="ring-zinc-500/50"] { --tw-ring-color: #1c1814; }
   
   /* modal / form panels, drawer and inputs */

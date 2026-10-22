@@ -77,11 +77,13 @@ Central table holding all daily video rundown items.
   * `'Editing'`
   * `'Video Review'`
   * `'Ready to Publish'`
+  * `'Scheduled'`
   * `'Published'`
   * `'On Hold'`
   * `'Dropped'`
   * `'Re-Shoot'`
 * `scheduled_publish_time` (`timestamptz`, nullable) — Target publish date and time.
+* `went_live_at` (`timestamptz`, nullable) — Real time the content went live (reports and Rundown Export use this; falls back to `published_at` for old rows).
 * `writer` (`text`) — Assigned Research & Script author.
 * `presenter_name` (`text`) — Assigned on-camera presenter.
 * `camera_operator` (`text`) - Assigned Camera Operator (was `camera_person`).

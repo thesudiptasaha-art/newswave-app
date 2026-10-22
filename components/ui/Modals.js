@@ -500,8 +500,9 @@ function countBy(rows, fn) {
 
 function KpiModal({ rows, rangeLabel, onClose }) {
   const published = rows.filter((r) => r.status === 'Published').length;
+  const scheduled = rows.filter((r) => r.status === 'Scheduled').length;
   const inProgress = rows.filter((r) => !['Published', 'Dropped', 'On Hold', 'Draft'].includes(r.status)).length;
-  const late = rows.filter((r) => r.status !== 'Published' && r.status !== 'Dropped' && r.scheduled_publish_time && new Date(r.scheduled_publish_time) < new Date()).length;
+  const late = rows.filter((r) => r.status !== 'Published' && r.status !== 'Dropped' && r.status !== 'Scheduled' && r.scheduled_publish_time && new Date(r.scheduled_publish_time) < new Date()).length;
   const Block = ({ title, items }) => (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
       <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-zinc-500">{title}</div>
@@ -516,8 +517,8 @@ function KpiModal({ rows, rangeLabel, onClose }) {
   );
   return (
     <ModalShell title="KPI report" subtitle={rangeLabel} onClose={onClose} wide>
-      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[['Total', rows.length], ['Published', published], ['In progress', inProgress], ['Past due', late]].map(([k, v]) => (
+      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[['Total', rows.length], ['Published', published], ['Scheduled', scheduled], ['In progress', inProgress], ['Past due', late]].map(([k, v]) => (
           <div key={k} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
             <div className="text-[11px] uppercase tracking-wider text-zinc-500">{k}</div>
             <div className="mt-1 text-2xl font-semibold tabular-nums text-white">{v}</div>
@@ -1339,7 +1340,37 @@ function DirectoryModal({ team, onClose }) {
   );
 }
 
-export { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, DirectoryModal };
+function PublishTimeModal({ row, defaultIso, onClose, onConfirm }) {
+  const [when, setWhen] = useState(toLocalInput(defaultIso));
+  const maxNow = toLocalInput(new Date().toISOString());
+  const iso = when ? fromLocalInput(when) : '';
+  const future = !!iso && new Date(iso).getTime() > Date.now() + 60000;
+  return (
+    <ModalShell
+      title="Confirm publish time"
+      subtitle={row.slug_name || row.title || ''}
+      onClose={onClose}
+      footer={
+        <>
+          <button className={btnGhost} onClick={onClose}>Cancel</button>
+          <button className={btnPrimary} disabled={!iso || future} onClick={() => onConfirm(iso)}>Confirm published</button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-[13px] text-zinc-400">
+          Scheduled for: {row.scheduled_publish_time ? formatStamp(row.scheduled_publish_time) : 'not set'}
+        </p>
+        <Field label="When did it go live?" hint="Reports use this time. Change it only if it went live at a different time.">
+          <input type="datetime-local" value={when} max={maxNow} onChange={(e) => setWhen(e.target.value)} className={`${inputBase} [color-scheme:dark]`} />
+        </Field>
+        {future ? <p className="text-[12px] text-red-400">The publish time cannot be in the future.</p> : null}
+      </div>
+    </ModalShell>
+  );
+}
+
+export { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, DirectoryModal, PublishTimeModal };
 
 
 export function BackupModal({ onClose }) {
