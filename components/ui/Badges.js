@@ -19,6 +19,10 @@ export function TypeBadge({ type }) {
   );
 }
 
+export function TypeBox({ type, small = false }) {
+  return <span className="type-box" style={small ? { fontSize: '8.5px', padding: '1px 5px' } : undefined}>{type || 'UNKNOWN'}</span>;
+}
+
 export function RoleBadge({ role }) {
   const tone =
     role === 'owner'

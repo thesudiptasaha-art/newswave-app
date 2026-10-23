@@ -229,6 +229,19 @@ const lightCss = `
     color: #241f19 !important;
     border-color: rgba(105, 85, 60, 0.3) !important;
   }
+
+  .type-box { display: inline-block; padding: 2px 7px; border-radius: 4px; background: #ffffff; color: #121215; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; white-space: nowrap; line-height: 1.4; }
+  html.light .type-box { background: #1c1814; color: #ffffff; }
+  .short-tag { display: inline-block; padding: 0 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.35); color: #e4e4e7; font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; line-height: 1.5; }
+  html.light .short-tag { border-color: #465a22; color: #465a22; }
+  .chan-band { background: #1f2a14; color: #e8efd6; }
+  html.light .chan-band { background: #465a22; color: #ffffff; }
+  .chan-band-count { background: #e8efd6; color: #1f2a14; }
+  html.light .chan-band-count { background: #ffffff; color: #465a22; }
+  .rd-card { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+  html.light .rd-card { box-shadow: 0 2px 8px rgba(60, 45, 25, 0.1); }
+  .rd-alt { background: rgba(255, 255, 255, 0.03); }
+  html.light .rd-alt { background: #f6f1e6; }
 `;
 export default function RootLayout({ children }) {
   return (

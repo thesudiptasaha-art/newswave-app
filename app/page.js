@@ -16,6 +16,7 @@ import { StaffCell } from '../components/ui/StaffAssignSelect';
 import { NewContentModal, AddChannelModal, AddPlatformModal, ReasonModal, TeamModal, KpiModal, BulkScheduleModal, ProfileModal, MyWorkModal, EmployeeReportModal, BackupModal, DirectoryModal, PublishTimeModal } from '../components/ui/Modals';
 import { NoticeModal } from '../components/ui/NoticeModal';
 import { HowItWorksModal } from '../components/ui/HowItWorksModal';
+import { PhoneCard, PhoneRow, ShortNote } from '../components/ui/RundownCards';
 import { fetchNotices, createNotice, deleteNotice } from '../services/noticeService';
 
 import {
@@ -648,6 +649,21 @@ function NewsroomApp({ authUser, onSignOut }) {
       window.localStorage.setItem('nw-theme', next);
     } catch (e) {}
   };
+  const [phoneView, setPhoneView] = useState('list');
+  const [expandedId, setExpandedId] = useState(null);
+  const [collapsedChannels, setCollapsedChannels] = useState({});
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem('wd-phone-view');
+      if (v === 'cards' || v === 'list') setPhoneView(v);
+    } catch (e) {}
+  }, []);
+  function changePhoneView(v) {
+    setPhoneView(v);
+    try {
+      window.localStorage.setItem('wd-phone-view', v);
+    } catch (e) {}
+  }
   const [showKpi, setShowKpi] = useState(false);
   const [confirmReq, setConfirmReq] = useState(null);
   const [showAddChannel, setShowAddChannel] = useState(false);
@@ -1349,6 +1365,34 @@ function NewsroomApp({ authUser, onSignOut }) {
     return items;
   }, [visible, channelFilter]);
 
+  const phoneItems = useMemo(() => {
+    return tableItems.filter((item) => {
+      if (item.type === 'header') return true;
+      if (channelFilter === 'all' && collapsedChannels[item.row.channel || 'No channel']) {
+        return false;
+      }
+      return true;
+    });
+  }, [tableItems, channelFilter, collapsedChannels]);
+
+  const phoneGroups = useMemo(() => {
+    const groups = [];
+    let current = null;
+    phoneItems.forEach((item) => {
+      if (item.type === 'header') {
+        current = { header: item, rows: [] };
+        groups.push(current);
+      } else {
+        if (!current) {
+          current = { header: null, rows: [] };
+          groups.push(current);
+        }
+        current.rows.push(item.row);
+      }
+    });
+    return groups;
+  }, [phoneItems]);
+
   const selected = rows.find((r) => r.id === selectedId) || null;
   const reasonRow = reasonFor ? rows.find((r) => r.id === reasonFor.rowId) : null;
   const publishRow = publishFor ? rows.find((r) => r.id === publishFor.rowId) : null;
@@ -1686,30 +1730,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                               </div>
                               {r.is_script_locked ? <LockIcon message="Script locked" className="h-4 w-4 shrink-0 text-white" /> : null}
                             </div>
-                            {(() => {
-                              const d = r.scheduled_publish_time ? new Date(r.scheduled_publish_time) : null;
-                              const isMainInRange = d && d >= range.start && d < addDays(range.end, 1);
-                              const totalShorts = (r.shorts || []).length;
-                              const dueShorts = shortsInRange(r, range.start, addDays(range.end, 1));
-                              if (!isMainInRange && dueShorts.length === 0) return null;
-                              
-                              const getOrdinal = (num) => {
-                                const sfx = ["th", "st", "nd", "rd"];
-                                const v = num % 100;
-                                return num + (sfx[(v - 20) % 10] || sfx[v] || sfx[0]);
-                              };
-                              return (
-                                <div className="flex flex-col mt-1 text-[11px] text-zinc-500">
-                                  {isMainInRange && totalShorts >= 1 && (
-                                    <div>Total {totalShorts} Short Content</div>
-                                  )}
-                                  {dueShorts.map(s => {
-                                    const n = (r.shorts || []).findIndex(x => x.id === s.id) + 1;
-                                    return <div key={s.id}>{getOrdinal(n)} out of {totalShorts}</div>;
-                                  })}
-                                </div>
-                              );
-                            })()}
+                            <ShortNote r={r} range={range} />
 
                           </div>
                         );
@@ -1733,59 +1754,117 @@ function NewsroomApp({ authUser, onSignOut }) {
               <div className="text-[15px] font-medium text-zinc-300">Nothing scheduled</div>
               <p className="mt-1 text-[13px] text-zinc-600">Pick another date or add new content.</p>
             </div>
-) : null}
+          ) : null}
         </div>
 
-        {/* Mobile View for Rundown (2-Column) */}
-        <div className="md:hidden overflow-hidden rounded-2xl border border-white/[0.08] bg-[#121215] mb-8">
-          <table className="w-full text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500 bg-white/[0.02]">
-                <th className="px-3 py-2 font-medium w-[40%]">Time / Type / Status</th>
-                <th className="px-3 py-2 font-medium w-[60%] text-right">Slug / Action</th>
-              </tr>
-            </thead>
-            <tbody>
-               {tableItems.map((item, i) => {
-                  if (item.type === 'header') {
-                     return (
-                        <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
-                           <td colSpan={2} className="px-3 py-3 text-center">
-                              <span className="text-[14px] font-semibold text-white">{item.name}</span>
-                              <span className="ml-2 rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-medium text-zinc-400">{item.count}</span>
-                           </td>
-                        </tr>
-                     )
-                  }
-                  const r = item.row;
+        {/* Mobile View for Rundown */}
+        <div className="md:hidden mb-8">
+          {visible.length === 0 ? (
+            <div className="px-6 py-16 text-center rounded-2xl border border-white/[0.08] bg-[#121215]">
+              <div className="text-[15px] font-medium text-zinc-300">Nothing scheduled</div>
+              <p className="mt-1 text-[13px] text-zinc-600">Pick another date or add new content.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  className={`${phoneView === 'list' ? btnPrimary : btnGhost} min-h-[40px]`}
+                  onClick={() => changePhoneView('list')}
+                  aria-pressed={phoneView === 'list'}
+                >
+                  List
+                </button>
+                <button
+                  type="button"
+                  className={`${phoneView === 'cards' ? btnPrimary : btnGhost} min-h-[40px]`}
+                  onClick={() => changePhoneView('cards')}
+                  aria-pressed={phoneView === 'cards'}
+                >
+                  Cards
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {phoneGroups.map((group, gIdx) => {
+                  const isCollapsed = group.header ? !!collapsedChannels[group.header.name] : false;
                   return (
-                     <tr key={item.key} onClick={() => setSelectedId(r.id)} className="cursor-pointer border-b border-white/[0.14] hover:bg-white/[0.04]">
-                        <td className="px-3 py-3 align-top border-r border-white/5 relative w-[40%]">
-                           <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
-                           <div className="flex flex-col gap-2 pl-1">
-                              <span className="text-sky-400 font-mono text-[11px] font-medium tracking-tighter">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</span>
-                              <div className="scale-90 origin-left"><TypeBadge type={r.content_type} /></div>
-                              <div className="scale-90 origin-left"><StatusBadge status={r.status} /></div>
-                           </div>
-                        </td>
-                        <td className="px-3 py-3 align-top w-[60%] relative">
-                           <div className="flex flex-col justify-between h-full min-h-[90px]">
-                              <div className="flex items-start justify-end gap-1.5 text-right w-full">
-                                     {r.is_script_locked && <LockIcon message="Script locked" className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-1" />}
-                                     <div className="uppercase text-right text-[16px] font-black text-white p-1 -mr-1 w-full leading-tight truncate">
-                                       {r.slug_name || 'ENTER SLUG...'}
-                                     </div>
+                    <div key={group.header ? group.header.key : `group-${gIdx}`} className="flex flex-col">
+                      {group.header ? (
+                        <button
+                          type="button"
+                          aria-expanded={!isCollapsed}
+                          onClick={() => setCollapsedChannels((c) => ({ ...c, [group.header.name]: !c[group.header.name] }))}
+                          className="chan-band mb-0 flex min-h-[48px] w-full items-center gap-2.5 rounded-xl px-3.5 text-left"
+                        >
+                          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                            {isCollapsed ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            )}
+                          </svg>
+                          <span className="text-[15px] font-bold flex-1 truncate">{group.header.name}</span>
+                          <span className="chan-band-count rounded-full px-2.5 py-0.5 text-[13px] font-bold">{group.header.count}</span>
+                        </button>
+                      ) : null}
+
+                      {!isCollapsed && group.rows.length > 0 ? (
+                        phoneView === 'list' ? (
+                          <div className={`${group.header ? 'rounded-b-xl' : 'rounded-xl'} border border-white/[0.14] bg-[#121215] overflow-hidden`}>
+                            {group.rows.map((r, idx) => {
+                              if (expandedId === r.id) {
+                                return (
+                                  <div key={r.id} className="my-2 mx-2">
+                                    <PhoneCard
+                                      r={r}
+                                      range={range}
+                                      team={team}
+                                      actor={actor}
+                                      patchRow={patchRow}
+                                      notify={notify}
+                                      onOpen={setSelectedId}
+                                      onRun={runAction}
+                                      onCollapse={() => setExpandedId(null)}
+                                    />
                                   </div>
-                              <div className="flex flex-col items-end gap-2 mt-auto pt-2" onClick={(e) => e.stopPropagation()}>
-                                 <ActionButtons actions={getActions(r, actor).slice(0, 2)} onRun={(a) => runAction(r, a)} compact />
-                              </div>
-                           </div>
-                        </td>
-                     </tr>
-                  )
-               })}
-            </tbody>
-          </table>
+                                );
+                              }
+                              return (
+                                <PhoneRow
+                                  key={r.id}
+                                  r={r}
+                                  range={range}
+                                  alt={idx % 2 === 1}
+                                  onToggle={() => setExpandedId(r.id)}
+                                />
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className={`flex flex-col gap-3.5 ${group.header ? 'mt-3' : ''}`}>
+                            {group.rows.map((r) => (
+                              <PhoneCard
+                                key={r.id}
+                                r={r}
+                                range={range}
+                                team={team}
+                                actor={actor}
+                                patchRow={patchRow}
+                                notify={notify}
+                                onOpen={setSelectedId}
+                                onRun={runAction}
+                              />
+                            ))}
+                          </div>
+                        )
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
         <section className="mt-10">
           <div className="mb-4 relative flex flex-col items-center">

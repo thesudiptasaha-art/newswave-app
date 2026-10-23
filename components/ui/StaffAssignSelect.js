@@ -31,40 +31,64 @@ export function StaffAssignSelect({ value, names, placeholder, onChange, team })
   );
 }
 
-export function StaffCell({ r, team, actor, patchRow, notify }) {
+export function StaffCell({ r, team, actor, patchRow, notify, layout = 'stack' }) {
   const actorCan = actor && actor.active !== false;
 
   const writers = team.filter((t) => t.role_research_script_writer || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
   const presenters = team.filter((m) => m.active !== false).map((m) => m.full_name);
   const editors = team.filter((t) => t.role_video_editor || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
 
-  const renderLine = (field, label, names) => {
+  const renderLine = (field, label, names, colLabel = null) => {
     const isEditable = actorCan && can(actor, FIELD_PERM[field]);
     const val = r[field];
 
+    let control = null;
     if (isEditable) {
-      return (
-        <div key={field} className="flex items-center gap-1.5">
-          <span className="text-zinc-500 w-[110px] shrink-0">{label}</span>
-          <StaffAssignSelect
-            value={val}
-            names={names}
-            placeholder="+ Assign"
-            onChange={async (v) => { const ok = await patchRow(r.id, { [field]: v }); if (ok && notify) notify(v ? `${label.replace(/:$/, '')} → ${v}` : `${label.replace(/:$/, '')} cleared`, 'success'); }}
-            team={team}
-          />
-        </div>
+      control = (
+        <StaffAssignSelect
+          value={val}
+          names={names}
+          placeholder="+ Assign"
+          onChange={async (v) => { const ok = await patchRow(r.id, { [field]: v }); if (ok && notify) notify(v ? `${label.replace(/:$/, '')} → ${v}` : `${label.replace(/:$/, '')} cleared`, 'success'); }}
+          team={team}
+        />
       );
     } else {
-      if (!val) return null;
+      if (val) {
+        control = <PersonName name={val} team={team} hideDesignation />;
+      } else if (colLabel) {
+        control = <span className="text-[12px] italic text-zinc-600">Not assigned</span>;
+      }
+    }
+
+    if (!control) return null;
+
+    if (colLabel) {
       return (
-        <div key={field} className="flex items-center gap-1.5">
-          <span className="text-zinc-500 w-[110px] shrink-0">{label}</span>
-          <PersonName name={val} team={team} hideDesignation />
+        <div key={field} className="min-w-0 flex-1 overflow-hidden">
+          <div className="mb-1 text-[9.5px] font-semibold uppercase tracking-[0.1em] text-zinc-500">{colLabel}</div>
+          {control}
         </div>
       );
     }
+
+    return (
+      <div key={field} className="flex items-center gap-1.5">
+        <span className="text-zinc-500 w-[110px] shrink-0">{label}</span>
+        {control}
+      </div>
+    );
   };
+
+  if (layout === 'columns') {
+    return (
+      <div className="flex gap-2.5">
+        {renderLine('writer', 'Script Writer:', writers, 'SCRIPT WRITER')}
+        {renderLine('presenter_name', 'Presenter:', presenters, 'PRESENTER')}
+        {r.content_type === 'LIVE' ? null : renderLine('video_editor', 'Video Editor:', editors, 'VIDEO EDITOR')}
+      </div>
+    );
+  }
 
   const lineWriter = renderLine('writer', 'Script Writer:', writers);
   const linePresenter = renderLine('presenter_name', 'Presenter:', presenters);
