@@ -135,7 +135,7 @@ export function ModalShell({ title, subtitle, onClose, children, footer, wide = 
             <Icon name="x" className="h-5 w-5" />
           </button>
         </div>
-        <div className={`flex-1 overflow-y-auto px-6 py-5 ${full ? 'lg:flex lg:flex-col' : ''}`}>{children}</div>
+        <div className={`flex-1 overflow-y-auto px-6 py-5 ${full ? 'lg:flex lg:flex-col lg:p-0' : ''}`}>{children}</div>
         {footer ? <div className="flex items-center justify-end gap-2 border-t border-white/[0.06] bg-black/30 px-6 py-4">{footer}</div> : null}
       </div>
     </div>
