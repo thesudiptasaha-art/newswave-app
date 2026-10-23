@@ -7,7 +7,7 @@ import { APP_NAME, APP_CREDIT, APP_COPYRIGHT, APP_CONTACT_EMAIL } from '../utils
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon, LockIcon } from '../components/ui/Icons';
-import { StatusBadge, TypeBadge, RoleBadge, DesignationPill } from '../components/ui/Badges';
+import { StatusBadge, TypeBadge, RoleBadge, DesignationPill, TypeBox } from '../components/ui/Badges';
 import { supabase } from '../services/supabase';
 import { inputBase, inputLocked, btnPrimary, btnGhost, btnDanger, Avatar, PersonName, Field, SelectBox, BlurInput, ModalShell, ConfirmDialog, FullScreenCard, Toggle, ActionButtons } from '../components/ui/Shared';
 import { fetchAllPages } from '../utils/fetchAll';
@@ -650,6 +650,7 @@ function NewsroomApp({ authUser, onSignOut }) {
     } catch (e) {}
   };
   const [phoneView, setPhoneView] = useState('list');
+  const [pcView, setPcView] = useState('list');
   const [expandedId, setExpandedId] = useState(null);
   const [collapsedChannels, setCollapsedChannels] = useState({});
   useEffect(() => {
@@ -657,11 +658,21 @@ function NewsroomApp({ authUser, onSignOut }) {
       const v = window.localStorage.getItem('wd-phone-view');
       if (v === 'cards' || v === 'list') setPhoneView(v);
     } catch (e) {}
+    try {
+      const v = window.localStorage.getItem('wd-pc-view');
+      if (v === 'cards' || v === 'list') setPcView(v);
+    } catch (e) {}
   }, []);
   function changePhoneView(v) {
     setPhoneView(v);
     try {
       window.localStorage.setItem('wd-phone-view', v);
+    } catch (e) {}
+  }
+  function changePcView(v) {
+    setPcView(v);
+    try {
+      window.localStorage.setItem('wd-pc-view', v);
     } catch (e) {}
   }
   const [showKpi, setShowKpi] = useState(false);
@@ -1393,6 +1404,16 @@ function NewsroomApp({ authUser, onSignOut }) {
     return groups;
   }, [phoneItems]);
 
+  const pcCardRows = useMemo(
+    () =>
+      [...visible].sort(
+        (a, b) =>
+          new Date(rowTimeIn(a, range.start, addDays(range.end, 1)) || 0) -
+          new Date(rowTimeIn(b, range.start, addDays(range.end, 1)) || 0)
+      ),
+    [visible, range]
+  );
+
   const selected = rows.find((r) => r.id === selectedId) || null;
   const reasonRow = reasonFor ? rows.find((r) => r.id === reasonFor.rowId) : null;
   const publishRow = publishFor ? rows.find((r) => r.id === publishFor.rowId) : null;
@@ -1673,56 +1694,108 @@ function NewsroomApp({ authUser, onSignOut }) {
         </div>
         </div>
 
-        <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
-          <table className="w-full min-w-[1180px] text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
+        <div className="mb-3 hidden items-center gap-2 md:flex">
+          <button
+            type="button"
+            className={`${pcView === 'list' ? btnPrimary : btnGhost} min-h-[40px]`}
+            onClick={() => changePcView('list')}
+            aria-pressed={pcView === 'list'}
+          >
+            List view
+          </button>
+          <button
+            type="button"
+            className={`${pcView === 'cards' ? btnPrimary : btnGhost} min-h-[40px]`}
+            onClick={() => changePcView('cards')}
+            aria-pressed={pcView === 'cards'}
+          >
+            Card view
+          </button>
+          {(() => {
+            if (pcView !== 'list' || channelFilter !== 'all') return null;
+            const headers = tableItems.filter((x) => x.type === 'header');
+            if (headers.length === 0) return null;
+            const allCollapsed = headers.every((x) => collapsedChannels[x.name]);
+            return (
+              <button
+                type="button"
+                className={`${btnGhost} min-h-[40px]`}
+                onClick={() => {
+                  if (allCollapsed) {
+                    setCollapsedChannels({});
+                  } else {
+                    setCollapsedChannels(Object.fromEntries(tableItems.filter((x) => x.type === 'header').map((x) => [x.name, true])));
+                  }
+                }}
+              >
+                {allCollapsed ? 'Expand all channels' : 'Collapse all channels'}
+              </button>
+            );
+          })()}
+        </div>
+
+        {pcView === 'list' ? (
+          <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#121215]">
+            <table className="w-full min-w-[1180px] text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-zinc-500">
                   {['Time', 'Slug Name', 'Staff Assignment', 'Action'].map((h) => (
-                  <th key={h} className="px-4 py-2 font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tableItems.map((item, i) => {
-                if (item.type === 'header') {
-                  return (
-                    <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
-                      <td colSpan={4} className="px-4 py-5">
-                        <div className="flex items-center gap-4">
-                          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.16]" />
-                          <span className="text-[18px] font-semibold tracking-tight text-white">{item.name}</span>
-                          <span className="rounded-full bg-white/[0.08] px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-zinc-400">{item.count}</span>
-                          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/[0.16]" />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                }
-                const r = item.row;
-                return (
-                  <tr
-                    key={item.key}
-                    onClick={() => setSelectedId(r.id)}
-                    style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
-                    className="row-in cursor-pointer border-b border-white/[0.14] transition last:border-0 hover:bg-white/[0.04]"
-                  >
-                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5 tabular-nums text-zinc-300 align-top">
-                      <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
-                      {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div> : null}
-                      <div className="mt-1.5"><StatusBadge status={r.status} /></div>
-                    </td>
-                    <td className="max-w-[280px] px-3 py-2 border-r border-white/5 relative align-top">
-                      <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
-                      {(() => {
-                        const tc = CONTENT_TYPE_COLORS[r.content_type?.toUpperCase()] || { bg: 'bg-zinc-500', text: 'text-zinc-500', tagText: 'text-white' };
-                        return (
+                    <th key={h} className="px-4 py-2 font-medium">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  let altNo = 0;
+                  return phoneItems.map((item, i) => {
+                    if (item.type === 'header') {
+                      altNo = 0;
+                      return (
+                        <tr key={item.key} className="border-b border-white/[0.06] bg-white/[0.025]">
+                          <td colSpan={4} className="px-4 py-5">
+                            <button
+                              type="button"
+                              aria-expanded={!collapsedChannels[item.name]}
+                              onClick={() => setCollapsedChannels((c) => ({ ...c, [item.name]: !c[item.name] }))}
+                              className="flex min-h-[44px] w-full items-center gap-4 text-left"
+                            >
+                              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/[0.16]" />
+                              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                                {collapsedChannels[item.name] ? (
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                ) : (
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                )}
+                              </svg>
+                              <span className="text-[18px] font-semibold tracking-tight text-white">{item.name}</span>
+                              <span className="rounded-full bg-white/[0.08] px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-zinc-400">{item.count}</span>
+                              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/[0.16]" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+                    altNo += 1;
+                    const r = item.row;
+                    return (
+                      <tr
+                        key={item.key}
+                        onClick={() => setSelectedId(r.id)}
+                        style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
+                        className={`row-in cursor-pointer border-b border-white/[0.14] transition last:border-0 hover:bg-white/[0.04]${altNo % 2 === 0 ? ' rd-alt' : ''}`}
+                      >
+                        <td className="whitespace-nowrap px-3 py-2 border-r border-white/5 tabular-nums text-zinc-300 align-top">
+                          <div className="font-medium text-white">{formatTime(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div>
+                          {!sameDay(range.start, range.end) ? <div className="text-[11px] text-zinc-500">{formatDay(rowTimeIn(r, range.start, addDays(range.end, 1)))}</div> : null}
+                          <div className="mt-1.5"><StatusBadge status={r.status} /></div>
+                        </td>
+                        <td className="max-w-[280px] px-3 py-2 border-r border-white/5 relative align-top">
+                          <div className={`absolute inset-y-0 left-0 w-1 ${STATUS_META[r.status]?.dot || "bg-zinc-500"}`} />
                           <div className="pl-3 flex flex-col gap-0.5">
                             <div>
-                              <span className={`inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded ${tc.bg} ${tc.tagText}`}>
-                                {r.content_type || 'UNKNOWN'}
-                              </span>
+                              <TypeBox type={r.content_type} />
                             </div>
                             <div className="flex items-center gap-1.5">
                               <div className="uppercase text-[18px] font-bold tracking-wide text-white px-1 -ml-1 truncate w-full min-w-[150px]">
@@ -1731,31 +1804,54 @@ function NewsroomApp({ authUser, onSignOut }) {
                               {r.is_script_locked ? <LockIcon message="Script locked" className="h-4 w-4 shrink-0 text-white" /> : null}
                             </div>
                             <ShortNote r={r} range={range} />
-
                           </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
-                      <StaffCell r={r} team={team} actor={actor} patchRow={patchRow} notify={notify} />
-                    </td>
-                    
-                    
-                    <td className="min-w-[260px] px-3 py-3">
-                      <ActionButtons compact actions={getActions(r, actor)} onRun={(a) => runAction(r, a)} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {visible.length === 0 ? (
-            <div className="px-6 py-16 text-center">
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 border-r border-white/5">
+                          <StaffCell layout="rows" r={r} team={team} actor={actor} patchRow={patchRow} notify={notify} />
+                        </td>
+                        <td className="min-w-[260px] px-3 py-3">
+                          <ActionButtons compact actions={getActions(r, actor)} onRun={(a) => runAction(r, a)} />
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
+              </tbody>
+            </table>
+            {visible.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+                <div className="text-[15px] font-medium text-zinc-300">Nothing scheduled</div>
+                <p className="mt-1 text-[13px] text-zinc-600">Pick another date or add new content.</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {pcView === 'cards' ? (
+          visible.length === 0 ? (
+            <div className="hidden md:block rounded-2xl border border-white/[0.08] bg-[#121215] px-6 py-16 text-center">
               <div className="text-[15px] font-medium text-zinc-300">Nothing scheduled</div>
               <p className="mt-1 text-[13px] text-zinc-600">Pick another date or add new content.</p>
             </div>
-          ) : null}
-        </div>
+          ) : (
+            <div className="hidden md:grid grid-cols-2 gap-4 lg:grid-cols-3 2xl:grid-cols-4">
+              {pcCardRows.map((r) => (
+                <PhoneCard
+                  key={r.id}
+                  r={r}
+                  range={range}
+                  team={team}
+                  actor={actor}
+                  patchRow={patchRow}
+                  notify={notify}
+                  onOpen={setSelectedId}
+                  onRun={runAction}
+                  channelLabel={r.channel || 'No channel'}
+                />
+              ))}
+            </div>
+          )
+        ) : null}
 
         {/* Mobile View for Rundown */}
         <div className="md:hidden mb-8">

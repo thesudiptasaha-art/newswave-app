@@ -38,7 +38,7 @@ export function StaffCell({ r, team, actor, patchRow, notify, layout = 'stack' }
   const presenters = team.filter((m) => m.active !== false).map((m) => m.full_name);
   const editors = team.filter((t) => t.role_video_editor || t.role === 'owner' || t.role === 'manager').map((m) => m.full_name);
 
-  const renderLine = (field, label, names, colLabel = null) => {
+  const renderLine = (field, label, names, colLabel = null, showEmpty = false) => {
     const isEditable = actorCan && can(actor, FIELD_PERM[field]);
     const val = r[field];
 
@@ -58,6 +58,8 @@ export function StaffCell({ r, team, actor, patchRow, notify, layout = 'stack' }
         control = <PersonName name={val} team={team} hideDesignation />;
       } else if (colLabel) {
         control = <span className="text-[12px] italic text-zinc-600">Not assigned</span>;
+      } else if (showEmpty) {
+        control = <span className="text-[11px] italic text-zinc-600">Not assigned</span>;
       }
     }
 
@@ -86,6 +88,16 @@ export function StaffCell({ r, team, actor, patchRow, notify, layout = 'stack' }
         {renderLine('writer', 'Script Writer:', writers, 'SCRIPT WRITER')}
         {renderLine('presenter_name', 'Presenter:', presenters, 'PRESENTER')}
         {r.content_type === 'LIVE' ? null : renderLine('video_editor', 'Video Editor:', editors, 'VIDEO EDITOR')}
+      </div>
+    );
+  }
+
+  if (layout === 'rows') {
+    return (
+      <div className="flex flex-col gap-1 text-[11px]">
+        {renderLine('writer', 'Script Writer:', writers, null, true)}
+        {renderLine('presenter_name', 'Presenter:', presenters, null, true)}
+        {r.content_type === 'LIVE' ? null : renderLine('video_editor', 'Video Editor:', editors, null, true)}
       </div>
     );
   }

@@ -47,7 +47,7 @@ A commit on GitHub triggers a Vercel build. The browser loads the built page and
 | Code hosting | GitHub |
 | Hosting and builds | Vercel, deploys automatically on every commit to GitHub |
 
-**Where the code lives.** `app/page.js` is the main rundown dashboard interface (~2,080 lines, client component `NewsroomApp`), orchestrating sub-components in `components/ui/` (`Drawer.js`, `Modals.js`, `Teleprompter.js`, `ScriptEditor.js`, `StaffAssignSelect.js`, `Badges.js`, `Shared.js`). Business logic lives in `lib/core.js` and `utils/`, and Supabase/storage/export integrations reside in `services/`. `app/layout.js` holds the page shell, fonts, Tailwind script and global CSS. The browser talks to Supabase with the public (anon) key through `@supabase/supabase-js`; row-level security and the triggers decide what each signed-in person may do.
+**Where the code lives.** `app/page.js` is the main rundown dashboard interface (~2,080 lines, client component `NewsroomApp`), orchestrating sub-components in `components/ui/` (`Drawer.js`, `Modals.js`, `Teleprompter.js`, `ScriptEditor.js`, `StaffAssignSelect.js`, `Badges.js`, `Shared.js`, `RundownCards.js`). Business logic lives in `lib/core.js` and `utils/`, and Supabase/storage/export integrations reside in `services/`. `app/layout.js` holds the page shell, fonts, Tailwind script and global CSS. The browser talks to Supabase with the public (anon) key through `@supabase/supabase-js`; row-level security and the triggers decide what each signed-in person may do.
 
 ## 3. Users, roles and permissions
 
@@ -144,9 +144,13 @@ The app is one page (`app/page.js`) with a sticky header, the rundown, a second 
 **Main area, Daily Rundown**
 
 - Title "Daily Rundown", a status dropdown (All statuses or one of the 12), a search box (slug, title, people, content ID, channel, thumbnail text) and a counter "N items · date range".
-- Table columns: Time, Content Type, Slug Name (a lock icon if the script is locked), Writer, Presenter, Video Editor, Short, Status, Action.
-- Rows are grouped under a channel header with a count.
-- The Short column shows one chip per short that is due inside the selected range, amber while pending and green once published, with its upload time.
+- Phone: two views, List (default; compact rows, tap a row to open it as a full card) and Cards (one card per content: time, content type box, slug, short-clip note, staff in three columns, status pill and action buttons in the card footer); the choice is remembered (localStorage key wd-phone-view).
+- PC: List view (default; channel headers collapse and expand, "Collapse all channels" button, zebra rows, labelled staff, "Not assigned" when empty) and Card view (cards in 2/3/4 columns, all channels together in publish-time order, channel name on each card; remembered in wd-pc-view).
+- Table columns (PC list view): Time, Slug Name (with type box, lock icon, and short clip note), Staff Assignment (writer, presenter, and editor in stacked rows), Action. Rows are grouped under a channel header with a count and collapsible chevron.
+- Content type is shown as a black box with white text in the light theme and a white box with black text in the dark theme (one colour for all types).
+- Short clips are explained in plain words: the main video shows "Main video - has N short clips" and a short shows a tag "SHORT n/N" with "Short clip n of N, cut from the main video" (helper shortClipNotes in lib/core.js; component ShortNote).
+- Channel bands use the olive colour (dark olive in the dark theme).
+- New css classes in app/layout.js lightCss: type-box, short-tag, chan-band, chan-band-count, rd-card, rd-alt.
 - The Action column shows the next allowed workflow buttons for that row. Clicking a row anywhere else opens the drawer.
 
 **Second table, On hold & unscheduled** (below the rundown)

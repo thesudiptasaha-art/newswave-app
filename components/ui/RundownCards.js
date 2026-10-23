@@ -33,7 +33,7 @@ export function ShortNote({ r, range }) {
   );
 }
 
-export function PhoneCard({ r, range, team, actor, patchRow, notify, onOpen, onRun, onCollapse }) {
+export function PhoneCard({ r, range, team, actor, patchRow, notify, onOpen, onRun, onCollapse, channelLabel }) {
   const endEx = addDays(range.end, 1);
   const tIso = rowTimeIn(r, range.start, endEx);
   const t = formatTime(tIso);
@@ -76,6 +76,10 @@ export function PhoneCard({ r, range, team, actor, patchRow, notify, onOpen, onR
             ) : null}
           </div>
         </div>
+
+        {channelLabel ? (
+          <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-zinc-400">{channelLabel}</div>
+        ) : null}
 
         <div className="flex items-start gap-1.5">
           <div className="break-words uppercase text-[19px] font-extrabold leading-tight tracking-wide text-white">

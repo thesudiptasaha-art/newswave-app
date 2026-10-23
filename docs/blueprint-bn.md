@@ -68,7 +68,7 @@ Oct 4, 2026 · @EEA
 | নিয়ম ও নিরাপত্তা | Postgres row-level security, trigger, function |
 | কোড রাখা ও হোস্টিং | GitHub; Vercel (প্রতি commit-এ স্বয়ংক্রিয় বিল্ড) |
 
-কোড কোথায়: `app/page.js` (\~২,০৮০ লাইন) মূল ড্যাশবোর্ড ও স্টেট ম্যানেজমেন্ট; `components/ui/` (`Drawer.js`, `Modals.js`, `Teleprompter.js`, `ScriptEditor.js`, `StaffAssignSelect.js`, `Shared.js`) কম্পোনেন্টসমূহ; `lib/` ও `utils/` বিজনেস লজিক; `services/` ডেটাবেস ও স্টোরেজ কল; `app/layout.js` পাতার খোলস, ফন্ট, Tailwind ও থিম স্টাইল।
+কোড কোথায়: `app/page.js` (\~২,০৮০ লাইন) মূল ড্যাশবোর্ড ও স্টেট ম্যানেজমেন্ট; `components/ui/` (`Drawer.js`, `Modals.js`, `Teleprompter.js`, `ScriptEditor.js`, `StaffAssignSelect.js`, `Shared.js`, `RundownCards.js`) কম্পোনেন্টসমূহ; `lib/` ও `utils/` বিজনেস লজিক; `services/` ডেটাবেস ও স্টোরেজ কল; `app/layout.js` পাতার খোলস, ফন্ট, Tailwind ও থিম স্টাইল।
 
 **Header, প্রথম সারি**
 
@@ -88,7 +88,15 @@ Oct 4, 2026 · @EEA
 | Channel dropdown | সব চ্যানেল বা একটা; দুই টেবিলই ফিল্টার হয় |
 | + Channel | Owner ও Manager নতুন চ্যানেল যোগ করতে পারেন; বাকিদের জন্য লক |
 
-**প্রধান অংশ: Daily Rundown.** স্ট্যাটাস ড্রপডাউন (সব বা ১২টার একটা), সার্চ বক্স (slug, title, লোকজন, content ID, চ্যানেল, thumbnail text) ও কাউন্টার। কলাম: Time, Content Type, Slug Name (স্ক্রিপ্ট লক থাকলে তালার চিহ্ন), Writer, Presenter, Video Editor, Short, Status, Action। সারিগুলো চ্যানেলের হেডারের নিচে সাজানো। Short কলামে প্রতিটা short-এর জন্য একটা chip (অপেক্ষায় হলুদ, Published হলে সবুজ)। Action কলামে পরের অনুমত বাটন; সারির অন্য জায়গায় ক্লিক করলে Drawer খুলে।
+**প্রধান অংশ: Daily Rundown.** স্ট্যাটাস ড্রপডাউন (সব বা ১২টার একটা), সার্চ বক্স (slug, title, লোকজন, content ID, চ্যানেল, thumbnail text) ও কাউন্টার।
+- ফোনে দুটো ভিউ: List (ডিফল্ট; কমপ্যাক্ট সারি, ট্যাপে পুরো কার্ড খোলে) ও Cards (প্রতি কনটেন্টে একটি কার্ড: সময়, কনটেন্ট টাইপ বক্স, স্লাগ, শর্ট-ক্লিপ নোট, তিন কলামে কর্মী, ফুটারে স্ট্যাটাস পিল ও অ্যাকশন বাটন); পছন্দ `wd-phone-view` কি-তে সংরক্ষিত।
+- পিসিতে: List view (ডিফল্ট; চ্যানেল হেডার ফোল্ড/আনফোল্ড, "Collapse all channels" বাটন, জেব্রা সারি, লেবেলসহ কর্মী, ফাঁকা থাকলে "Not assigned") ও Card view (২/৩/৪ কলামের কার্ড গ্রিড, পাবলিশ সময় অনুযায়ী সব চ্যানেল একসাথে, প্রতি কার্ডে চ্যানেলের নাম; সংরক্ষিত `wd-pc-view`-তে)।
+- কলাম (পিসি লিস্ট ভিউ): Time, Slug Name (টাইপ বক্স, তালার চিহ্ন ও শর্ট নোটসহ), Staff Assignment (স্ট্যাক করা সারিতে কর্মী), Action। সারিগুলো চ্যানেলের হেডারের নিচে সাজানো।
+- কনটেন্ট টাইপ লাইট থিমে কালো বক্সে সাদা লেখা এবং ডার্ক থিমে সাদা বক্সে কালো লেখা (সব ধরনের জন্য একটাই রং)।
+- শর্ট ক্লিপ সহজ ভাষায়: মূল ভিডিওতে "Main video - has N short clips" এবং শর্টে "SHORT n/N" ট্যাগসহ "Short clip n of N, cut from the main video" (`shortClipNotes` হেল্পার, `ShortNote` কম্পোনেন্ট)।
+- চ্যানেল ব্যান্ডে অলিভ রং (ডার্ক থিমে গাঢ় অলিভ)।
+- নতুন সিএসএস ক্লাস: `type-box`, `short-tag`, `chan-band`, `chan-band-count`, `rd-card`, `rd-alt`।
+- Action কলামে পরের অনুমত বাটন; সারির অন্য জায়গায় ক্লিক করলে Drawer খুলে।
 
 **দ্বিতীয় টেবিল: On hold & unscheduled.** যেসব কনটেন্ট On Hold অথবা পাবলিশ সময় নেই। কলাম: Why, Content Type, Slug Name, Channel, Writer, Presenter, Status, New publish time। প্রতিটা সারিতে তারিখ-সময় ঘর ও একটা বাটন: Resume (On Hold-এর জন্য, শুধু Manager ও Owner) অথবা Schedule (সময়হীনের জন্য, Reschedule পারমিশন লাগে)।
 
