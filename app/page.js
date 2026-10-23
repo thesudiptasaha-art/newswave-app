@@ -1795,7 +1795,7 @@ function NewsroomApp({ authUser, onSignOut }) {
                           type="button"
                           aria-expanded={!isCollapsed}
                           onClick={() => setCollapsedChannels((c) => ({ ...c, [group.header.name]: !c[group.header.name] }))}
-                          className="chan-band mb-0 flex min-h-[48px] w-full items-center gap-2.5 rounded-xl px-3.5 text-left"
+                          className={`chan-band mb-0 flex min-h-[48px] w-full items-center gap-2.5 ${phoneView === 'list' && !isCollapsed ? 'rounded-t-xl' : 'rounded-xl'} px-3.5 text-left`}
                         >
                           <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                             {isCollapsed ? (
@@ -1811,7 +1811,7 @@ function NewsroomApp({ authUser, onSignOut }) {
 
                       {!isCollapsed && group.rows.length > 0 ? (
                         phoneView === 'list' ? (
-                          <div className={`${group.header ? 'rounded-b-xl' : 'rounded-xl'} border border-white/[0.14] bg-[#121215] overflow-hidden`}>
+                          <div className={`${group.header ? 'rounded-b-xl border-t-0' : 'rounded-xl'} border border-white/[0.14] bg-[#121215] overflow-hidden`}>
                             {group.rows.map((r, idx) => {
                               if (expandedId === r.id) {
                                 return (

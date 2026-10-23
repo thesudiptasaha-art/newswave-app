@@ -88,20 +88,16 @@ export function PhoneCard({ r, range, team, actor, patchRow, notify, onOpen, onR
 
         <ShortNote r={r} range={range} />
 
-        <div>
-          <StatusBadge status={r.status} />
-        </div>
-
         <div className="mt-1 border-t border-dashed border-white/[0.14] pt-2.5" onClick={(e) => e.stopPropagation()}>
           <StaffCell layout="columns" r={r} team={team} actor={actor} patchRow={patchRow} notify={notify} />
         </div>
       </div>
 
-      <div
-        className="flex flex-wrap items-center justify-end gap-2 border-t border-white/[0.08] bg-white/[0.03] py-2 pl-[22px] pr-3"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ActionButtons compact actions={getActions(r, actor).slice(0, 2)} onRun={(a) => onRun && onRun(r, a)} />
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] bg-white/[0.03] py-2 pl-[22px] pr-3">
+        <StatusBadge status={r.status} />
+        <div className="flex flex-wrap items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+          <ActionButtons compact actions={getActions(r, actor).slice(0, 2)} onRun={(a) => onRun && onRun(r, a)} />
+        </div>
       </div>
     </div>
   );
