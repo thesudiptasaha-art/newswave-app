@@ -124,7 +124,7 @@ export function ModalShell({ title, subtitle, onClose, children, footer, wide = 
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-6">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/[0.1] bg-[#121215]/90 shadow-2xl shadow-black/60 backdrop-blur-2xl sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : full ? 'sm:max-w-3xl md:h-[92vh] md:max-w-[1600px]' : 'sm:max-w-xl'}`}
+        className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/[0.1] bg-[#121215]/90 shadow-2xl shadow-black/60 backdrop-blur-2xl sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : full ? 'sm:max-w-3xl lg:h-[92vh] lg:max-w-[1600px]' : 'sm:max-w-xl'}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] px-6 py-5">
           <div>
@@ -135,7 +135,7 @@ export function ModalShell({ title, subtitle, onClose, children, footer, wide = 
             <Icon name="x" className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        <div className={`flex-1 overflow-y-auto px-6 py-5 ${full ? 'lg:flex lg:flex-col' : ''}`}>{children}</div>
         {footer ? <div className="flex items-center justify-end gap-2 border-t border-white/[0.06] bg-black/30 px-6 py-4">{footer}</div> : null}
       </div>
     </div>
