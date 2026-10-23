@@ -119,12 +119,12 @@ export function BlurInput({ value, onCommit, disabled = false, placeholder, type
   );
 }
 
-export function ModalShell({ title, subtitle, onClose, children, footer, wide = false }) {
+export function ModalShell({ title, subtitle, onClose, children, footer, wide = false, full = false }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-6">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/[0.1] bg-[#121215]/90 shadow-2xl shadow-black/60 backdrop-blur-2xl sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-xl'}`}
+        className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/[0.1] bg-[#121215]/90 shadow-2xl shadow-black/60 backdrop-blur-2xl sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : full ? 'sm:max-w-3xl md:h-[92vh] md:max-w-[1600px]' : 'sm:max-w-xl'}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] px-6 py-5">
           <div>

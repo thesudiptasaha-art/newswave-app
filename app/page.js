@@ -2120,7 +2120,7 @@ function NewsroomApp({ authUser, onSignOut }) {
         <Icon name="plus" className="h-6 w-6 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline">New Content</span>
       </button>
-      {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
+      {showNew ? <NewContentModal channels={channels} team={team} defaultDate={range.start} actor={actor} onClose={() => setShowNew(false)} onCreate={createContent} /> : null}
       {showNotices ? (
         <NoticeModal
           notices={notices}
