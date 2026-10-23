@@ -17,7 +17,9 @@ import { resizeToJpeg } from '../../utils/helpers';
 import { fetchAllPages } from '../../utils/fetchAll';
 
 function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
-  const activeNames = team.filter((m) => m.active !== false).map((m) => m.full_name);
+  const conceptOptions = team.filter((m) => m.active !== false && (m.role_concept_creator || m.role === 'owner' || m.role === 'manager')).map((m) => ({ value: m.full_name, label: m.nickname || m.full_name }));
+  const writerOptions = team.filter((m) => m.active !== false && (m.role_research_script_writer || m.role === 'owner' || m.role === 'manager')).map((m) => ({ value: m.full_name, label: m.nickname || m.full_name }));
+  const presenterOptions = team.filter((m) => m.active !== false).map((m) => ({ value: m.full_name, label: m.nickname || m.full_name }));
   const initialTime = () => {
     const d = new Date(defaultDate);
     const now = new Date();
@@ -31,6 +33,7 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
     slug_name: '',
     title: '',
     thumbnail_text: '',
+    concept_creator: '',
     writer: '',
     presenter_name: '',
     script: '',
@@ -64,6 +67,7 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
       slug_name: f.slug_name.trim(),
       title: f.title.trim(),
       thumbnail_text: f.thumbnail_text.trim(),
+      concept_creator: f.concept_creator,
       writer: f.writer,
       presenter_name: f.presenter_name,
       script: f.script,
@@ -88,81 +92,99 @@ function NewContentModal({ channels, team, defaultDate, onClose, onCreate }) {
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <div className="mb-2 text-[12px] font-medium text-zinc-400">Content type *</div>
-          <div className="flex flex-wrap gap-2">
-            {CONTENT_TYPES.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => set('content_type', t)}
-                className={`rounded-full border px-3.5 py-1.5 text-[12px] font-semibold tracking-wide transition ${
-                  f.content_type === t ? 'border-sky-400/60 bg-sky-500/15 text-sky-200' : 'border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:bg-white/[0.07]'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Basics</div>
+          <div className="space-y-4">
+            <div>
+              <div className="mb-2 text-[12px] font-medium text-zinc-400">Content type *</div>
+              <div className="flex flex-wrap gap-2">
+                {CONTENT_TYPES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => set('content_type', t)}
+                    className={`rounded-full border px-3.5 py-1.5 text-[12px] font-semibold tracking-wide transition ${
+                      f.content_type === t ? 'border-sky-400/60 bg-sky-500/15 text-sky-200' : 'border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:bg-white/[0.07]'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              {f.content_type ? <p className="mt-1.5 text-[12px] text-zinc-500">Workflow: {CONTENT_TYPE_HINT[f.content_type]}</p> : null}
+              {showErr('content_type')}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Channel *">
+                <SelectBox value={f.channel} onChange={(v) => set('channel', v)} options={channels} placeholder="Select channel" />
+                {showErr('channel')}
+              </Field>
+              <Field label="Publish date & time" hint="optional - leave empty to keep it in the On hold & unscheduled list">
+                <input type="datetime-local" value={f.when} onChange={(e) => set('when', e.target.value)} className={`${inputBase} [color-scheme:dark]`} />
+                {showErr('when')}
+              </Field>
+            </div>
           </div>
-          {f.content_type ? <p className="mt-1.5 text-[12px] text-zinc-500">Workflow: {CONTENT_TYPE_HINT[f.content_type]}</p> : null}
-          {showErr('content_type')}
         </div>
 
-        <Field label="Title *">
-          <input autoFocus value={f.title} onChange={(e) => onTitle(e.target.value)} placeholder="Full story title" className={`${inputBase} !text-[15px]`} />
-          {showErr('title')}
-        </Field>
+        <div>
+          <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Story</div>
+          <div className="space-y-4">
+            <Field label="Slug name *" hint={`${slugLen}/${SLUG_MAX} characters - filled from the title, you can edit it`}>
+              <input
+                value={f.slug_name}
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  set('slug_name', normalizeSlugInput(e.target.value));
+                }}
+                placeholder="BUDGET BREAKDOWN FISCAL YEAR"
+                maxLength={SLUG_MAX}
+                className={`${inputBase} font-mono uppercase tracking-wide`}
+                autoCapitalize="characters"
+                spellCheck={false}
+              />
+              {showErr('slug_name')}
+            </Field>
 
-        <Field label="Slug name *" hint={`${slugLen}/${SLUG_MAX} characters - filled from the title, you can edit it`}>
-          <input
-            value={f.slug_name}
-            onChange={(e) => {
-              setSlugTouched(true);
-              set('slug_name', normalizeSlugInput(e.target.value));
-            }}
-            placeholder="BUDGET BREAKDOWN FISCAL YEAR"
-            maxLength={SLUG_MAX}
-            className={`${inputBase} font-mono uppercase tracking-wide`}
-            autoCapitalize="characters"
-            spellCheck={false}
-          />
-          {showErr('slug_name')}
-        </Field>
+            <Field label="Title *">
+              <input value={f.title} onChange={(e) => onTitle(e.target.value)} placeholder="Full story title" className={`${inputBase} !text-[15px]`} />
+              {showErr('title')}
+            </Field>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Channel *">
-            <SelectBox value={f.channel} onChange={(v) => set('channel', v)} options={channels} placeholder="Select channel" />
-            {showErr('channel')}
-          </Field>
-          <Field label="Publish date & time" hint="optional - leave empty to keep it in the On hold & unscheduled list">
-            <input type="datetime-local" value={f.when} onChange={(e) => set('when', e.target.value)} className={`${inputBase} [color-scheme:dark]`} />
-            {showErr('when')}
-          </Field>
+            <Field label="Thumbnail text">
+              <input value={f.thumbnail_text} onChange={(e) => set('thumbnail_text', e.target.value)} placeholder="Short hook shown on the thumbnail" className={inputBase} />
+            </Field>
+
+            {showScript || f.script ? (
+              <Field label="Script">
+                <textarea value={f.script} onChange={(e) => set('script', e.target.value)} rows={6} placeholder="Paste or write the script…" className={`${inputBase} resize-y leading-relaxed`} />
+              </Field>
+            ) : (
+              <button type="button" onClick={() => setShowScript(true)} className="text-[13px] font-medium text-sky-400 transition hover:text-sky-300">
+                + Add script (optional)
+              </button>
+            )}
+          </div>
         </div>
 
-        <Field label="Thumbnail text">
-          <input value={f.thumbnail_text} onChange={(e) => set('thumbnail_text', e.target.value)} placeholder="Short hook shown on the thumbnail" className={inputBase} />
-        </Field>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Research & Script Writer">
-            <SelectBox value={f.writer} onChange={(v) => set('writer', v)} options={activeNames} placeholder="Select research & script" />
-          </Field>
-          <Field label="Presenter">
-            <SelectBox value={f.presenter_name} onChange={(v) => set('presenter_name', v)} options={activeNames} placeholder="Select presenter" />
-          </Field>
+        <div>
+          <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">People</div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Concept Creator">
+                <SelectBox value={f.concept_creator} onChange={(v) => set('concept_creator', v)} options={conceptOptions} placeholder="Select concept creator" />
+              </Field>
+              <Field label="Research & Script Writer">
+                <SelectBox value={f.writer} onChange={(v) => set('writer', v)} options={writerOptions} placeholder="Select research & script" />
+              </Field>
+            </div>
+            <Field label="Presenter" hint="optional">
+              <SelectBox value={f.presenter_name} onChange={(v) => set('presenter_name', v)} options={presenterOptions} placeholder="Select presenter" />
+            </Field>
+          </div>
         </div>
-
-        {showScript || f.script ? (
-          <Field label="Script">
-            <textarea value={f.script} onChange={(e) => set('script', e.target.value)} rows={6} placeholder="Paste or write the script…" className={`${inputBase} resize-y leading-relaxed`} />
-          </Field>
-        ) : (
-          <button type="button" onClick={() => setShowScript(true)} className="text-[13px] font-medium text-sky-400 transition hover:text-sky-300">
-            + Add script (optional)
-          </button>
-        )}
       </div>
     </ModalShell>
   );

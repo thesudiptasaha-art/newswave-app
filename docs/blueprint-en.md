@@ -181,7 +181,7 @@ The drawer footer shows the **Next step** workflow buttons and a **Delete perman
 
 **Modals**
 
-- **New Content**: six content type buttons, channel, optional publish date and time, slug name (uppercase, length limited), title, thumbnail text, writer, presenter, script. A content type shows its workflow hint, for example "Script approved → done (published)" for LIVE.
+- **New Content**: three sections without numbers. Basics: Content type (required), Channel (required), Publish date & time (optional). Story: Slug name (required; filled from the title until edited by hand), Title (required), Thumbnail text, Script (behind "+ Add script (optional)"). People: Concept Creator, Research & Script Writer, Presenter (optional). Concept Creator and Writer lists show active members who have the matching role tick, plus Owner and Managers (same rule as the drawer); Presenter lists all active members. No field gets the cursor automatically when the form opens.
 - **Reason / note**: asks for a reason before Hold, Drop or Re-Shoot.
 - **Team & permissions**: add a member, expand a member to set designation, photo link, the 8 permission toggles, role (Owner only), Deactivate or Reactivate, and Remove.
 - **KPI report**: tiles Total, Published, Scheduled, In progress, Past due, then counts by status, channel, content type, presenter, writer and video editor.

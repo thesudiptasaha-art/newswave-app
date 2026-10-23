@@ -121,7 +121,7 @@ Oct 4, 2026 · @EEA
 
 Drawer-এর ফুটারে পরের ধাপের বাটন ও Delete permanently (শুধু Manager, Owner; নিশ্চিতকরণসহ)।
 
-**Modal:** New Content (ছয় ধরনের বাটন, চ্যানেল, ঐচ্ছিক সময়, slug name, title, thumbnail text, writer, presenter, script); Reason (Hold/Drop/Re-Shoot-এর আগে কারণ চায়); Team & permissions; KPI (Total, Published, Scheduled, In progress, Past due ও স্ট্যাটাস/চ্যানেল/ধরন/প্রেজেন্টার/লেখক/এডিটর অনুযায়ী গণনা); Toast (সবুজ/লাল বার্তা)। অন্য স্ক্রিন: Sign in, Set up your newsroom (প্রথম বার), No access yet, Can't reach your database।
+**Modal:** New Content (নম্বরহীন তিন অংশে সাজানো — Basics: কনটেন্ট টাইপ, চ্যানেল, ঐচ্ছিক সময়; Story: স্লাগ, টাইটেল, থাম্বনেইল টেক্সট, স্ক্রিপ্ট; People: Concept Creator, Research & Script Writer, ঐচ্ছিক Presenter; Concept Creator ও Writer তালিকায় শুধু সক্রিয় সংশ্লিষ্ট পদের টিকধারী ও ম্যানেজার/ওনার, Presenter-এ সব সক্রিয় সদস্য; ফর্মে কোনো ঘরে স্বয়ংক্রিয় কার্সার বসে না); Reason (Hold/Drop/Re-Shoot-এর আগে কারণ চায়); Team & permissions; KPI (Total, Published, Scheduled, In progress, Past due ও স্ট্যাটাস/চ্যানেল/ধরন/প্রেজেন্টার/লেখক/এডিটর অনুযায়ী গণনা); Toast (সবুজ/লাল বার্তা)। অন্য স্ক্রিন: Sign in, Set up your newsroom (প্রথম বার), No access yet, Can't reach your database।
 
 **আপনার বদল/মন্তব্য:** এখানে লিখুন বা কমেন্ট করুন।
 
